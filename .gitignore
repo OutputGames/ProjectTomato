@@ -1,0 +1,12 @@
+.vs/
+.idea/
+.vscode/
+bin/
+generated/
+enc_temp_folder/
+*.sln
+Makefile
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*cmake*
