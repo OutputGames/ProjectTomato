@@ -14,3 +14,5 @@
     flags { "MultiProcessorCompile"}
 
     include("lib.lua")
+    include("engine.lua")
+    include("scriptcore.lua")

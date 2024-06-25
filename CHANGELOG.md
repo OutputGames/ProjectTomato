@@ -5,19 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
-## 0.0.2 - TBA (The Foundational Update)
+## 0.0.2 - 2024-6-8
+### Added
+
+* Framebuffer system w/ **deferred rendering**
+* Model Loading using [Assimp](https://github.com/assimp/assimp)
+* Vertex Buffer and Draw Call System
+
+### Changed
+
+* Camera now uses framebuffer system
+* `tmeEngine` now provides the screen dimensions
 
 
+### Deprecated
 
-### Security
+### Removed
 
-## 0.0.1 - 2023-12-1
+### Fixed
+
+### In Progress (at commit time)
+
+
+## 0.0.1 - 2024-6-8
+
+### Added
 
 - initial commit
 
 <!--
-### Added
-
 ### Changed
 
 ### Deprecated
@@ -28,7 +44,7 @@ and this project adheres to [Semantic Versioning].
 
 -->
 
-### In Progress
+### In Progress (at commit time)
 
 * vertex buffer system
 * framebuffer/render textures

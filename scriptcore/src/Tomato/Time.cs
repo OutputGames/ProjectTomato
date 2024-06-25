@@ -1,7 +1,9 @@
-﻿namespace TomatoScript.Tomato
+﻿using System.Runtime.CompilerServices;
+
+namespace Tomato
 {
-    public class Time
+    public static class Time
     {
-        
+        public static extern float time { [MethodImpl(MethodImplOptions.InternalCall)] get; }
     }
 }

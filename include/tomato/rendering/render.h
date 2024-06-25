@@ -4,23 +4,79 @@
 #include "tmgl.h"
 #include "ecs/actor.h"
 
-class tmTexture
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+class tmRenderMgr;
+struct tmEngine;
+class tmModel;
+
+class TMAPI tmTexture
 {
 public:
     unsigned id;
 
     tmTexture(string path, bool flip);
+    tmTexture()
+    {
+        id = -1;
+    }
 
     void use(int offset);
+
+private:
+
+    friend tmRenderMgr;
+
+    string path;
+    bool flip;
+
 };
 
-class tmShader
+class TMAPI tmFramebuffer : public tmTexture
+{
+public:
+
+    unsigned frameId;
+    unsigned gPos=-1, gAlb=-1, gNrm=-1, gSha=-1;
+    glm::vec3 clearColor;
+
+    enum FramebufferType
+    {
+	    Color,
+        Deferred
+    } type;
+
+    tmFramebuffer(FramebufferType type);
+
+    void use();
+    void draw();
+
+    void reload();
+
+private:
+    inline static unsigned drawVAO = -1;
+    inline static class tmShader* drawShader = nullptr;
+};
+
+class TMAPI tmShader
 {
 public:
 	unsigned id;
 
     tmShader(string vertex, string fragment);
 
+    void reload(string vertex, string fragment)
+    {
+        unload();
+        id = tmgl::genShader(vertex.c_str(), fragment.c_str());
+    }
+
+    void unload()
+    {
+        glDeleteShader(id);
+    }
 
     void use()
     {
@@ -98,22 +154,33 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 
+private:
 
+    friend tmRenderMgr;
+
+    string vertData;
+    string fragData;
 };
 
-class Camera : public Component
+class TMAPI tmCamera : public Component
 {
-	CLASS_DECLARATION(Camera)
+	CLASS_DECLARATION(tmCamera)
 
 public:
-	Camera(std::string&& initialValue) : Component(move(initialValue))
+	tmCamera(std::string&& initialValue) : Component(move(initialValue))
 	{
 	}
 
-	Camera() = default;
+	tmCamera();
+    void Deserialize(nlohmann::json j) override;
 
     void Start() override;
     void Update() override;
+    void LateUpdate() override;
+    void Use();
+    nlohmann::json Serialize() override;
+
+    static tmCamera* GetMainCamera();
 
     void UpdateShader(tmShader* shader);
 
@@ -141,61 +208,168 @@ public:
         Orthographic
 	} Projection = Perspective;
 
+    glm::vec3 ClearColor = {0.2f,0.3f,0.3f};
     float FieldOfView = 60, Size = 5;
     float NearPlane=0.3f, FarPlane=1000;
     bool EnableOcclusionCulling;
+    tmFramebuffer* framebuffer;
 
 
 private:
+
+    static tmCamera* _mainCamera;
 
     glm::mat4 view=glm::mat4(1.0), proj=glm::mat4(1.0);
 
 };
 
-struct tmVertex
+struct TMAPI tmVertex
 {
     glm::vec3 position;
     glm::vec3 normal;
-    glm::vec3 texcoords;
+    glm::vec2 texcoords;
 };
 
-struct tmVertexBuffer
+struct TMAPI tmVertexBuffer
 {
     unsigned int VAO, VBO, EBO = -1, shader;
 
     GLenum mode=GL_TRIANGLES,elementType=GL_UNSIGNED_INT;
-    int vertexCount;
+    int vertexCount,elementCount;
 
-    void Draw();
-
-    tmVertexBuffer(tmVertex* data, size_t vertexCount, unsigned int* indices);
+    tmVertexBuffer(tmVertex* data, size_t vertexCount,size_t elementCount, unsigned int* indices);
+    tmVertexBuffer() = default;
 };
 
-class tmMaterial
-{
-	
-};
-
-class tmMesh
+class TMAPI tmMaterial
 {
 public:
-    List<tmVertex> vertices;
-    List<unsigned int> indices;
-    unsigned int material;
+    unsigned materialIndex;
 
-    tmMesh(List<tmVertex> verts, List<unsigned int> ind);
-    tmMesh(tmVertex* verts, unsigned int* ind);
-    tmMesh(std::vector<tmVertex> verts, std::vector<unsigned int> ind);
+    tmShader* shader;
+
+    std::vector<tmTexture*> textures;
+
+    tmMaterial(tmShader* shader);
+};
+
+class TMAPI tmMesh
+{
+public:
+    tmVertex* vertices;
+    unsigned int* indices;
+
+    tmMesh(tmVertex* verts, size_t vertCount, size_t elemCount, unsigned int* ind);
+
+    struct tmDrawCall* draw(unsigned material, glm::mat4 modelMatrix);
+
+private:
+    size_t vertexCount, elementCount;
+    tmVertexBuffer buffer;
+    void setup();
+};
+
+class TMAPI tmRenderer : public Component
+{
+	CLASS_DECLARATION(tmRenderer)
+
+public:
+	tmRenderer(std::string&& initialValue) : Component(move(initialValue))
+	{
+	}
+
+	tmRenderer() = default;
+};
+
+class TMAPI tmMeshRenderer : public tmRenderer
+{
+	CLASS_DECLARATION(tmMeshRenderer)
+
+public:
+	tmMeshRenderer(std::string&& initialValue) : tmRenderer(move(initialValue))
+	{
+	}
+
+    tmMeshRenderer(tmModel* model, int meshIndex);
+    void Deserialize(nlohmann::json j) override;
+    tmMeshRenderer() = default;
+
+    tmMesh* mesh;
+    unsigned materialIndex=-1;
+    nlohmann::json Serialize() override;
+
+    void Update() override;
 
 private:
 
+    void Initialize(tmModel* model, int meshIndex);
 
+    int meshIndex = -1;
+    tmModel* model;
 
 };
 
-class tmModel
+class TMAPI tmModel
 {
-	
+public:
+    static tmModel* LoadModel(string path);
+
+    List<tmMesh*> meshes;
+
+private:
+
+    friend tmMeshRenderer;
+
+    string path;
+
+    tmModel(string path);
+
+    void loadModel(string path);
+    void processNode(aiNode* node, const aiScene* scene);
+    tmMesh* processMesh(aiMesh* mesh, const aiScene* scene);
+
+    static Dictionary<string, tmModel*> loadedModels;
+};
+
+struct TMAPI tmDrawCall
+{
+    unsigned material;
+    glm::mat4 modelMatrix;
+    tmVertexBuffer* buffer;
+
+    tmDrawCall(tmVertexBuffer* buffer, unsigned materialIndex)
+    {
+        this->buffer = buffer;
+        this->material = materialIndex;
+    }
+};
+
+
+class TMAPI tmRenderMgr
+{
+
+    std::vector<tmDrawCall*> drawCalls;
+    std::vector<tmMaterial*> materials;
+
+    void DeserializeGame(nlohmann::json j);
+    nlohmann::json SerializeGame();
+
+    friend tmCamera;
+    friend tmMaterial;
+    friend tmEngine;
+
+public:
+
+    tmRenderMgr() = default;
+
+    tmDrawCall* InsertCall(tmVertexBuffer* buffer, unsigned material,glm::mat4 modelMatrix = glm::mat4(1.0));
+
+    void Draw();
+
+    void Clear()
+    {
+        drawCalls.clear();
+    }
 };
 
 #endif // RENDER_H

@@ -1,146 +1,121 @@
 
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "scripting/script.h"
 #include "tomato/engine.hpp"
 #include "tomato/rendering/render.h"
 #include "tomato/rendering/tmgl.h"
 #include "tomato/util/filesystem_tm.h"
 
+tmShader* shader;
+tmCamera* camera;
 
 int main(int argc, const char** argv) {
 
-
+    tmfs::copyFile("scriptcore/bin/Debug/TomatoScript.dll", "scriptcore/TomatoScript.dll");
     tmeInit(800, 600, "TomatoEngine");
 
-    auto shader = new tmShader(tmfs::loadFileString("resources/shaders/test/vertex.glsl"), tmfs::loadFileString("resources/shaders/test/fragment.glsl"));
-    var texture = new tmTexture("resources/textures/test.png", true);
-    var texture2 = new tmTexture("resources/textures/test3.png", true);
 
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    ImGui::SetCurrentContext(tmGetCore()->ctx);
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    var scriptMgr = tmeGetCore()->scriptMgr;
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-    // world space positions of our cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f,  2.0f, -2.5f),
-        glm::vec3(1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    };
-
-    unsigned vao = tmgl::genVertexArray();
-    unsigned vbo = tmgl::genBuffer(GL_ARRAY_BUFFER, vertices, sizeof(vertices), GL_STATIC_DRAW);
-	tmgl::genVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float));
-	tmgl::genVertexBuffer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    //unsigned ebo = tmgl::genBuffer(GL_ELEMENT_ARRAY_BUFFER, indices, sizeof(indices), GL_STATIC_DRAW);
-    glBindVertexArray(0);
-
+    var window = tmGetCore()->window;
     tmEngine* engine = tmeGetCore();
 
-    for (int i = 0; i < 10; ++i)
-    {
-        // calculate the model matrix for each object and pass it to shader before drawing
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, cubePositions[i]);
-        float angle = 20.0f * i;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-        Actor* actor = new Actor("Cube" + std::to_string(i));
-        actor->transform->position = cubePositions[i];
-        actor->transform->rotation = (glm::vec3(1.0f, 0.3f, 0.5f) * angle);
+    if (tmfs::fileExists("game.tmg")) {
+        tmeGetCore()->DeserializeGame(tmfs::loadFileString("game.tmg"));
+        //std::cout << "Loaded scene from file.";
     }
+    else {
 
-    Actor* cameraActor = new Actor("Camera");
-    Camera* camera = cameraActor->AttachComponent<Camera>();
+        // world space positions of our cubes
+        glm::vec3 cubePositions[] = {
+            glm::vec3(0.0f,  0.0f,  0.0f),
+            glm::vec3(2.0f,  5.0f, -15.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3(2.4f, -0.4f, -3.5f),
+            glm::vec3(-1.7f,  3.0f, -7.5f),
+            glm::vec3(1.3f, -2.0f, -2.5f),
+            glm::vec3(1.5f,  2.0f, -2.5f),
+            glm::vec3(1.5f,  0.2f, -1.5f),
+            glm::vec3(-1.3f,  1.0f, -1.5f)
+        };
 
-    while (!tmGetWindowClose())
-    {
-        cameraActor->transform->position = { 0,0,-3 };
-        cameraActor->transform->rotation.y = 90;
-        engine->Update();
-
-        /*
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        */
-
-
-        // create transformations
-        // pass transformation matrices to the shader
-        camera->UpdateShader(shader);
-
+        shader = new tmShader(tmfs::loadFileString("resources/shaders/test/vertex.glsl"), tmfs::loadFileString("resources/shaders/test/fragment.glsl"));
         shader->setInt("texture1", 0);
         shader->setInt("texture2", 1);
 
+        var texture = new tmTexture("resources/textures/test.png", true);
+        var texture2 = new tmTexture("resources/textures/test3.png", true);
 
-        texture->use(0);
-        texture2->use(1);
-        shader->use();
-        glBindVertexArray(vao);// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        tmMaterial* material = new tmMaterial(shader);
+        material->textures.push_back(texture);
 
-        for (auto const& actor : engine->currentScene->actorMgr->GetAllActors())
+        tmMaterial* material2 = new tmMaterial(shader);
+        material2->textures.push_back(texture2);
+
+
+        tmModel* model = tmModel::LoadModel("resources/models/test.fbx");
+
+        tmActor* map = new tmActor("Map");
+        for (int i = 0; i < 10; ++i)
         {
-            if (actor->GetComponent<Camera>())
-                continue;
+            float angle = 20.0f * i;
 
-            glm::mat4 model = actor->transform->GetMatrix();
+            tmActor* actor = new tmActor("Cube" + std::to_string(i), map);
+            actor->transform->position = cubePositions[i];
+            actor->transform->rotation = (glm::vec3(1.0f, 0.3f, 0.5f) * angle);
 
-            shader->setMat4("model", model);
+            var meshRenderer = actor->AttachComponent<tmMeshRenderer>(model, randval(0, 1));
+            meshRenderer->materialIndex = randval(0, 1);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        glBindVertexArray(0);
+        tmActor* cameraActor = new tmActor("Camera");
+        cameraActor->transform->position = { 0,0,10 };
+        cameraActor->transform->rotation.y = -90;
+        camera = cameraActor->AttachComponent<tmCamera>();
+        camera->framebuffer = new tmFramebuffer(tmFramebuffer::Deferred);
+        //cameraActor->AttachComponent<MonoComponent>(scriptMgr->assemblies[0]->GetMonoComponentIndex("TestComponent"));
+
+    }
+
+    glfwSetKeyCallback(tmGetCore()->window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
+			if (key == GLFW_KEY_R && action == GLFW_PRESS)
+			{
+                shader->reload(tmfs::loadFileString("resources/shaders/test/vertex.glsl"), tmfs::loadFileString("resources/shaders/test/fragment.glsl"));
+                camera->framebuffer->reload();
+			}
+        });
+
+
+    /*
+    float val = 1;
+
+    obj->CallMethod("IncrementFloatVar", &val, 1);
+
+    MonoString* name = (MonoString*)obj->GetPropertyValue("Name");
+    var n = ScriptMgr::MonoStringToUTF8(name);
+
+    obj->SetPropertyValue("Name", scriptMgr->UTF8ToMonoString((n + "1").c_str()));
+    */
+    tmfs::writeFileString("game.tmg", tmeGetCore()->SerializeGame());
+
+    scriptMgr->CompileFull();
+
+    while (!tmGetWindowClose())
+    {
+        tmPoll();
+
+        engine->Update();
 
         tmeUpdate();
+
     }
 
 

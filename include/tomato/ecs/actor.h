@@ -12,7 +12,7 @@
 #define CLASS_DECLARATION( classname )                                                      \
 public:                                                                                     \
     inline static const std::size_t Type = std::hash<const char*>()(TO_STRING( classname ));;                                                          \
-    TMAPI virtual bool IsClassType( const std::size_t classType ) const override;                 \
+    virtual bool IsClassType( const std::size_t classType ) const override;                 \
     virtual std::shared_ptr<Component> clone() const override                               \
 	{                                                                                       \
     return std::make_shared<classname>(*this);                                              \
@@ -46,22 +46,31 @@ public:\
 
 class Component;
 
-class Actor {
+class TMAPI tmActor {
+
+    friend class tmActorMgr;
+
+    nlohmann::json Serialize();
+
 public:
 
 
-    Actor(string name);
+    tmActor(string name, tmActor* parent = nullptr);
 
-    class Transform {
+    class TMAPI Transform {
     public:
         glm::vec3 position = glm::vec3(0.0);
         glm::vec3 rotation = glm::vec3(0.0);
         glm::vec3 scale = glm::vec3(1.0);
 
-        Actor* GetActor();
+        tmActor* GetActor();
 
         glm::mat4 GetMatrix();
         void CopyTransforms(glm::mat4 m);
+
+        glm::vec3 GetGlobalPosition();
+        glm::vec3 GetGlobalRotation();
+        glm::vec3 GetGlobalScale();
 
         glm::vec3 TransformPoint(glm::vec3 p)
         {
@@ -83,9 +92,22 @@ public:
             return TransformPoint({ 1,0,0 });
         }
 
+        void SetParent(Transform* transform = nullptr);
+        Transform* GetParent();
+
+        List<int> GetChildren()
+        {
+            return children;
+        }
+
     private:
 
-        friend Actor;
+        friend class tmScene;
+
+        int parentId = -1;
+        List<int> children;
+
+        friend tmActor;
 
         int entityId = -1;
     };
@@ -98,6 +120,9 @@ public:
     void Update();
 
     std::vector<std::shared_ptr<Component>> components;
+
+
+    std::shared_ptr<Component> AttachComponent(string name);
 
     template< class ComponentType >
     ComponentType* GetComponent()
@@ -139,12 +164,12 @@ public:
             */
         }
 
-        return static_cast<CompType*>(nullptr);
+        return static_cast<CompType*>(c);
     }
 
 };
 
-class Component {
+class TMAPI Component {
 public:
     inline static const std::size_t                    Type = std::hash<const char*>()(TO_STRING(Component));;
     virtual bool                                IsClassType(const std::size_t classType) const {
@@ -161,7 +186,7 @@ public:
         : value(initialValue) {
     }
 
-    Component() = default;
+    Component();
 
     virtual void imgui_properties() {};
 
@@ -212,21 +237,25 @@ public:
     int entityID = -1;
     bool enabled = true;
 
-    Actor* GetActor();
+    tmActor* GetActor();
+    virtual nlohmann::json Serialize();
+    virtual void Deserialize(nlohmann::json j);
 };
 
 
-class ActorMgr {
-    List<Actor*> actorIndex;
+class TMAPI tmActorMgr {
+    List<tmActor*> actorIndex;
 
-    friend Actor;
-    friend class Scene;
+    friend tmActor;
+    friend class tmScene;
 
-    void InsertActor(Actor* actor);
+    void InsertActor(tmActor* actor);
+
+    nlohmann::json Serialize();
 
 public:
 
-    Actor* GetActor(int id);
+    tmActor* GetActor(int id);
 
     auto GetAllActors()
     {
@@ -234,10 +263,14 @@ public:
     }
 };
 
-class Scene
+class TMAPI tmScene
 {
 public:
-    ActorMgr* actorMgr = new ActorMgr;
+
+    tmScene() = default;
+    tmScene(nlohmann::json j);
+
+    tmActorMgr* actorMgr = new tmActorMgr;
 
     void OnRuntimeStart();
     void OnRuntimeUpdate();
@@ -246,6 +279,9 @@ public:
     void OnStart();
     void OnUpdate();
     void OnUnload();
+
+    nlohmann::json Serialize();
+    void Deserialize(string d);
 };
 
 #endif // ACTOR_H

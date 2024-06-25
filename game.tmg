@@ -1,0 +1,426 @@
+{
+  "currentScene": 0,
+  "renderMgr": {
+    "materials": [
+      {
+        "fragment": "#version 330 core\r\nlayout (location = 0) out vec3 gPosition;\r\nlayout (location = 1) out vec3 gNormal;\r\nlayout (location = 2) out vec4 gAlbedoSpec;\r\nlayout (location = 3) out vec4 gShading;\r\n\r\nin vec2 TexCoords;\r\nin vec3 Normal;\r\nin vec4 WorldPosition;\r\nin vec4 ScreenPosition;\r\n\r\nuniform sampler2D texture1;\r\n\r\nvoid main()\r\n{\r\n    gAlbedoSpec = texture(texture1, TexCoords);\r\n    gPosition = vec3(WorldPosition);\r\n    gNormal = normalize(Normal);\r\n    gShading = vec4(1,0,0,0);\r\n    //gAlbedoSpec = WorldPosition;\r\n\r\n    //FragColor = vec4(Normal, 1.0);\r\n\r\n}",
+        "textures": [
+          1
+        ],
+        "vertex": "#version 330 core\r\nlayout (location = 0) in vec3 aPos;\r\nlayout (location = 1) in vec3 aNormal;\r\nlayout (location = 2) in vec2 aTexCoords;\r\n\r\nout vec2 TexCoords;\r\nout vec3 Normal;\r\nout vec4 WorldPosition;\r\nout vec4 ScreenPosition;\r\n\r\nuniform mat4 model;\r\nuniform mat4 view;\r\nuniform mat4 projection;\r\n\r\nvoid main()\r\n{\r\n    TexCoords = aTexCoords;    \r\n    ScreenPosition = projection * view * model * vec4(aPos, 1.0);\r\n    WorldPosition = model * vec4(aPos,1.0);\r\n    Normal = mat3(transpose(inverse(model))) * aNormal;\r\n\r\n    gl_Position = ScreenPosition;\r\n}"
+      },
+      {
+        "fragment": "#version 330 core\r\nlayout (location = 0) out vec3 gPosition;\r\nlayout (location = 1) out vec3 gNormal;\r\nlayout (location = 2) out vec4 gAlbedoSpec;\r\nlayout (location = 3) out vec4 gShading;\r\n\r\nin vec2 TexCoords;\r\nin vec3 Normal;\r\nin vec4 WorldPosition;\r\nin vec4 ScreenPosition;\r\n\r\nuniform sampler2D texture1;\r\n\r\nvoid main()\r\n{\r\n    gAlbedoSpec = texture(texture1, TexCoords);\r\n    gPosition = vec3(WorldPosition);\r\n    gNormal = normalize(Normal);\r\n    gShading = vec4(1,0,0,0);\r\n    //gAlbedoSpec = WorldPosition;\r\n\r\n    //FragColor = vec4(Normal, 1.0);\r\n\r\n}",
+        "textures": [
+          2
+        ],
+        "vertex": "#version 330 core\r\nlayout (location = 0) in vec3 aPos;\r\nlayout (location = 1) in vec3 aNormal;\r\nlayout (location = 2) in vec2 aTexCoords;\r\n\r\nout vec2 TexCoords;\r\nout vec3 Normal;\r\nout vec4 WorldPosition;\r\nout vec4 ScreenPosition;\r\n\r\nuniform mat4 model;\r\nuniform mat4 view;\r\nuniform mat4 projection;\r\n\r\nvoid main()\r\n{\r\n    TexCoords = aTexCoords;    \r\n    ScreenPosition = projection * view * model * vec4(aPos, 1.0);\r\n    WorldPosition = model * vec4(aPos,1.0);\r\n    Normal = mat3(transpose(inverse(model))) * aNormal;\r\n\r\n    gl_Position = ScreenPosition;\r\n}"
+      }
+    ],
+    "textures": [
+      {
+        "flip": true,
+        "path": "resources/textures/test.png"
+      },
+      {
+        "flip": true,
+        "path": "resources/textures/test3.png"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "actors": [
+        {
+          "components": null,
+          "enabled": true,
+          "name": "Map",
+          "transform": {
+            "children": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "parent": -1,
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 1,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube0",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 0,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube1",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 2.0,
+              "y": 5.0,
+              "z": -15.0
+            },
+            "rotation": {
+              "x": 20.0,
+              "y": 6.0,
+              "z": 10.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube2",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": -1.5,
+              "y": -2.200000047683716,
+              "z": -2.5
+            },
+            "rotation": {
+              "x": 40.0,
+              "y": 12.0,
+              "z": 20.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 0,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube3",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": -3.799999952316284,
+              "y": -2.0,
+              "z": -12.300000190734863
+            },
+            "rotation": {
+              "x": 60.0,
+              "y": 18.0,
+              "z": 30.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 0,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube4",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 2.4000000953674316,
+              "y": -0.4000000059604645,
+              "z": -3.5
+            },
+            "rotation": {
+              "x": 80.0,
+              "y": 24.0,
+              "z": 40.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 1,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube5",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": -1.7000000476837158,
+              "y": 3.0,
+              "z": -7.5
+            },
+            "rotation": {
+              "x": 100.0,
+              "y": 30.000001907348633,
+              "z": 50.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 1,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube6",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 1.2999999523162842,
+              "y": -2.0,
+              "z": -2.5
+            },
+            "rotation": {
+              "x": 120.0,
+              "y": 36.0,
+              "z": 60.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 1,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube7",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 1.5,
+              "y": 2.0,
+              "z": -2.5
+            },
+            "rotation": {
+              "x": 140.0,
+              "y": 42.0,
+              "z": 70.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube8",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": 1.5,
+              "y": 0.20000000298023224,
+              "z": -1.5
+            },
+            "rotation": {
+              "x": 160.0,
+              "y": 48.0,
+              "z": 80.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmMeshRenderer": {
+              "enabled": true,
+              "material_index": 0,
+              "mesh_index": 1,
+              "model_path": "resources/models/test.fbx"
+            }
+          },
+          "enabled": true,
+          "name": "Cube9",
+          "transform": {
+            "children": null,
+            "parent": 0,
+            "position": {
+              "x": -1.2999999523162842,
+              "y": 1.0,
+              "z": -1.5
+            },
+            "rotation": {
+              "x": 180.0,
+              "y": 54.000003814697266,
+              "z": 90.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        {
+          "components": {
+            "tmCamera": {
+              "clear_color": {
+                "x": 0.20000000298023224,
+                "y": 0.30000001192092896,
+                "z": 0.30000001192092896
+              },
+              "clear_flags": 0,
+              "enabled": true,
+              "far_plane": 1000.0,
+              "fov": 60.0,
+              "framebuffer_type": 1,
+              "near_plane": 0.30000001192092896,
+              "occlusion_culling": true,
+              "projection": 0,
+              "size": 5.0
+            }
+          },
+          "enabled": true,
+          "name": "Camera",
+          "transform": {
+            "children": null,
+            "parent": -1,
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 10.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": -90.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "actors": []
+    }
+  ]
+}

@@ -1,28 +1,18 @@
 #if !defined(UTILS_HPP)
 #define UTILS_HPP
 
-#if defined(_WIN32)
-    #if defined(__TINYC__)
-        #define __declspec(x) __attribute__((x))
-    #endif
-    #if defined(BUILD_LIBTYPE_SHARED)
-        #define TMAPI __declspec(dllexport)     // We are building the library as a Win32 shared library (.dll)
-    #elif defined(USE_LIBTYPE_SHARED)
-        #define TMAPI __declspec(dllimport)     // We are using the library as a Win32 shared library (.dll)
-    #endif
+#ifdef TOMATO_DLLBUILD
+#define TMAPI __declspec(dllexport)
 #else
-    #if defined(BUILD_LIBTYPE_SHARED)
-        #define TMAPI __attribute__((visibility("default"))) // We are building as a Unix shared library (.so/.dylib)
-    #endif
+#define TMAPI __declspec(dllimport)
 #endif
-
-#ifndef TMAPI
-    #define TMAPI       // Functions defined as 'extern' by default (implicit specifiers)
-#endif
-
 
 #define var auto
 #define flt (float)
+#define arrsize(a) sizeof(a) / sizeof(a[0])
+#define randval(min, max) (rand()%(abs(max - min) + 1) + min)
+
+
 
 #ifndef PI
 #define PI 3.14159265358979323846f
@@ -50,6 +40,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <json.hpp>
 #include <numeric>
 #include <map>
 #include <memory>
@@ -59,5 +50,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using string = std::string;
+namespace fs = std::filesystem;
+
+void RunCommand(const char* cmd);
+std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
+
+namespace glm {
+    void to_json(nlohmann::json& j, const glm::vec2& P);;
+
+    void from_json(const nlohmann::json& j, glm::vec2& P);
+
+    void to_json(nlohmann::json& j, const glm::vec3& P);;
+
+    void from_json(const nlohmann::json& j, glm::vec3& P);
+}
+
 
 #endif // UTILS_HPP
+
