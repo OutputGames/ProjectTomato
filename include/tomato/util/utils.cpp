@@ -3,6 +3,9 @@
 #include "collections.h"
 #include "filesystem_tm.h"
 
+
+Logger Logger::logger = Logger("");
+
 string tmfs::loadFileString(string path)
 {
     const std::ifstream input_stream(path, std::ios_base::binary);
@@ -86,7 +89,7 @@ void tmfs::copyDirectory(string from, string to)
 
 void RunCommand(const char* cmd)
 {
-	std::cout << "Running command: \n\t" << cmd << std::endl;
+	Logger::logger << "Running command: \n\t" << cmd << std::endl;
 
     system(cmd);
 }
@@ -99,6 +102,11 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
 	}
 	return str;
+}
+
+void Logger::Log(std::string msg, Logger::Level logLevel, std::string source)
+{
+	Logger::logger << msg,logLevel,source;
 }
 
 void glm::to_json(nlohmann::json& j, const glm::vec2& P)

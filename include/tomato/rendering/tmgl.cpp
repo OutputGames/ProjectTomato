@@ -25,7 +25,7 @@ TMAPI void tmInit(int width, int height, string windowName)
     core->window = glfwCreateWindow(width, height, windowName.c_str(), NULL, NULL);
     if (core->window == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        Logger::logger << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         exit(-1);
     }
@@ -48,6 +48,7 @@ TMAPI void tmInit(int width, int height, string windowName)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(core->window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
@@ -58,6 +59,11 @@ void tmSwap()
 {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    GLFWwindow* backup_current_context = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent(backup_current_context);
 
     glfwSwapBuffers(core->window);
 
@@ -120,7 +126,7 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     if (!success)
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
     // fragment shader
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -131,7 +137,7 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     if (!success)
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
@@ -142,7 +148,7 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);

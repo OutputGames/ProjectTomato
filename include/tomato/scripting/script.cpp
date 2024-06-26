@@ -13,7 +13,7 @@ ScriptMgr::ScriptMgr()
     mono_set_dirs(MONO_HOME "/lib",
         MONO_HOME "/etc");
 
-    std::cout << "Set mono directories." << std::endl;
+    Logger::logger << "Set mono directories." << std::endl;
 
     MonoDomain* rootDomain = mono_jit_init("TomatoRuntime");
     if (rootDomain == nullptr)
@@ -21,7 +21,7 @@ ScriptMgr::ScriptMgr()
         // Maybe log some error here
         return;
     }
-    std::cout << "Initialized mono runtime." << std::endl;
+    Logger::logger << "Initialized mono runtime." << std::endl;
 
     // Store the root domain pointer
     s_RootDomain = rootDomain;
@@ -29,19 +29,19 @@ ScriptMgr::ScriptMgr()
     // Create an App Domain
     s_AppDomain = mono_domain_create_appdomain(R"(TomatoAppDomain)", nullptr);
     mono_domain_set(s_AppDomain, true);
-    std::cout << "Initialized mono domain" << std::endl;
+    Logger::logger << "Initialized mono domain" << std::endl;
 
     mono_add_internal_call("TomatoEngine.InternalCalls::GetTransformValue", &GetTransformValue);
     mono_add_internal_call("TomatoEngine.InternalCalls::SetTransformValue", &SetTransformValue);
     mono_add_internal_call("Tomato.Time::get_time", &get_time);
-    std::cout << "Assigned internal calls." << std::endl;
+    Logger::logger << "Assigned internal calls." << std::endl;
 
     mainAssembly = LoadAssembly("scriptcore/TomatoScript.dll");
-    std::cout << "Loaded main assembly." << std::endl;
+    Logger::logger << "Loaded main assembly." << std::endl;
 
     mono_trace_set_level_string("debug");
     mono_trace_set_log_handler((MonoLogCallback)printf, NULL);
-    std::cout << "Initialized debugger." << std::endl;
+    Logger::logger << "Initialized debugger." << std::endl;
 
 }
 
@@ -51,7 +51,7 @@ ScriptMgr::tsAssembly* ScriptMgr::LoadAssembly(string assemblyPath)
 
 
     if (!std::filesystem::exists(assemblyPath)) {
-        std::cout << "Assembly does not exist at " << assemblyPath << "!\n";
+        Logger::logger << "Assembly does not exist at " << assemblyPath << "!\n";
         return nullptr;
     }
 
@@ -98,7 +98,7 @@ void ScriptMgr::CompileFull()
             std::cerr << "Error removing directory: " << ec.message() << '\n';
         }
         else {
-            std::cout << "Successfully removed " << count << " items.\n";
+            Logger::logger << "Successfully removed " << count << " items.\n";
         }
     }
     catch (const fs::filesystem_error& e) {
@@ -151,7 +151,7 @@ void ScriptMgr::CompileFull()
     tmfs::copyFile("bin/Debug/TomatoRuntime.dll", "temp/build/Bin/Debug/TomatoRuntime.dll");
 
     for (auto dll_file : dllFiles) {
-        std::cout << dll_file.string() << std::endl;
+        Logger::logger << dll_file.string() << std::endl;
         tmfs::copyFile(dll_file.string(), "temp/build/Bin/Debug/" + dll_file.filename().string());
     }
 
@@ -188,9 +188,9 @@ MonoComponent::MonoComponent(int componentIndex) : Component()
     Initialize(componentIndex);
 }
 
-void MonoComponent::Start()
+void MonoComponent::RuntimeStart()
 {
-	Component::Start();
+	Component::RuntimeStart();
 
     var eng = tmeGetCore();
 
@@ -214,9 +214,11 @@ void MonoComponent::Start()
     obj_->CallMethod("Start");
 }
 
-void MonoComponent::Update()
+void MonoComponent::RuntimeUpdate()
 {
-	Component::Update();
+	Component::RuntimeUpdate();
+
+    //Logger::Log("updated");
 
     obj_->CallMethod("Update");
 }
@@ -233,7 +235,7 @@ nlohmann::json MonoComponent::Serialize()
 void MonoComponent::Initialize(int componentIndex)
 {
     if (componentIndex == -1) {
-        std::cout << "Unable to get component with index: " + componentIndex << std::endl;
+        Logger::logger << "Unable to get component with index: " + componentIndex << std::endl;
         return;
     }
 
@@ -244,7 +246,7 @@ void MonoComponent::Initialize(int componentIndex)
 
     className = class_->name;
 
-    std::cout << "Initialized scripted component: " << class_->name << std::endl;
+    Logger::logger << "Initialized scripted component: " << class_->name << std::endl;
 }
 
 ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
@@ -287,7 +289,7 @@ ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
 
     }
 
-    std::cout << "Initialized " << classes.size() << " mono classes." << std::endl;
+    Logger::logger << "Initialized " << classes.size() << " mono classes." << std::endl;
 
     for (auto class_ : classes) {
         if (class_->parentClass) {
@@ -316,30 +318,30 @@ ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
 
     for (auto class_ : classes)
     {
-        std::cout << class_->name << std::endl;
+        Logger::logger << class_->name << std::endl;
 
         string parentName = "Base Class";
 
         if (class_->parentTsClass)
             parentName = class_->parentTsClass->name;
 
-        std::cout << "\tParent class: " << parentName << std::endl;
+        Logger::logger << "\tParent class: " << parentName << std::endl;
 
         for (auto field : class_->fields)
-            std::cout << "\tField: " << field->name << std::endl;
+            Logger::logger << "\tField: " << field->name << std::endl;
 
         for (auto property : class_->properties)
-            std::cout << "\tProperty: " << property->name << std::endl;
+            Logger::logger << "\tProperty: " << property->name << std::endl;
 
         void* itr = nullptr;
 
-        std::cout << "\tMethods:" << std::endl;
+        Logger::logger << "\tMethods:" << std::endl;
 
         while (var method = mono_class_get_methods(class_->GetClass(), &itr))
         {
             class_->methods.push_back(method);
 
-            std::cout << "\t\tMethod: " << mono_method_get_name(method) << std::endl;
+            Logger::logger << "\t\tMethod: " << mono_method_get_name(method) << std::endl;
 
             var sig = mono_method_get_signature(method, image, mono_method_get_token(method));
 
@@ -364,12 +366,12 @@ ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
                 {
                     var paramType = params[i];
 
-                    std::cout << "\t\t\t" << mono_type_get_name(paramType) << " " << paramNames[i] << std::endl;
+                    Logger::logger << "\t\t\t" << mono_type_get_name(paramType) << " " << paramNames[i] << std::endl;
                 }
             }
         }
 
-        std::cout << std::endl;
+        Logger::logger << std::endl;
     }
 
 
@@ -391,7 +393,7 @@ ScriptMgr::tsAssembly::tsClass::tsClass(MonoClass* klass)
     /*
     while (var type = mono_class_get_nested_types(_class, &itr))
     {
-        std::cout << "\tSubclass: " << mono_class_get_name(type) << std::endl;
+        Logger::logger << "\tSubclass: " << mono_class_get_name(type) << std::endl;
     }
     */
 
@@ -400,7 +402,7 @@ ScriptMgr::tsAssembly::tsClass::tsClass(MonoClass* klass)
 
     if (type) {
         parentClass = type;
-        //std::cout << "\tParent class: " << mono_class_get_name(type) << std::endl;
+        //Logger::logger << "\tParent class: " << mono_class_get_name(type) << std::endl;
     }
 
 
@@ -638,7 +640,7 @@ int ScriptMgr::tsAssembly::GetMonoComponentIndex(string name)
 		i++;
 	}
 
-	std::cout << "Cannot get mono component: "<<name<<std::endl;
+	Logger::logger << "Cannot get mono component: "<<name<<std::endl;
 				
 	return -1;
 }
@@ -691,7 +693,7 @@ MonoMethod* ScriptMgr::tsAssembly::tsClass::GetMethod(string name, int paramCoun
                 return method;
             } else
             {
-	            std::cout << "Found method: " << methodName << ", but invalid parameter count was found. (" << parCount << ")" << std::endl;
+	            Logger::logger << "Found method: " << methodName << ", but invalid parameter count was found. (" << parCount << ")" << std::endl;
             }
 
 		}
@@ -815,7 +817,7 @@ MonoObject* ScriptMgr::GetTransformValue(uint32_t id, int type)
 
 void ScriptMgr::SetTransformValue(uint32_t id, MonoObject* v, int type)
 {
-	//std::cout << mono_class_get_name(mono_object_get_class(v)) << std::endl;
+	//Logger::logger << mono_class_get_name(mono_object_get_class(v)) << std::endl;
 
     var engine = tmeGetCore();
 

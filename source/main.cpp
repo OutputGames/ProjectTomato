@@ -1,12 +1,11 @@
 
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
+
 #include "scripting/script.h"
 #include "tomato/engine.hpp"
 #include "tomato/rendering/render.h"
 #include "tomato/rendering/tmgl.h"
 #include "tomato/util/filesystem_tm.h"
+#include "tomatoEngine/editor.h"
 
 tmShader* shader;
 tmCamera* camera;
@@ -19,15 +18,17 @@ int main(int argc, const char** argv) {
 
     ImGui::SetCurrentContext(tmGetCore()->ctx);
 
-
-    var scriptMgr = tmeGetCore()->scriptMgr;
-
-    var window = tmGetCore()->window;
     tmEngine* engine = tmeGetCore();
+
+    engine->runtimePlaying = false;
+
+    teEditorMgr* editor = new teEditorMgr;
+	//editor->currentProject->resMgr->PackResources("out.rres", "resources/");
+
+    //fs::remove("game.tmg");
 
     if (tmfs::fileExists("game.tmg")) {
         tmeGetCore()->DeserializeGame(tmfs::loadFileString("game.tmg"));
-        //std::cout << "Loaded scene from file.";
     }
     else {
 
@@ -62,6 +63,7 @@ int main(int argc, const char** argv) {
         tmModel* model = tmModel::LoadModel("resources/models/test.fbx");
 
         tmActor* map = new tmActor("Map");
+        map->AttachComponent<MonoComponent>("TestComponent");
         for (int i = 0; i < 10; ++i)
         {
             float angle = 20.0f * i;
@@ -79,7 +81,7 @@ int main(int argc, const char** argv) {
         cameraActor->transform->position = { 0,0,10 };
         cameraActor->transform->rotation.y = -90;
         camera = cameraActor->AttachComponent<tmCamera>();
-        camera->framebuffer = new tmFramebuffer(tmFramebuffer::Deferred);
+        camera->framebuffer = new tmFramebuffer(tmFramebuffer::Deferred, {tmeGetCore()->ScreenWidth, tmeGetCore()->ScreenHeight});
         //cameraActor->AttachComponent<MonoComponent>(scriptMgr->assemblies[0]->GetMonoComponentIndex("TestComponent"));
 
     }
@@ -92,27 +94,17 @@ int main(int argc, const char** argv) {
                 camera->framebuffer->reload();
 			}
         });
-
-
-    /*
-    float val = 1;
-
-    obj->CallMethod("IncrementFloatVar", &val, 1);
-
-    MonoString* name = (MonoString*)obj->GetPropertyValue("Name");
-    var n = ScriptMgr::MonoStringToUTF8(name);
-
-    obj->SetPropertyValue("Name", scriptMgr->UTF8ToMonoString((n + "1").c_str()));
-    */
     tmfs::writeFileString("game.tmg", tmeGetCore()->SerializeGame());
 
-    scriptMgr->CompileFull();
+    //scriptMgr->CompileFull();
 
     while (!tmGetWindowClose())
     {
         tmPoll();
 
         engine->Update();
+
+		editor->DrawUI();
 
         tmeUpdate();
 

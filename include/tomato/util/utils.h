@@ -65,6 +65,67 @@ namespace glm {
     void from_json(const nlohmann::json& j, glm::vec3& P);
 }
 
+struct Logger
+{
+
+    enum Level {
+        INFO = 0,
+        DBG,
+        WARN,
+        LOG_ERROR,
+    };
+
+    TMAPI static void Log(std::string msg, Logger::Level logLevel = INFO, std::string source = "Engine");
+
+    inline static std::map<std::pair<int, std::string>, Logger::Level> loggedEntries = std::map<std::pair<int, std::string>, Logger::Level>();
+
+    // Overload << operator for various types
+    template <typename T>
+    Logger& operator<<(const T& message) {
+        if (fileStream.is_open()) {
+            fileStream << message;
+        }
+        else {
+            std::cout << message;
+            //loggedEntries.insert({ {static_cast<int>(loggedEntries.size()),std::to_string(message)}, INFO });
+
+        }
+        return *this;
+    }
+
+    // Overload << operator for std::endl
+	Logger& operator<<(std::ostream& (*manip)(std::ostream&)) {
+        if (fileStream.is_open()) {
+            manip(fileStream);
+        }
+        else {
+            manip(std::cout);
+        }
+        return *this;
+    }
+
+    // Constructor that takes an optional file name for logging to a file
+    Logger(const std::string& filename = "") {
+        if (!filename.empty()) {
+            fileStream.open(filename, std::ios::out | std::ios::app);
+        }
+    }
+
+    Logger() = default;
+
+    // Destructor
+    ~Logger() {
+        if (fileStream.is_open()) {
+            fileStream.close();
+        }
+    }
+
+    static Logger logger;
+
+private:
+    std::ofstream fileStream;
+};
+
 
 #endif // UTILS_HPP
 

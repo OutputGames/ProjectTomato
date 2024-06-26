@@ -11,32 +11,35 @@ void tmeFullUpdate()
 {
 
 	tmPoll();
-	//std::cout << "Cleared screen." << std::endl;
+	//Logger::logger << "Cleared screen." << std::endl;
 	engine->Update();
-	//std::cout << "Updated engine." << std::endl;
+	//Logger::logger << "Updated engine." << std::endl;
+
+	engine->renderMgr->Clear();
+	tmCamera::GetMainCamera()->framebuffer->draw();
 
 	tmeUpdate();
-	//std::cout << "Successfully updated." << std::endl;
+	//Logger::logger << "Successfully updated." << std::endl;
 }
 
 extern "C" {
 	void tmeInit(int width, int height, const char* name)
 	{
-		std::cout << "Initialized tomato." << std::endl;
+		Logger::logger << "Initialized tomato." << std::endl;
 		tmInit(width, height, name);
-		std::cout << "Created window." << std::endl;
+		Logger::logger << "Created window." << std::endl;
 		engine = new tmEngine;
-		std::cout << "Created engine core." << std::endl;
+		Logger::logger << "Created engine core." << std::endl;
 		engine->ScreenWidth = width;
-		std::cout << "Assigned screen width" << std::endl;
+		Logger::logger << "Assigned screen width" << std::endl;
 		engine->ScreenHeight = height;
-		std::cout << "Assigned screen height" << std::endl;
+		Logger::logger << "Assigned screen height" << std::endl;
 
 		engine->scriptMgr = new ScriptMgr;
-		std::cout << "Created script engine." << std::endl;
+		Logger::logger << "Created script engine." << std::endl;
 
 		RegisterComponent(ComponentRegistry::RegisteredComponents());
-		std::cout << "Registered components." << std::endl;
+		Logger::logger << "Registered components." << std::endl;
 	}
 
 	void tmeStartLoop()
@@ -78,13 +81,6 @@ void tmEngine::Update()
 	{
 		currentScene->OnRuntimeUpdate();
 	}
-
-
-
-	renderMgr->Clear();
-
-
-	tmCamera::GetMainCamera()->framebuffer->draw();
 }
 
 void tmEngine::Unload()
@@ -93,8 +89,8 @@ void tmEngine::Unload()
 
 tmScene* tmEngine::GetActiveScene()
 {
-	//std::cout << "Getting active scene";
-	//std::cout << loadedScenes.size();
+	//Logger::logger << "Getting active scene";
+	//Logger::logger << loadedScenes.size();
 
 	if (loadedScenes.size() <= 0) {
 		loadedScenes.push_back(new tmScene());

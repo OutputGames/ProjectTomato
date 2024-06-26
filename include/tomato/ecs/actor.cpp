@@ -222,6 +222,13 @@ void tmScene::OnRuntimeStart()
 
 void tmScene::OnRuntimeUpdate()
 {
+    for (auto vector : actorMgr->actorIndex.GetVector())
+    {
+
+        for (auto component : vector->components) {
+            component->RuntimeUpdate();
+        }
+    }
 }
 
 void tmScene::OnRuntimeUnload()
@@ -241,6 +248,8 @@ void tmScene::OnUpdate()
             if (component->value == "uninitialized")
             {
 	            component->Start();
+                if (tmeGetCore()->runtimePlaying)
+                    component->RuntimeStart();
                 component->value = "initialized";
             }
             component->Update();

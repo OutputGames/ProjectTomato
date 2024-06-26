@@ -287,8 +287,8 @@ public:
 	void Deserialize(nlohmann::json j) override;
 	MonoComponent(int componentIndex = -1);
 	MonoComponent(const char* componentName) : MonoComponent(tmeGetCore()->scriptMgr->mainAssembly->GetMonoComponentIndex(componentName)) {}
-	void Start() override;
-	void Update() override;
+	void RuntimeStart() override;
+	void RuntimeUpdate() override;
 	nlohmann::json Serialize() override;
 
 private:

@@ -223,6 +223,16 @@ public:
     {
     }
 
+    virtual void RuntimeStart()
+    {
+	    
+    }
+
+    virtual void RuntimeUpdate()
+    {
+	    
+    }
+
     virtual void SetEnabled(bool enb)
     {
         enabled = enb;

@@ -50,12 +50,12 @@ void tmCamera::Deserialize(nlohmann::json j)
     ClearFlags = j["clear_flags"];
     Projection = j["projection"];
     glm::from_json(j["clear_color"], ClearColor);
-    framebuffer = new tmFramebuffer(j["framebuffer_type"]);
+    framebuffer = new tmFramebuffer(j["framebuffer_type"], {tmeGetCore()->ScreenWidth, tmeGetCore()->ScreenHeight});
 }
 
 void tmCamera::Start()
 {
-	//std::cout << "Camera initialized";
+	//Logger::logger << "Camera initialized";
 }
 
 void tmCamera::Update()
@@ -112,7 +112,7 @@ void tmCamera::LateUpdate()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void tmCamera::Use()
+void tmBaseCamera::Use()
 {
     if (framebuffer != nullptr)
     {
@@ -145,7 +145,7 @@ tmCamera* tmCamera::GetMainCamera()
     return _mainCamera;
 }
 
-void tmCamera::UpdateShader(tmShader* shader)
+void tmBaseCamera::UpdateShader(tmShader* shader)
 {
     shader->setMat4("view", view);
     shader->setMat4("projection", proj);
@@ -245,11 +245,11 @@ void tmModel::loadModel(string path)
     this->path = path;
 
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_ForceGenNormals |  aiProcess_GenSmoothNormals);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-	    std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+	    Logger::logger << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
         return;
     }
     //directory = path.substr(0, path.find_last_of('/'));
@@ -332,8 +332,10 @@ void tmRenderMgr::DeserializeGame(nlohmann::json g)
 
         var mat = new tmMaterial(shader);
 
-        for (auto t : j["textures"])
-            mat->textures.push_back(texs[t-1]);
+        if (!j["textures"].is_null()) {
+            for (auto t : j["textures"])
+                mat->textures.push_back(texs[t.get<int>()]);
+        }
 
     }
 }
@@ -352,8 +354,10 @@ nlohmann::json tmRenderMgr::SerializeGame()
         m["vertex"] = material->shader->vertData;
         m["fragment"] = material->shader->fragData;
 
+        m["textures"] = nlohmann::json();
+
         for (auto texture : material->textures) {
-            m["textures"].push_back(texture->id);
+            m["textures"].push_back(texs.GetCount());
 
             if (!texs.Contains(texture))
             {
@@ -361,6 +365,8 @@ nlohmann::json tmRenderMgr::SerializeGame()
             }
 
         }
+
+        j["texture_count"] = material->textures.size();
 
         j["materials"].push_back(m);
     }
@@ -478,75 +484,11 @@ void tmTexture::use(int offset)
     glBindTexture(GL_TEXTURE_2D, id);
 }
 
-tmFramebuffer::tmFramebuffer(FramebufferType type)
+tmFramebuffer::tmFramebuffer(FramebufferType type, glm::vec2 size)
 {
     this->type = type;
-    glGenFramebuffers(1, &frameId);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameId);
 
-    var engine = tmeGetCore();
-
-    glm::vec2 screenSize = { engine->ScreenWidth, engine->ScreenHeight };
-
-    if (type == Deferred) {
-
-        // position color buffer
-        glGenTextures(1, &gPos);
-        glBindTexture(GL_TEXTURE_2D, gPos);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPos, 0);
-        // normal color buffer
-        glGenTextures(1, &gNrm);
-        glBindTexture(GL_TEXTURE_2D, gNrm);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNrm, 0);
-        // color + specular color buffer
-        glGenTextures(1, &gAlb);
-        glBindTexture(GL_TEXTURE_2D, gAlb);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlb, 0);
-        glGenTextures(1, &gSha);
-        glBindTexture(GL_TEXTURE_2D, gSha);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gSha, 0);
-
-        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-        unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-        glDrawBuffers(4, attachments);
-    } else if (type == Color)
-    {
-        // color + specular color buffer
-        glGenTextures(1, &gAlb);
-        glBindTexture(GL_TEXTURE_2D, gAlb);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlb, 0);
-
-        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-        unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
-        glDrawBuffers(1, attachments);
-    }
-    // create and attach depth buffer (renderbuffer)
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, screenSize.x, screenSize.y);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    // finally check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer not complete!" << std::endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    recreate(size);
 
 }
 
@@ -556,7 +498,7 @@ void tmFramebuffer::use()
 
     var engine = tmeGetCore();
 
-    glViewport(0, 0, engine->ScreenWidth, engine->ScreenHeight);
+    glViewport(0, 0, size.x, size.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -585,9 +527,9 @@ void tmFramebuffer::draw()
         drawVAO = vao;
 
         drawShader = new tmShader(tmfs::loadFileString("resources/shaders/quad/vertex.glsl"), tmfs::loadFileString("resources/shaders/quad/fragment.glsl"));
-        drawShader->setInt("position", 0);
+        drawShader->setInt("position", 2);
         drawShader->setInt("normal", 1);
-        drawShader->setInt("albedo", 2);
+        drawShader->setInt("albedo", 0);
         drawShader->setInt("shading", 3);
     }
 
@@ -596,11 +538,11 @@ void tmFramebuffer::draw()
     drawShader->setVec3("clearColor", clearColor);
     drawShader->use();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gPos);
+    glBindTexture(GL_TEXTURE_2D, gAlb);
     glActiveTexture(GL_TEXTURE0+1);
     glBindTexture(GL_TEXTURE_2D, gNrm);
     glActiveTexture(GL_TEXTURE0+2);
-    glBindTexture(GL_TEXTURE_2D, gAlb);
+    glBindTexture(GL_TEXTURE_2D, gPos);
     glActiveTexture(GL_TEXTURE0+3);
     glBindTexture(GL_TEXTURE_2D, gSha);
     glBindVertexArray(drawVAO);
@@ -615,4 +557,96 @@ void tmFramebuffer::reload()
     glDeleteVertexArrays(1,&drawVAO);
     drawShader->unload();
     drawVAO = -1;
+}
+
+void tmFramebuffer::recreate(glm::vec2 screenSize)
+{
+    if (frameId != -1)
+    {
+        unload();
+    }
+
+    size = screenSize;
+
+    glGenFramebuffers(1, &frameId);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameId);
+
+    if (type == Deferred) {
+
+        // position color buffer
+        glGenTextures(1, &gAlb);
+        glBindTexture(GL_TEXTURE_2D, gAlb);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gAlb, 0);
+        // normal color buffer
+        glGenTextures(1, &gNrm);
+        glBindTexture(GL_TEXTURE_2D, gNrm);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNrm, 0);
+        // color + specular color buffer
+        glGenTextures(1, &gPos);
+        glBindTexture(GL_TEXTURE_2D, gPos);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gPos, 0);
+        glGenTextures(1, &gSha);
+        glBindTexture(GL_TEXTURE_2D, gSha);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gSha, 0);
+
+        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+        const unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+        glDrawBuffers(4, attachments);
+        //delete attachments;
+    }
+    else if (type == Color)
+    {
+        // color + specular color buffer
+        glGenTextures(1, &gAlb);
+        glBindTexture(GL_TEXTURE_2D, gAlb);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenSize.x, screenSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gAlb, 0);
+
+        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+        const unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
+        glDrawBuffers(1, attachments);
+        //delete attachments;
+    }
+    // create and attach depth buffer (renderbuffer)
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, screenSize.x, screenSize.y);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        Logger::Log("Framebuffer not complete!", Logger::Level::DBG);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void tmFramebuffer::unload()
+{
+    if (type == Deferred) {
+
+        GLuint texs[] = {gPos,gAlb,gNrm,gSha};
+
+        glDeleteTextures(4, texs);
+    }
+    else if (type == Color)
+    {
+        glDeleteTextures(1, &gAlb);
+    }
+
+    glDeleteRenderbuffers(1, &rboDepth);
+    glDeleteFramebuffers(1, &frameId);
 }

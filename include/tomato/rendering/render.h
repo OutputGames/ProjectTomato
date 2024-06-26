@@ -38,8 +38,9 @@ class TMAPI tmFramebuffer : public tmTexture
 {
 public:
 
-    unsigned frameId;
+    unsigned frameId = -1;
     unsigned gPos=-1, gAlb=-1, gNrm=-1, gSha=-1;
+    unsigned rboDepth;
     glm::vec3 clearColor;
 
     enum FramebufferType
@@ -48,12 +49,16 @@ public:
         Deferred
     } type;
 
-    tmFramebuffer(FramebufferType type);
+    tmFramebuffer(FramebufferType type, glm::vec2 size);
 
     void use();
     void draw();
 
     void reload();
+    void recreate(glm::vec2 size);
+    void unload();
+
+    glm::vec2 size;
 
 private:
     inline static unsigned drawVAO = -1;
@@ -162,7 +167,46 @@ private:
     string fragData;
 };
 
-class TMAPI tmCamera : public Component
+struct TMAPI tmBaseCamera
+{
+    glm::mat4 GetViewMatrix()
+    {
+        return view;
+    }
+
+    glm::mat4 GetProjectionMatrix()
+    {
+        return proj;
+    }
+
+    enum CameraClearFlags
+    {
+        Skybox,
+        SolidColor,
+        DepthOnly,
+        DontClear
+    } ClearFlags = Skybox;
+
+    enum CameraProjection
+    {
+        Perspective,
+        Orthographic
+    } Projection = Perspective;
+
+    glm::vec3 ClearColor = { 0.2f,0.3f,0.3f };
+    float FieldOfView = 60, Size = 5;
+    float NearPlane = 0.3f, FarPlane = 1000;
+    bool EnableOcclusionCulling;
+    tmFramebuffer* framebuffer;
+    glm::mat4 view = glm::mat4(1.0), proj = glm::mat4(1.0);
+
+    void UpdateShader(tmShader* shader);
+    void Use();
+
+
+};
+
+class TMAPI tmCamera final : public Component, public tmBaseCamera
 {
 	CLASS_DECLARATION(tmCamera)
 
@@ -177,49 +221,14 @@ public:
     void Start() override;
     void Update() override;
     void LateUpdate() override;
-    void Use();
     nlohmann::json Serialize() override;
 
     static tmCamera* GetMainCamera();
-
-    void UpdateShader(tmShader* shader);
-
-	glm::mat4 GetViewMatrix()
-	{
-        return view;
-	}
-
-	glm::mat4 GetProjectionMatrix()
-	{
-        return proj;
-	}
-
-	enum CameraClearFlags
-    {
-	    Skybox,
-        SolidColor,
-        DepthOnly,
-        DontClear
-    } ClearFlags = Skybox;
-
-	enum CameraProjection
-	{
-		Perspective,
-        Orthographic
-	} Projection = Perspective;
-
-    glm::vec3 ClearColor = {0.2f,0.3f,0.3f};
-    float FieldOfView = 60, Size = 5;
-    float NearPlane=0.3f, FarPlane=1000;
-    bool EnableOcclusionCulling;
-    tmFramebuffer* framebuffer;
-
 
 private:
 
     static tmCamera* _mainCamera;
 
-    glm::mat4 view=glm::mat4(1.0), proj=glm::mat4(1.0);
 
 };
 
@@ -348,8 +357,6 @@ struct TMAPI tmDrawCall
 class TMAPI tmRenderMgr
 {
 
-    std::vector<tmDrawCall*> drawCalls;
-    std::vector<tmMaterial*> materials;
 
     void DeserializeGame(nlohmann::json j);
     nlohmann::json SerializeGame();
@@ -360,6 +367,9 @@ class TMAPI tmRenderMgr
 
 public:
 
+    std::vector<tmDrawCall*> drawCalls;
+    std::vector<tmMaterial*> materials;
+
     tmRenderMgr() = default;
 
     tmDrawCall* InsertCall(tmVertexBuffer* buffer, unsigned material,glm::mat4 modelMatrix = glm::mat4(1.0));
@@ -368,6 +378,9 @@ public:
 
     void Clear()
     {
+
+        for (auto draw_call : drawCalls) delete draw_call;
+
         drawCalls.clear();
     }
 };
