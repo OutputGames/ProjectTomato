@@ -11,6 +11,7 @@ struct TMAPI tmfs
 	static void copyFile(string from, string to);
 	static bool fileExists(string path);
 	static void copyDirectory(string from, string to);
+	static string getHomeDirectory();
 };
 
 

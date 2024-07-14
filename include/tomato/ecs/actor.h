@@ -5,18 +5,24 @@
 
 #include "util/collections.h"
 #include "util/utils.h"
+#include "icons/IconsFontAwesome6.h"
 
 #define TO_STRING( x ) #x
 
 //****************
 #define CLASS_DECLARATION( classname )                                                      \
 public:                                                                                     \
-    inline static const std::size_t Type = std::hash<const char*>()(TO_STRING( classname ));;                                                          \
+    inline static const std::size_t Type = std::hash<std::string>()(TO_STRING( classname ));;                                                          \
     virtual bool IsClassType( const std::size_t classType ) const override;                 \
-    virtual std::shared_ptr<Component> clone() const override                               \
+    virtual std::shared_ptr<Component> clone(int offset) override                               \
 	{                                                                                       \
     return std::make_shared<classname>(*this);                                              \
     }                                                                                       \
+
+#define CLASS_DECLARATION_NO_CLONE( classname )                                                      \
+public:                                                                                     \
+    inline static const std::size_t Type = std::hash<std::string>()(TO_STRING( classname ));;                                                          \
+    virtual bool IsClassType( const std::size_t classType ) const override;                 \
 
 //****************
 // CLASS_DEFINITION
@@ -44,15 +50,24 @@ public:\
     }\
     classname() = default; \
 
+class MonoComponent;
 class Component;
 
 class TMAPI tmActor {
 
     friend class tmActorMgr;
+    friend class tmPrefab;
+    friend class tmScene;
+
+    tmActor();
 
     nlohmann::json Serialize();
 
+    bool enabled;
+
 public:
+
+    bool queuedForDelete = false, queuedForDeleteRecursive = false;
 
 
     tmActor(string name, tmActor* parent = nullptr);
@@ -66,6 +81,7 @@ public:
         tmActor* GetActor();
 
         glm::mat4 GetMatrix();
+        glm::mat4 GetLocalMatrix();
         void CopyTransforms(glm::mat4 m);
 
         glm::vec3 GetGlobalPosition();
@@ -100,12 +116,24 @@ public:
             return children;
         }
 
+        List<int> GetRecursiveChildren();
+
+        Transform* GetChild(string name);
+        Transform* GetChildContains(string name);
+
+        Transform* GetChild(string name, std::vector<tmActor*> actorList);
+        Transform* GetChildContains(string name, std::vector<tmActor*> actorList);
+
     private:
 
         friend class tmScene;
+        friend tmPrefab;
+        friend class tmModel;
 
         int parentId = -1;
         List<int> children;
+
+        mat4 localMat, globalMat;
 
         friend tmActor;
 
@@ -113,11 +141,12 @@ public:
     };
     string name;
     uint32_t id;
-    bool enabled;
+    u32 componentCount;
 
     Transform* transform = new Transform;
 
     void Update();
+    ~tmActor();
 
     std::vector<std::shared_ptr<Component>> components;
 
@@ -125,11 +154,58 @@ public:
     std::shared_ptr<Component> AttachComponent(string name);
 
     template< class ComponentType >
-    ComponentType* GetComponent()
+    ComponentType* GetComponent(int index = 0)
     {
+	    //std::cout << "Searching for component: " << ComponentType::Type << "(" << typeid(ComponentType).name() << ")" <<  std::endl;
+        List<ComponentType*> comps;
         for (auto&& component : components) {
-            if (component->IsClassType(ComponentType::Type))
-                return static_cast<ComponentType*>(component.get());
+            if (component->IsClassType(ComponentType::Type)) {
+                //std::cout << "\tFound matching component: " << component->Type << std::endl;
+                comps.Add(static_cast<ComponentType*>(component.get()));
+            }
+            else {
+	            //std::cout << "\tComponent not matching: " << component->Type << std::endl;
+            };
+        }
+
+        if (comps.GetCount() > 0)
+            return comps[index];
+
+        //std::cout << "Couldn't find a matching component: " << ComponentType::Type << std::endl;
+
+        return static_cast<ComponentType*>(nullptr);
+    }
+
+    template< class ComponentType >
+    List<ComponentType*> GetComponents()
+    {
+        List<ComponentType*> comps;
+        for (auto& component : components) {
+            if (component->IsClassType(ComponentType::Type)) {
+                comps.Add(static_cast<ComponentType*>(component.get()));;
+            }
+            else {
+            };
+        }
+
+        return comps;
+    }
+
+    template< class ComponentType >
+    ComponentType* GetComponentInParent()
+    {
+
+        if (!transform->GetParent())
+            return nullptr;
+
+        var component = transform->GetParent()->GetActor()->GetComponent<ComponentType>();
+
+        if (component)
+        {
+            return component;
+        } else
+        {
+            return transform->GetParent()->GetActor()->GetComponentInParent<ComponentType>();
         }
 
         return static_cast<ComponentType*>(nullptr);
@@ -141,11 +217,14 @@ public:
 
         CompType* c = GetComponent<CompType>();
 
-        if (!GetComponent<CompType>()) {
+        if (c == nullptr || std::is_same<CompType, MonoComponent>().value)
+        {
             auto cc = components.emplace_back(std::make_shared< CompType >(std::forward< Args >(params)...));
             auto sc = static_cast<CompType*>(cc.get());;
 
             sc->entityID = id;
+            sc->componentIndex = GetComponents<CompType>().GetCount() - 1;
+            componentCount++;
 
             return sc;
 
@@ -162,10 +241,46 @@ public:
                 }
             }
             */
+
         }
 
         return static_cast<CompType*>(c);
     }
+
+    void RemoveComponent(string n, int idx = 0);
+
+    void SetEnabled(bool b);
+
+    bool GetEnabled();
+    bool GetDirectEnabled()
+    {
+        return enabled;
+    }
+
+    void Delete();
+    void DeleteRecursive();
+
+    tmActor* Duplicate(std::vector<tmActor*> actorList, int offset = 0);
+
+};
+
+class TMAPI tmPrefab
+{
+
+public:
+
+    tmPrefab();
+    ~tmPrefab();
+
+    string path;
+
+    List<tmActor*> actors;
+
+    tmActor* InsertActor(string name);
+
+    void Insert();
+
+    static List<tmPrefab*> loaded_prefabs;
 
 };
 
@@ -175,13 +290,14 @@ public:
     virtual bool                                IsClassType(const std::size_t classType) const {
         return classType == Type;
     }
-    virtual std::shared_ptr<Component> clone() const
+
+    virtual std::shared_ptr<Component> clone(int offset)
     {
         return std::make_shared<Component>(*this);
     }
 public:
 
-    virtual                                ~Component() = default;
+    virtual                                ~Component();
     Component(std::string&& initialValue)
         : value(initialValue) {
     }
@@ -221,6 +337,7 @@ public:
 
     virtual void Unload()
     {
+
     }
 
     virtual void RuntimeStart()
@@ -238,16 +355,29 @@ public:
         enabled = enb;
     }
 
+    virtual void EngineRender()
+    {
+	    
+    }
+
     // virtual void EngineRender();
    // virtual std::string PrintToJSON();
     //virtual void LoadFromJSON(nlohmann::json data);
-    //virtual std::string GetIcon();
+    virtual std::string GetIcon()
+    {
+        return ICON_FA_GEARS;
+    }
 
 public:
     int entityID = -1;
+    int componentIndex = 0;
     bool enabled = true;
 
     tmActor* GetActor();
+
+    tmActor::Transform* transform();
+    tmActor* actor();
+
     virtual nlohmann::json Serialize();
     virtual void Deserialize(nlohmann::json j);
 };
@@ -258,6 +388,7 @@ class TMAPI tmActorMgr {
 
     friend tmActor;
     friend class tmScene;
+    friend tmPrefab;
 
     void InsertActor(tmActor* actor);
 
@@ -271,6 +402,12 @@ public:
     {
         return actorIndex.GetVector();
     }
+
+    auto GetActorCount() {
+        return actorIndex.GetCount();
+    }
+
+    static tmActor* GetSceneActor(int id);
 };
 
 class TMAPI tmScene

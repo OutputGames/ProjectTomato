@@ -2,7 +2,9 @@
 #define ENGINE_HPP
 
 #include "ecs/actor.h"
+#include "rendering/lighting.h"
 #include "rendering/render.h"
+#include "util/input.h"
 #include "util/utils.h"
 
 
@@ -21,6 +23,7 @@ struct TMAPI tmEngine
 public:
 	int currentScene = -1;
 	tmRenderMgr* renderMgr = new tmRenderMgr;
+	tmLighting* lighting = new tmLighting;
 	ScriptMgr* scriptMgr;
 
 	bool runtimePlaying = true;
@@ -29,14 +32,23 @@ public:
 	void Update();
 	void Unload();
 
+	~tmEngine() { Unload(); }
+
 	tmScene* GetActiveScene();
 
-	float applicationTime = 0;
+	struct tmTime
+	{
+		TMAPI inline static float time = 0;
+		TMAPI inline static float deltaTime = 1.f / 60.f;
+		TMAPI inline static float fps = 60.f;
+	};
 
 	string SerializeGame();
 	void DeserializeGame(string data);
 
 private:
+
+	float last_time;
 
 	std::vector<tmScene*> loadedScenes;
 

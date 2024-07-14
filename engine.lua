@@ -7,7 +7,7 @@
         compileas "C++"
         targetdir "bin/%{cfg.buildcfg}"
 
-        defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM", 'MONO_HOME="C:/Program Files/Mono/"'}
+        defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM", 'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"'}
 
         files {
             "include/**",

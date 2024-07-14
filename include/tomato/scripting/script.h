@@ -22,6 +22,7 @@
 struct TMAPI ScriptMgr {
 
 	ScriptMgr();
+	~ScriptMgr();
 
 	static bool CheckMonoError(MonoError& error)
 	{
@@ -75,7 +76,8 @@ struct TMAPI ScriptMgr {
 
 	struct TMAPI tsAssembly
 	{
-		tsAssembly(MonoAssembly* assembly);
+		tsAssembly(MonoAssembly* assembly, ScriptMgr* scriptMgr);
+		~tsAssembly();
 
 		struct TMAPI tsAssemblyType
 		{
@@ -95,6 +97,8 @@ struct TMAPI ScriptMgr {
 			tsClass(MonoClass* _class);
 			tsClass(MonoImage* image,string space, string name) : tsClass(mono_class_from_name(image, space.c_str(), name.c_str())) {}
 
+			~tsClass();
+
 			MonoClass* GetClass()
 			{
 				return _class;
@@ -112,12 +116,13 @@ struct TMAPI ScriptMgr {
 
 				tsField(MonoClassField* field);
 
+				MonoClassField* field_;
+
 			private:
 
 				friend tsObject;
 				friend tsClass;
 
-				MonoClassField* field_;
 			};
 			struct tsProperty
 			{
@@ -182,6 +187,8 @@ struct TMAPI ScriptMgr {
 			tsObject(tsClass* klass, tsAssembly* assembly, void** params = nullptr, int paramCt = 0, bool autoCallConstructor = true);
 			tsObject(MonoObject* object, tsAssembly* assembly, void** params = nullptr, int paramCt = 0, bool autoCallConstructor = true);
 
+			~tsObject();
+
 			void CallMethod(string method, void** params = nullptr, int paramCt = 0);
 			void CallMethod(MonoMethodDesc* method, void** params = nullptr);
 
@@ -233,6 +240,11 @@ struct TMAPI ScriptMgr {
 
 		int GetMonoComponentIndex(string name);
 
+		std::vector<tsClass*> GetComponents()
+		{
+			return components;
+		}
+
 	private:
 
 		friend ScriptMgr;
@@ -241,12 +253,15 @@ struct TMAPI ScriptMgr {
 
 		MonoImage* image;
 		MonoAssembly* assembly;
-		ScriptMgr* scriptMgr;
+		ScriptMgr* scriptMgr = nullptr;
+
+		string path;
 
 		std::vector<string> types;
 		std::vector<tsClass*> classes;
 		std::vector<tsClass*> monoComponents;
 		std::vector<tsClass*> components;
+		std::vector<tsObject*> objects;
 
 		MonoClass* GetMonoClass(string space, string name);
 
@@ -260,9 +275,11 @@ struct TMAPI ScriptMgr {
 
 
 	void Update();
+	void Reload();
+	void Unload();
 
-	std::vector<tsAssembly*> assemblies;
-	tsAssembly* mainAssembly;
+	Dictionary<string, tsAssembly*> assemblies;
+	tsAssembly* mainAssembly = nullptr;
 
 
 	static MonoObject* GetTransformValue(uint32_t id, int type);
@@ -270,6 +287,7 @@ struct TMAPI ScriptMgr {
 
 	MonoDomain* s_RootDomain;
 	MonoDomain* s_AppDomain;
+	bool wasReloaded;
 
 private:
 
@@ -285,20 +303,53 @@ public:
 	}
 
 	void Deserialize(nlohmann::json j) override;
-	MonoComponent(int componentIndex = -1);
-	MonoComponent(const char* componentName) : MonoComponent(tmeGetCore()->scriptMgr->mainAssembly->GetMonoComponentIndex(componentName)) {}
+	MonoComponent(int componentIndex = -1, int assemblyIndex=0);
+	MonoComponent(const char* componentName, int assemblyIndex=0);
 	void RuntimeStart() override;
 	void RuntimeUpdate() override;
 	nlohmann::json Serialize() override;
+	void EngineRender() override;
+	std::string GetName() override;
+
+
+
+	struct MonoField
+	{
+		string name;
+
+		MonoType* type;
+
+		union data
+		{
+			int int_0;
+			float float_0;
+			bool bool_0;
+			vec2 vec2_0;
+			vec3 vec3_0;
+			vec4 vec4_0;
+
+			mat2 mat2_0;
+			mat3 mat3_0;
+			mat4 mat4_0;
+		} data;
+
+	};
+
+	List<MonoField*> fields;
+
 
 private:
 
 	ScriptMgr::tsAssembly::tsClass* class_;
 	ScriptMgr::tsAssembly::tsObject* obj_;
+	ScriptMgr::tsAssembly* assembly_;
 	string className;
 
-	void Initialize(int compIdx);
-	void Initialize(const char* componentName) { Initialize(tmeGetCore()->scriptMgr->mainAssembly->GetMonoComponentIndex(componentName)); };
+	string assemblyPath;
+	int assemblyIndex;
+
+	void Initialize(int compIdx, int assemIdx=0);
+	void Initialize(const char* componentName, int assemIdx=0) { Initialize(tmeGetCore()->scriptMgr->assemblies.GetVector()[assemIdx].second->GetMonoComponentIndex(componentName), assemIdx); };
 
 
 };

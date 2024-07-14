@@ -6,6 +6,10 @@ namespace TomatoScript.Tomato
 {
     public class TestComponent : MonoComponent
     {
+
+        public float Radius = 10;
+        public float Speed = 0.01f;
+
         protected override void Start()
         {
             base.Start();
@@ -25,12 +29,9 @@ namespace TomatoScript.Tomato
             
             //Console.WriteLine("Updated test component");
 
-            //Console.WriteLine(Time.time);
-
-            float radius = 10;
-            float speed = 0.01f;
+            //Console.WriteLine(Radius);
             
-            Actor.Transform.Position = new Vector3(Math.Sin(Time.time*speed)*radius, 0,Math.Cos(Time.time*speed)*radius);
+            Actor.Transform.Position = new Vector3((float)(Math.Sin(Time.time*Speed)*Radius), 0,(float)(Math.Cos(Time.time*Speed)*Radius));
             
             base.Update();
         }

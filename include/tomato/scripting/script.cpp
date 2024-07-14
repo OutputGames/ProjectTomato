@@ -2,10 +2,24 @@
 
 #include "engine.hpp"
 #include "util/filesystem_tm.h"
+#include <mono/metadata/debug-helpers.h>
+#include <mono/metadata/mono-gc.h>
+#include <mono/metadata/threads.h>
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h>
+#include <mono/metadata/environment.h>
+#include <mono/metadata/mono-config.h>
+#include <mono/metadata/mono-gc.h>
+#include <mono/metadata/object.h>
+#include <mono/metadata/class.h>
 
 CLASS_DEFINITION(Component, MonoComponent)
 
-float get_time() { return tmeGetCore()->applicationTime; }
+float get_time() { return tmEngine::tmTime::time; }
+
+void custom_log_handler(const char* log_domain, const char* log_level, const char* message, mono_bool fatal, void* user_data) {
+    std::cout << "[" << log_level << "] " << message << std::endl;
+}
 
 ScriptMgr::ScriptMgr()
 {
@@ -36,19 +50,43 @@ ScriptMgr::ScriptMgr()
     mono_add_internal_call("Tomato.Time::get_time", &get_time);
     Logger::logger << "Assigned internal calls." << std::endl;
 
-    mainAssembly = LoadAssembly("scriptcore/TomatoScript.dll");
-    Logger::logger << "Loaded main assembly." << std::endl;
-
     mono_trace_set_level_string("debug");
-    mono_trace_set_log_handler((MonoLogCallback)printf, NULL);
+    mono_trace_set_log_handler(custom_log_handler, NULL);
     Logger::logger << "Initialized debugger." << std::endl;
 
+}
+
+ScriptMgr::~ScriptMgr()
+{
+    /*
+    // Invoke garbage collection to clean up managed objects
+    mono_gc_collect(mono_gc_max_generation());
+
+    // Wait for any pending finalizers to complete
+    while (mono_gc_pending_finalizers())
+    {
+	    
+    }
+    */
+
+    mono_domain_unload(s_AppDomain);
+    // Uninitialize the Mono runtime
+    mono_jit_cleanup(s_RootDomain);
 }
 
 ScriptMgr::tsAssembly* ScriptMgr::LoadAssembly(string assemblyPath)
 {
 
+    /*
+    if (assemblies.Contains(assemblyPath))
+    {
+        delete assemblies[assemblyPath];
+        assemblies.Remove(assemblyPath);
+        wasReloaded = true;
+    }
+    */
 
+    //std::cout << "Loading assembly at " << assemblyPath << std::endl;
 
     if (!std::filesystem::exists(assemblyPath)) {
         Logger::logger << "Assembly does not exist at " << assemblyPath << "!\n";
@@ -72,10 +110,10 @@ ScriptMgr::tsAssembly* ScriptMgr::LoadAssembly(string assemblyPath)
     MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.c_str(), &status, 0);
     mono_image_close(image);
 
-    var tmAssemb = new tsAssembly(assembly);
-    tmAssemb->scriptMgr = this;
+    var tmAssemb = new tsAssembly(assembly, this);
+    tmAssemb->path = assemblyPath;
 
-    assemblies.push_back(tmAssemb);
+    assemblies[assemblyPath] = tmAssemb;
 
     // Don't forget to free the file data
     delete[] fileData;
@@ -98,7 +136,7 @@ void ScriptMgr::CompileFull()
             std::cerr << "Error removing directory: " << ec.message() << '\n';
         }
         else {
-            Logger::logger << "Successfully removed " << count << " items.\n";
+            Logger::logger << "Successfully removed " << std::to_string(count) << " items.\n";
         }
     }
     catch (const fs::filesystem_error& e) {
@@ -167,25 +205,56 @@ void ScriptMgr::CompileFull()
 }
 
 void ScriptMgr::Update()
+{;
+    if (mainAssembly)
+    {
+	    
+    }
+    wasReloaded = false;
+}
+
+void ScriptMgr::Reload()
 {
+    List<string> assemblyPaths;
 
-    var timeClass = mainAssembly->GetClass("Tomato", "Time");
+    for (auto assembly : assemblies)
+        assemblyPaths.Add(assembly.first);
+    string mainAssemblyPath = mainAssembly->path;
 
-	var engine = tmeGetCore();
+    Unload();
 
-    //timeClass->SetStaticFieldValue("time", &engine->applicationTime);
+    //const cast because method expects a char* for some reason
+    s_AppDomain = mono_domain_create_appdomain(R"(TomatoAppDomain)", nullptr);
+    mono_domain_set(s_AppDomain, true);
+
+    for (auto assembly_path : assemblyPaths) {
+        var assem = LoadAssembly(assembly_path);
+        if (assembly_path == mainAssemblyPath)
+            mainAssembly = assem;
+    }
+
+
+    wasReloaded = true;
+    
+}
+
+void ScriptMgr::Unload()
+{
+    mono_domain_set(mono_get_root_domain(), true);
+    mono_domain_unload(s_AppDomain);
+    assemblies.Clear();
 }
 
 
-void MonoComponent::Deserialize(nlohmann::json j)
+MonoComponent::MonoComponent(int componentIndex, int assemblyIndex) : Component()
 {
-    Initialize(j["comp_name"].get<string>().c_str());
-	Component::Deserialize(j);
+    Initialize(componentIndex, assemblyIndex);
 }
 
-MonoComponent::MonoComponent(int componentIndex) : Component()
+MonoComponent::MonoComponent(const char* componentName, int assemblyIndex): MonoComponent(
+	tmeGetCore()->scriptMgr->assemblies.GetVector()[assemblyIndex].second->GetMonoComponentIndex(componentName), assemblyIndex)
 {
-    Initialize(componentIndex);
+
 }
 
 void MonoComponent::RuntimeStart()
@@ -210,18 +279,86 @@ void MonoComponent::RuntimeStart()
 
     transformObj->SetPropertyValue("Actor", actorObj->GetObject());;
     actorObj->SetPropertyValue("Transform", transformObj->GetObject());
+    obj_->SetFieldValue("_transform", transformObj->GetObject());
 
     obj_->CallMethod("Start");
 }
 
+
+#define checkTypes(t, c) mono_metadata_type_equal(t, mono_class_get_type(c))
+
 void MonoComponent::RuntimeUpdate()
 {
+
+    if (tmeGetCore()->scriptMgr->wasReloaded)
+    {
+        class_ = nullptr;
+        obj_ = nullptr;
+        assembly_ = tmeGetCore()->scriptMgr->assemblies[assemblyPath];
+        Initialize(className.c_str(), tmeGetCore()->scriptMgr->assemblies.IndexOf(assemblyPath));
+		RuntimeStart();
+    }
+
 	Component::RuntimeUpdate();
 
     //Logger::Log("updated");
 
+    for (auto field : fields.GetVector())
+    {
+
+        void* data = nullptr;
+
+        if (checkTypes(field->type, mono_get_single_class()) || checkTypes(field->type, mono_get_double_class()))
+        {
+            data = &field->data.float_0;
+        }
+        if (checkTypes(field->type, mono_get_int16_class()) || checkTypes(field->type, mono_get_int32_class()) || checkTypes(field->type, mono_get_int64_class()))
+        {
+            data = &field->data.int_0;
+        }
+        if (checkTypes(field->type, mono_get_boolean_class()))
+        {
+            data = &field->data.bool_0;
+        }
+
+        obj_->SetFieldValue(field->name.c_str(), data);
+
+    }
+
     obj_->CallMethod("Update");
 }
+
+#define monofield(type) f[#type "_0"] = field->data.type##_0;
+#define monofieldset(type) field->data.type##_0 = mfield[#type "_0"];
+
+void MonoComponent::Deserialize(nlohmann::json j)
+{
+    Initialize(j["comp_name"].get<string>().c_str());
+
+    for (int i = 0; i < fields.GetCount(); ++i)
+    {
+        var field = fields[i];
+        var mfield = j["fields"][field->name];
+
+        monofieldset(int)
+        monofieldset(float)
+        monofieldset(bool)
+
+        /*
+        monofieldset(vec2)
+        monofieldset(vec3)
+        monofieldset(vec4)
+
+        monofieldset(mat2)
+        monofieldset(mat3)
+        monofieldset(mat4)
+        */
+
+    }
+
+    Component::Deserialize(j);
+}
+
 
 nlohmann::json MonoComponent::Serialize()
 {
@@ -229,10 +366,62 @@ nlohmann::json MonoComponent::Serialize()
 
     c["comp_name"] = className;
 
+    for (auto field : fields.GetVector())
+    {
+        json f = {};
+        f["name"] = field->name;
+
+        monofield(int)
+        monofield(float)
+        monofield(bool)
+
+        /*
+        monofield(vec2)
+        monofield(vec3)
+        monofield(vec4)
+
+        monofield(mat2)
+        monofield(mat3)
+        monofield(mat4)
+        */
+
+
+        c["fields"][field->name] = f;
+    }
+
     return c;
 }
 
-void MonoComponent::Initialize(int componentIndex)
+void MonoComponent::EngineRender()
+{
+
+    for (auto field : fields.GetVector())
+    {
+
+        var typeName = mono_type_get_name(field->type);
+
+        if (checkTypes(field->type, mono_get_single_class()) || checkTypes(field->type, mono_get_double_class()))
+        {
+            ImGui::DragFloat(field->name.c_str(), &field->data.float_0, 0.1);
+        }
+        if (checkTypes(field->type, mono_get_int16_class()) || checkTypes(field->type, mono_get_int32_class()) || checkTypes(field->type, mono_get_int64_class()))
+        {
+            ImGui::DragInt(field->name.c_str(), &field->data.int_0);
+        }
+        if (checkTypes(field->type, mono_get_boolean_class()))
+        {
+            ImGui::Checkbox(field->name.c_str(), &field->data.bool_0);
+        }
+    }
+
+}
+
+std::string MonoComponent::GetName()
+{
+    return className;
+}
+
+void MonoComponent::Initialize(int componentIndex, int assemIdx)
 {
     if (componentIndex == -1) {
         Logger::logger << "Unable to get component with index: " + componentIndex << std::endl;
@@ -241,20 +430,51 @@ void MonoComponent::Initialize(int componentIndex)
 
     var eng = tmeGetCore();
 
-    class_ = eng->scriptMgr->mainAssembly->monoComponents[componentIndex];
+    assemblyPath = eng->scriptMgr->assemblies.GetVector()[assemIdx].first;
+    assembly_ = eng->scriptMgr->assemblies.GetVector()[assemIdx].second;
+    class_ = eng->scriptMgr->assemblies.GetVector()[assemIdx].second->monoComponents[componentIndex];
     obj_ = class_->CreateInstance();
 
     className = class_->name;
 
+    fields.Clear();
+    for (auto field : class_->fields)
+    {
+
+        if (field->accessibility & (u8)ScriptMgr::Accessibility::Public) {
+
+            var mfield = new MonoField();
+            mfield->name = field->name;
+
+            var type = mono_field_get_type(field->field_);
+
+            mfield->type = type;
+
+            mfield->data.int_0 = 0;
+            mfield->data.float_0 = 0;
+            mfield->data.bool_0 = false;
+
+            mfield->data.vec2_0 = vec2(0);
+            mfield->data.vec3_0 = vec3(0);
+            mfield->data.vec4_0 = vec4(0);
+
+            mfield->data.mat2_0 = mat2(0);
+            mfield->data.mat3_0 = mat3(0);
+            mfield->data.mat4_0 = mat4(0);
+
+            fields.Add(mfield);
+        }
+
+    }
+
     Logger::logger << "Initialized scripted component: " << class_->name << std::endl;
 }
 
-ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
+ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly, ScriptMgr* script_mgr)
 {
     this->assembly = assembly;
+    this->scriptMgr = script_mgr;
     image = mono_assembly_get_image(assembly);
-
-
 
     const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
     int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
@@ -289,7 +509,7 @@ ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
 
     }
 
-    Logger::logger << "Initialized " << classes.size() << " mono classes." << std::endl;
+    Logger::logger << "Initialized " << std::to_string(classes.size()) << " mono classes." << std::endl;
 
     for (auto class_ : classes) {
         if (class_->parentClass) {
@@ -377,6 +597,21 @@ ScriptMgr::tsAssembly::tsAssembly(MonoAssembly* assembly)
 
 }
 
+ScriptMgr::tsAssembly::~tsAssembly()
+{
+    //mono_image_close(image);
+    mono_assembly_close(assembly);
+    types.~vector();
+    classes.~vector();
+    monoComponents.~vector();
+    components.~vector();
+    //objects.~vector();
+
+    
+    for (auto object : objects)
+        delete object;
+}
+
 ScriptMgr::tsAssembly::tsClass::tsClass(MonoClass* klass)
 {
     this->_class = klass;
@@ -408,10 +643,16 @@ ScriptMgr::tsAssembly::tsClass::tsClass(MonoClass* klass)
 
 }
 
+ScriptMgr::tsAssembly::tsClass::~tsClass()
+{
+
+}
+
 ScriptMgr::tsAssembly::tsObject::tsObject(tsClass* klass, tsAssembly* assembly, void** params, int paramCt, bool autoCall)
 {
     _assembly = assembly;
     object_ = mono_object_new(assembly->scriptMgr->s_AppDomain, klass->GetClass());
+    assembly->objects.push_back(this);
 
     Class = klass;
 
@@ -430,6 +671,7 @@ ScriptMgr::tsAssembly::tsObject::tsObject(MonoObject* object, tsAssembly* assemb
 {
     object_ = object;
     _assembly = assembly;
+    assembly->objects.push_back(this);
 
     Class = assembly->GetClass(mono_object_get_class(object));
 
@@ -442,6 +684,11 @@ ScriptMgr::tsAssembly::tsObject::tsObject(MonoObject* object, tsAssembly* assemb
     {
         CallMethod(".ctor", params, paramCt);
     }
+}
+
+ScriptMgr::tsAssembly::tsObject::~tsObject()
+{
+    //delete object_;
 }
 
 void ScriptMgr::tsAssembly::tsObject::CallMethod(string methodName, void** params, int paramCount)
@@ -491,7 +738,7 @@ void ScriptMgr::tsAssembly::tsObject::SetFieldValue(string name, void* value)
 
 
     /*
-    if (field->accessibility & ~(u8)Accessibility::Public)
+    if (field.accessibility & ~(u8)Accessibility::Public)
         return;
         */
 
@@ -615,6 +862,14 @@ ScriptMgr::tsAssembly::tsClass* ScriptMgr::tsAssembly::GetClass(string space, st
             return class_;
 	}
 
+    if (scriptMgr && scriptMgr->mainAssembly) {
+        for (auto class_ : scriptMgr->mainAssembly->classes)
+        {
+            if (class_->name == name && class_->nameSpace == space)
+                return class_;
+        }
+    }
+
     return nullptr;
 }
 
@@ -625,6 +880,14 @@ ScriptMgr::tsAssembly::tsClass* ScriptMgr::tsAssembly::GetClass(MonoClass* klass
     {
         if (class_->GetClass() == klass)
             return class_;
+    }
+
+    if (scriptMgr && scriptMgr->mainAssembly) {
+        for (auto class_ : scriptMgr->mainAssembly->classes)
+        {
+            if (class_->GetClass() == klass)
+                return class_;
+        }
     }
 
 	return nullptr;
@@ -693,7 +956,7 @@ MonoMethod* ScriptMgr::tsAssembly::tsClass::GetMethod(string name, int paramCoun
                 return method;
             } else
             {
-	            Logger::logger << "Found method: " << methodName << ", but invalid parameter count was found. (" << parCount << ")" << std::endl;
+	            Logger::logger << "Found method: " << methodName << ", but invalid parameter count was found. (" << std::to_string(parCount) << ")" << std::endl;
             }
 
 		}

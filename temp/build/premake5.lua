@@ -25,8 +25,12 @@ workspace "TomatoApp"
         }
 
         links {
-            "TomatoScript"
+            "TomatoScript.dll"
         }
+
+        debuglevel (1)
+
+        libdirs { "./" }
 
         filter "configurations:Debug"
             defines { "DEBUG" }
@@ -39,5 +43,6 @@ workspace "TomatoApp"
         filter "configurations:Release"
             defines { "NDEBUG" }
             optimize "On"
+            symbols "On"
             staticruntime "off"
             runtime "Release"

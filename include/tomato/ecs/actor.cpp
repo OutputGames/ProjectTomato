@@ -2,10 +2,13 @@
 
 #include "component_registry.h"
 #include "engine.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtx/quaternion.hpp"
 //#include "glm/gtx/matrix_decompose.hpp"
 
 using namespace nlohmann;
+
+List<tmPrefab*> tmPrefab::loaded_prefabs;
 
 nlohmann::json tmActor::Serialize()
 {
@@ -41,6 +44,9 @@ nlohmann::json tmActor::Serialize()
     return j;
 }
 
+tmActor::tmActor()
+= default;
+
 tmActor::tmActor(string name, tmActor* parent)
 {
     this->name = name;
@@ -57,19 +63,50 @@ tmActor::tmActor(string name, tmActor* parent)
 
 glm::mat4 tmActor::Transform::GetMatrix()
 {
-    glm::mat4 m(1.0);
 
-    m = glm::translate(m, GetGlobalPosition());
-    m *= glm::toMat4(glm::quat(GetGlobalRotation()));
-    m = glm::scale(m, GetGlobalScale());
+    if (globalMat == mat4(0.0))
+    {
+        glm::mat4 m(1.0f);
 
-    return m;
+        const glm::vec3 globalPosition = GetGlobalPosition();
+        const glm::vec3 globalRotation = GetGlobalRotation();
+        const glm::vec3 globalScale = GetGlobalScale();
+
+        m = glm::translate(m, globalPosition);
+        m *= glm::toMat4(glm::quat(glm::radians(globalRotation)));
+        m = glm::scale(m, globalScale);
+
+        globalMat = m;
+    }
+
+    return globalMat;
+}
+
+
+glm::mat4 tmActor::Transform::GetLocalMatrix()
+{
+    if (localMat == mat4(0.0)) {
+        glm::mat4 m(1.0f);
+
+        m = glm::translate(m, position);
+        m *= glm::toMat4(glm::quat(glm::radians(rotation)));
+        m = glm::scale(m, scale);
+
+        localMat = m;
+    }
+
+    return localMat;
 }
 
 
 void tmActor::Update()
 {
 
+}
+
+tmActor::~tmActor()
+{
+    delete transform;
 }
 
 std::shared_ptr<Component> tmActor::AttachComponent(string name)
@@ -81,6 +118,153 @@ std::shared_ptr<Component> tmActor::AttachComponent(string name)
     components.push_back(c);
 
     return c;
+}
+
+void tmActor::RemoveComponent(string n, int idx)
+{
+    int id = 0;
+    int cid = 0;
+    for (const auto& component : components)
+    {
+
+        if (component->GetName() == n)
+        {
+            if (cid == idx)
+            {
+                break;
+            }
+            cid++;
+        }
+        id++;
+    }
+
+
+    components.erase(components.begin() + id);
+    componentCount--;
+}
+
+void tmActor::SetEnabled(bool b)
+{
+	enabled = b;
+
+    for (auto component : components) component->SetEnabled(b);
+}
+
+bool tmActor::GetEnabled()
+{
+    if ((transform->parentId > -1))
+        return enabled & tmActorMgr::GetSceneActor(transform->parentId)->GetEnabled();
+
+    return enabled;
+}
+
+void tmActor::Delete()
+{
+    queuedForDelete = true;
+}
+
+void tmActor::DeleteRecursive()
+{
+    queuedForDeleteRecursive = true;
+}
+
+
+tmActor* tmActor::Duplicate(std::vector<tmActor*> actorList, int offset)
+{
+    var actor = new tmActor(name);
+
+    actor->transform->position = transform->position;
+    actor->transform->rotation = transform->rotation;
+    actor->transform->scale = transform->scale;
+
+    int ctr = 0;
+    for (int child : transform->children.GetVector())
+    {
+        var c = actorList[child]->Duplicate(actorList, offset);
+        c->transform->SetParent(actor->transform);
+    }
+
+    for (auto const& component : components)
+    {
+        std::shared_ptr<Component> new_component = component.get()->clone(offset);
+        new_component->entityID = actor->id;
+        actor->components.emplace_back(new_component);
+    }
+
+    return actor;
+}
+
+tmPrefab::tmPrefab()
+{
+	
+}
+
+tmPrefab::~tmPrefab()
+{
+    for (auto actor : actors)
+        delete actor;
+}
+
+tmActor* tmPrefab::InsertActor(string name)
+{
+
+    var actor = new tmActor();
+    actor->name = name;
+    actor->id = actors.GetCount();
+    actor->transform->entityId = actor->id;
+
+    actors.Add(actor);
+
+    return actor;
+}
+
+void tmPrefab::Insert()
+{
+	auto tm_actors = tmeGetCore()->GetActiveScene()->actorMgr;
+    int offset = tm_actors->GetActorCount();
+
+    /*
+    var actors_ = List<tmActor>();
+
+    for (auto vector : actors.GetVector())
+    {
+        actors_.Add(*vector);
+    }
+
+    for (int i = 0; i < actors.GetCount(); ++i)
+    {
+        var actor = actors_[i];
+
+        int id = actor.id;
+        tm_actors->InsertActor(&actor);
+
+    	actor.id = id+offset;
+        actor.transform->entityId = actor.id;
+        
+        for (int j = 0; j < actor.transform->children.GetCount(); ++j)
+        {
+            actor.transform->children[j] += offset;
+        }
+
+        if (actor.transform->parentId > -1) {
+            actor.transform->parentId += offset;
+        }
+    }
+    */
+
+    for (auto actor : actors.GetVector())
+    {
+        if (actor->transform->parentId == -1) {
+            actor->Duplicate(actors.GetVector(), offset);
+        }
+    }
+
+
+}
+
+Component::~Component()
+{
+	Unload();
 }
 
 Component::Component()
@@ -95,7 +279,14 @@ void tmActor::Transform::CopyTransforms(glm::mat4 m)
     glm::vec3 translation;
     glm::vec3 skew;
     glm::vec4 perspective;
-    //glm::decompose(m, scale, rotation, translation, skew, perspective);
+    glm::decompose(m, scale, rotation, translation, skew, perspective);
+
+    this->rotation = glm::eulerAngles(rotation) * RAD2DEG;
+	this->scale = scale;
+    this->position = translation;
+
+    localMat = mat4(0.0);
+    globalMat = mat4(0.0);
 
 
 }
@@ -106,7 +297,7 @@ glm::vec3 tmActor::Transform::GetGlobalPosition()
 
     if (parent)
     {
-        return (position * scale) + parent->GetGlobalPosition();
+        return (position) + parent->GetGlobalPosition();
     }
     else
     {
@@ -169,9 +360,107 @@ tmActor::Transform* tmActor::Transform::GetParent()
     return nullptr;
 }
 
+List<int> tmActor::Transform::GetRecursiveChildren()
+{
+    var childList = GetChildren();
+
+    for (auto childIndex : children)
+    {
+        var child = tmeGetCore()->GetActiveScene()->actorMgr->GetActor(childIndex)->transform;
+        childList.Add(child->GetRecursiveChildren());
+    }
+
+    return childList;
+}
+
+tmActor::Transform* tmActor::Transform::GetChild(string name)
+{
+    var actorList = tmeGetCore()->GetActiveScene()->actorMgr->GetAllActors();
+
+    return GetChild(name, actorList);
+}
+
+tmActor::Transform* tmActor::Transform::GetChildContains(string name)
+{
+    var actorList = tmeGetCore()->GetActiveScene()->actorMgr->GetAllActors();
+
+    return GetChildContains(name, actorList);
+
+}
+
+tmActor::Transform* tmActor::Transform::GetChild(string name, std::vector<tmActor*> actorList)
+{
+
+    for (auto childIndex : children.GetVector())
+    {
+        var child = actorList[childIndex];
+
+        if (child->name == name)
+            return child->transform;
+
+    }
+
+    for (auto childIndex : children.GetVector())
+    {
+        var child = actorList[childIndex];
+
+        if (child->name == name)
+            return child->transform;
+
+        var found = child->transform->GetChild(name, actorList);
+        if (found)
+        {
+            return found;
+        }
+
+    }
+
+    return nullptr;
+}
+
+tmActor::Transform* tmActor::Transform::GetChildContains(string name, std::vector<tmActor*> actorList)
+{
+
+    for (auto childIndex : children.GetVector())
+    {
+        var child = actorList[childIndex];
+
+        if (StringContains(child->name, name))
+            return child->transform;
+
+    }
+
+    for (auto childIndex : children.GetVector())
+    {
+        var child = actorList[childIndex];
+
+        if (StringContains(child->name, name))
+            return child->transform;
+
+        var found = child->transform->GetChildContains(name, actorList);
+        if (found)
+        {
+            return found;
+        }
+
+    }
+
+    return nullptr;
+}
+
 tmActor* Component::GetActor()
 {
     return tmeGetCore()->GetActiveScene()->actorMgr->GetActor(entityID);
+}
+
+tmActor::Transform* Component::transform()
+{
+    return GetActor()->transform;
+}
+
+tmActor* Component::actor()
+{
+    return GetActor();
 }
 
 nlohmann::json Component::Serialize()
@@ -208,7 +497,15 @@ json tmActorMgr::Serialize()
 
 tmActor *tmActorMgr::GetActor(int id)
 {
+    if (id >= actorIndex.GetCount() || id < 0)
+        return nullptr;
+
     return actorIndex[id];
+}
+
+tmActor* tmActorMgr::GetSceneActor(int id)
+{
+    return tmeGetCore()->GetActiveScene()->actorMgr->GetActor(id);
 }
 
 tmScene::tmScene(nlohmann::json j)
@@ -224,6 +521,9 @@ void tmScene::OnRuntimeUpdate()
 {
     for (auto vector : actorMgr->actorIndex.GetVector())
     {
+
+        if (!vector->GetEnabled())
+            continue;
 
         for (auto component : vector->components) {
             component->RuntimeUpdate();
@@ -241,8 +541,66 @@ void tmScene::OnStart()
 
 void tmScene::OnUpdate()
 {
+    for (tmActor* actor : actorMgr->actorIndex)
+    {
+        actor->transform->localMat = mat4(0.0);
+        actor->transform->globalMat = mat4(0.0);
+    }
+        
+
     for (auto vector : actorMgr->actorIndex.GetVector())
     {
+
+        if (!vector->GetEnabled())
+            continue;
+
+        if (vector->queuedForDelete)
+        {
+
+            for (auto actorid : vector->transform->children.GetVector())
+            {
+                var actor = tmeGetCore()->GetActiveScene()->actorMgr->GetActor(actorid);
+                actor->transform->SetParent(nullptr);
+            }
+
+            tmeGetCore()->GetActiveScene()->actorMgr->actorIndex.Remove(vector);
+
+            for (auto actor : actorMgr->actorIndex.GetVector())
+            {
+                if (actor->id > vector->id)
+                {
+                    actor->id--;
+                }
+            }
+
+
+            delete vector;
+            continue;
+        }
+        if (vector->queuedForDeleteRecursive)
+        {
+	        for (auto actorid : vector->transform->children.GetVector())
+	        {
+		        var actor = tmeGetCore()->GetActiveScene()->actorMgr->GetActor(actorid);
+		        actor->DeleteRecursive();
+	        }
+
+	        tmeGetCore()->GetActiveScene()->actorMgr->actorIndex.Remove(vector);
+
+            for (auto actor : actorMgr->actorIndex.GetVector())
+            {
+                if (actor->id > vector->id)
+                {
+                    actor->id--;
+                }
+            }
+
+	        delete vector;
+            continue;
+        }
+
+        if (vector->componentCount <= 0)
+            continue;
 
         for (auto component : vector->components) {
             if (component->value == "uninitialized")
@@ -256,8 +614,13 @@ void tmScene::OnUpdate()
         }
     }
 
+    tmeGetCore()->lighting->Draw();
+
     for (auto vector : actorMgr->actorIndex.GetVector())
     {
+
+        if (!vector->GetEnabled())
+            continue;
 
         for (auto component : vector->components) {
             component->LateUpdate();
@@ -267,6 +630,13 @@ void tmScene::OnUpdate()
 
 void tmScene::OnUnload()
 {
+    for (auto vector : actorMgr->actorIndex.GetVector())
+    {
+        for (auto component : vector->components) {
+            component->Unload();
+        }
+    }
+    delete actorMgr;
 }
 
 json tmScene::Serialize()
@@ -283,10 +653,12 @@ void tmScene::Deserialize(string d)
 {
     json s = json::parse(d);
 
+    actorMgr->actorIndex.Clear();
+
     for (auto actorj : s["actors"])
     {
         var actor = new tmActor(actorj["name"]);
-        actor->enabled = actorj["enabled"];
+        actor->SetEnabled(actorj["enabled"]);
 
         glm::from_json(actorj["transform"]["position"], actor->transform->position);
         glm::from_json(actorj["transform"]["rotation"], actor->transform->rotation);

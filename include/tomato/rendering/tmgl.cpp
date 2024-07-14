@@ -1,16 +1,27 @@
 #include "tmgl.h"
 
+#include "engine.hpp"
+#include "ImGuizmo.h"
+
+#include "misc/debug.h"
+
 
 static tm_CORE* core;
+bool captureFrame, capturingFrame;
 
 TMAPI void tmInit(int width, int height, string windowName)
 {
 
     // glfw: initialize and configure
 // ------------------------------
+
+#ifdef DEBUG
+    tmDebug::rdoc_init();
+#endif
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -40,13 +51,16 @@ TMAPI void tmInit(int width, int height, string windowName)
     }
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     core->ctx = ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
@@ -67,27 +81,63 @@ void tmSwap()
 
     glfwSwapBuffers(core->window);
 
+#ifdef DEBUG
+
+    if (capturingFrame)
+    {
+        tmDebug::rdoc_endframe();
+        capturingFrame = false;
+    }
+
+    if (captureFrame) {
+        tmDebug::rdoc_beginframe();
+        captureFrame = false;
+        capturingFrame = true;
+    }
+#endif
+
+
 }
 
 void tmPoll()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    tmInput::update();
 
     glfwPollEvents();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 void tmClose()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
 }
 
 bool tmGetWindowClose()
 {
     return glfwWindowShouldClose(core->window);
+}
+
+void tmCapture()
+{
+    captureFrame = true;
+}
+
+glm::vec2 tm_CORE::getWindowPos()
+{
+    int window_x, window_y;
+    glfwGetWindowPos(tmGetCore()->window, &window_x, &window_y);
+
+    return glm::vec2(window_x, window_y);
 }
 
 tm_CORE* tmGetCore()
@@ -99,7 +149,11 @@ void tmgl::genVertexBuffer(unsigned index, GLsizei size,
 	GLenum type, GLboolean normalized, GLsizei stride, const void* pointer)
 {
 
-    glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+
+    if (type != GL_INT)
+		glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+    else
+        glVertexAttribIPointer(index, size, type, stride, pointer);
     glEnableVertexAttribArray(index);
 
 }
@@ -116,6 +170,7 @@ unsigned tmgl::genVertexArray()
 
 unsigned tmgl::genShader(const char* vertex, const char* fragment)
 {
+	std::cout << "Generating shader.." << std::endl;
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &(vertex), NULL);
     glCompileShader(vertexShader);
@@ -126,7 +181,8 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     if (!success)
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        Logger::logger << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "Shader compilation failed at vertex stage. \n" << vertex << "\n\n" << infoLog << std::endl;
+        return 0;
     }
     // fragment shader
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -137,7 +193,8 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     if (!success)
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        Logger::logger << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "Shader compilation failed at fragment stage. \n" << fragment << "\n\n" << infoLog << std::endl;
+        return 0;
     }
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
@@ -148,12 +205,20 @@ unsigned tmgl::genShader(const char* vertex, const char* fragment)
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        Logger::logger << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        Logger::logger << "Shader linking failed. \n" << infoLog << std::endl;
+        return 0;
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+	std::cout << "Successfully compiled shader!" << std::endl;
+
     return shaderProgram;
+}
+
+void tmgl::freeBuffer(unsigned id)
+{
+    glDeleteBuffers(1, &id);
 }
 
 unsigned tmgl::genBuffer(GLenum target, const void* data, size_t size, GLenum usage)

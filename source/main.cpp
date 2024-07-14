@@ -1,5 +1,7 @@
 
 
+#include "rendering/ui.h"
+
 #include "scripting/script.h"
 #include "tomato/engine.hpp"
 #include "tomato/rendering/render.h"
@@ -7,30 +9,36 @@
 #include "tomato/util/filesystem_tm.h"
 #include "tomatoEngine/editor.h"
 
-tmShader* shader;
 tmCamera* camera;
 
 int main(int argc, const char** argv) {
 
     tmfs::copyFile("scriptcore/bin/Debug/TomatoScript.dll", "scriptcore/TomatoScript.dll");
-    tmeInit(800, 600, "TomatoEngine");
-
-
+    tmeInit(1600, 1200, "TomatoEngine");
     ImGui::SetCurrentContext(tmGetCore()->ctx);
 
     tmEngine* engine = tmeGetCore();
 
-    engine->runtimePlaying = false;
+    engine->lighting->SetCubemap(new tmCubemap("resources/textures/testhdr.png", true));
+
+    engine->runtimePlaying = true;
 
     teEditorMgr* editor = new teEditorMgr;
 	//editor->currentProject->resMgr->PackResources("out.rres", "resources/");
 
-    //fs::remove("game.tmg");
+    fs::remove("game.tmg");
 
     if (tmfs::fileExists("game.tmg")) {
         tmeGetCore()->DeserializeGame(tmfs::loadFileString("game.tmg"));
+
+        camera = tmCamera::GetMainCamera();
+
+        fs::remove("game.tmg");
+
     }
     else {
+
+        /*
 
         // world space positions of our cubes
         glm::vec3 cubePositions[] = {
@@ -46,36 +54,39 @@ int main(int argc, const char** argv) {
             glm::vec3(-1.3f,  1.0f, -1.5f)
         };
 
-        shader = new tmShader(tmfs::loadFileString("resources/shaders/test/vertex.glsl"), tmfs::loadFileString("resources/shaders/test/fragment.glsl"));
-        shader->setInt("texture1", 0);
-        shader->setInt("texture2", 1);
+        tmShader* shader = tmShader::GetDefaultShader();
 
-        var texture = new tmTexture("resources/textures/test.png", true);
+        var texture = new tmTexture("resources/models/godot_plush/godot_plush_basecolor.png", false);
+        var texture3 = new tmTexture("resources/models/godot_plush/godot_plush_roughness.png", true);
+        var texture4 = new tmTexture("resources/models/godot_plush/godot_plush_roughness.png", true);
+        var texture5 = new tmTexture("resources/models/godot_plush/godot_plush_normal.png", true);
         var texture2 = new tmTexture("resources/textures/test3.png", true);
 
         tmMaterial* material = new tmMaterial(shader);
-        material->textures.push_back(texture);
+        material->SetTexture("albedo", texture);
+        material->SetTexture("roughness", texture3);
+        material->SetTexture("metallic", texture4);
+        material->SetTexture("normal", texture5);
+        material->SetField("metallic_override", 1.0f);
+        material->SetField("roughness_override", 0.5f);
 
-        tmMaterial* material2 = new tmMaterial(shader);
-        material2->textures.push_back(texture2);
 
-
-        tmModel* model = tmModel::LoadModel("resources/models/test.fbx");
+        tmModel* model = tmModel::LoadModel("resources/models/godot_plush.fbx");
 
         tmActor* map = new tmActor("Map");
-        map->AttachComponent<MonoComponent>("TestComponent");
-        for (int i = 0; i < 10; ++i)
+        //map->AttachComponent<MonoComponent>("TestComponent");
+
         {
-            float angle = 20.0f * i;
+            tmActor* actor = new tmActor("Cube", map);
+            actor->transform->position = glm::vec3{ 0 };
+            actor->transform->rotation = { -90.f,0,0 };
+            actor->transform->scale = glm::vec3{ 50 };
 
-            tmActor* actor = new tmActor("Cube" + std::to_string(i), map);
-            actor->transform->position = cubePositions[i];
-            actor->transform->rotation = (glm::vec3(1.0f, 0.3f, 0.5f) * angle);
-
-            var meshRenderer = actor->AttachComponent<tmMeshRenderer>(model, randval(0, 1));
-            meshRenderer->materialIndex = randval(0, 1);
-
+            var meshRenderer = actor->AttachComponent<tmMeshRenderer>(model, 0);
+            meshRenderer->materialIndex = 0;
         }
+
+        */
 
         tmActor* cameraActor = new tmActor("Camera");
         cameraActor->transform->position = { 0,0,10 };
@@ -84,19 +95,27 @@ int main(int argc, const char** argv) {
         camera->framebuffer = new tmFramebuffer(tmFramebuffer::Deferred, {tmeGetCore()->ScreenWidth, tmeGetCore()->ScreenHeight});
         //cameraActor->AttachComponent<MonoComponent>(scriptMgr->assemblies[0]->GetMonoComponentIndex("TestComponent"));
 
-    }
+        var light = new tmActor("Directional Light");
+        var pointLight = light->AttachComponent<tmLight>();
+        pointLight->lightType = tmLight::Directional;
+        pointLight->intensity = 5;
+        light->transform->rotation = {-15,-30,0};
 
-    glfwSetKeyCallback(tmGetCore()->window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-        {
-			if (key == GLFW_KEY_R && action == GLFW_PRESS)
-			{
-                shader->reload(tmfs::loadFileString("resources/shaders/test/vertex.glsl"), tmfs::loadFileString("resources/shaders/test/fragment.glsl"));
-                camera->framebuffer->reload();
-			}
-        });
-    tmfs::writeFileString("game.tmg", tmeGetCore()->SerializeGame());
+        /*
+        var text = new tmActor("Text");
+        var textRenderer = text->AttachComponent<tmText>();
+        textRenderer->text = "Test Hi Hi";
+        */
+
+        tmfs::writeFileString("game.tmg", tmeGetCore()->SerializeGame());
+        
+    } 
 
     //scriptMgr->CompileFull();
+
+    teEditorMgr::currentProject = new teEditorMgr::teProject("New Project");
+
+    tmLighting::UnloadBRDF();
 
     while (!tmGetWindowClose())
     {
@@ -109,9 +128,6 @@ int main(int argc, const char** argv) {
         tmeUpdate();
 
     }
-
-
-    tmeClose();
 
     return 0;
 }

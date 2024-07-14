@@ -8,7 +8,7 @@
         targetdir "bin/%{cfg.buildcfg}"
         staticruntime "off"
 
-        defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM",  "TOMATO_DLLBUILD",'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"'}
+        defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM",  "TOMATO_DLLBUILD",'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"', 'RENDERDOC_HOME="C:/Program Files/RenderDoc"'}
 
         files {
             "include/**",
@@ -30,17 +30,18 @@
             "vendor/sdl2/include",
             "vendor/generator/include/",
             "C:/Program Files/Mono/include/mono-2.0",
+            "C:/Program Files/RenderDoc"
         }
 
         files {"vendor/imgui/backends/imgui_impl_opengl3.*", "vendor/imgui/backends/imgui_impl_glfw.*"}
         files {"vendor/imgui/*"}
         files {"vendor/imgui/misc/debuggers/**", "vendor/imgui/misc/cpp/**"}
 
-        libdirs {"vendor/assimp/lib/Release/",  "vendor/generator/lib/%{cfg.buildcfg}/", "vendor/glew/x64",  "C:/Program Files/Mono/lib"  }
+        libdirs {"vendor/assimp/lib/Release/",  "vendor/generator/lib/%{cfg.buildcfg}/", "vendor/glew/x64",  "C:/Program Files/Mono/lib", "vendor/freetype/"  }
 
         removefiles { "include/tomatoEngine/**"}
 
-        links {"assimp-vc143-mt.lib","mono-2.0-sgen.lib"}
+        links {"assimp-vc143-mt.lib","mono-2.0-sgen.lib", "freetype.lib"}
 
         dependson {"TomatoScript"}
 

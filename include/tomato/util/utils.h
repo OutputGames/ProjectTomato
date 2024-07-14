@@ -29,7 +29,18 @@
 #ifndef RAD2DEG
 #define RAD2DEG (180.0f/PI)
 #endif
+#include <cstdint>
 
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef unsigned int uint;
+
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 
 #include "GL/glew.h"
 #include <glfw/glfw3.h>
@@ -52,17 +63,50 @@
 using string = std::string;
 namespace fs = std::filesystem;
 
-void RunCommand(const char* cmd);
-std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
+typedef glm::vec2 vec2;
+typedef glm::vec3 vec3;
+typedef glm::vec4 vec4;
+
+typedef glm::mat2 mat2;
+typedef glm::mat3 mat3;
+typedef glm::mat4 mat4;
+
+typedef nlohmann::json json;
+
+extern "C" {
+    TMAPI void RunCommand(const char* cmd);
+    TMAPI std::string  ReplaceAll(std::string str, const std::string& from, const std::string& to);
+    TMAPI bool HasExtension(const std::string& filename, const std::string& extension);
+bool StringContains(const std::string& str, const std::string& substr);
+}
+
+#define tfjson(type) \
+        void to_json(nlohmann::json& j, const type& p); \
+		void from_json(const nlohmann::json& j, type& p); \
+
+#define vigui(type) \
+		void vector_color(string name, type& p); \
+		void vector_drag(string name, type& p); \
 
 namespace glm {
-    void to_json(nlohmann::json& j, const glm::vec2& P);;
+		tfjson(int)
+        tfjson(float)
+        tfjson(bool)
 
-    void from_json(const nlohmann::json& j, glm::vec2& P);
+        tfjson(vec2)
+        tfjson(vec3)
+        tfjson(vec4)
 
-    void to_json(nlohmann::json& j, const glm::vec3& P);;
+        tfjson(mat2);
+        tfjson(mat3);
+        tfjson(mat4);
 
-    void from_json(const nlohmann::json& j, glm::vec3& P);
+        vigui(vec2)
+        vigui(vec3)
+        vigui(vec4)
+
+
+	glm::mat4 mulmatSIMD(const glm::mat4& mat1, const glm::mat4& mat2);
 }
 
 struct Logger
@@ -77,21 +121,10 @@ struct Logger
 
     TMAPI static void Log(std::string msg, Logger::Level logLevel = INFO, std::string source = "Engine");
 
-    inline static std::map<std::pair<int, std::string>, Logger::Level> loggedEntries = std::map<std::pair<int, std::string>, Logger::Level>();
+	std::map<std::pair<int, std::string>, Logger::Level> loggedEntries = std::map<std::pair<int, std::string>, Logger::Level>();
 
-    // Overload << operator for various types
-    template <typename T>
-    Logger& operator<<(const T& message) {
-        if (fileStream.is_open()) {
-            fileStream << message;
-        }
-        else {
-            std::cout << message;
-            //loggedEntries.insert({ {static_cast<int>(loggedEntries.size()),std::to_string(message)}, INFO });
 
-        }
-        return *this;
-    }
+    Logger& operator<<(const string& message);
 
     // Overload << operator for std::endl
 	Logger& operator<<(std::ostream& (*manip)(std::ostream&)) {
@@ -120,11 +153,25 @@ struct Logger
         }
     }
 
-    static Logger logger;
+    static TMAPI Logger logger;
 
 private:
     std::ofstream fileStream;
 };
+
+
+inline Logger& Logger::operator<<(const string& message)
+{
+	if (fileStream.is_open()) {
+		fileStream << message;
+	}
+	else {
+		std::cout << message;
+		loggedEntries.insert({ {static_cast<int>(loggedEntries.size()),(message)}, INFO });
+
+	}
+	return *this;
+}
 
 
 #endif // UTILS_HPP
