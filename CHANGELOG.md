@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning].
 * Why didn't you use the blinn-phong lighting model when moving between Phong and PBR?
     * The Blinn-Phong lighting model isn't physically accurate because it returns more "light" than it was given, and there are specific rules to having realistic lighting such as **returning less than what was given.** I would recommend watching [this video](https://www.youtube.com/watch?v=KkOkx0FiHDA) which explains how lighting models work.
 
+## 0.05 - 15-7-2024
+
+### Added
+
+* Debug drawing using *glampert*'s `debug-draw` system
+
+### Changed
+
+* Render system now has a callback system that will be used in sync with the draw-call system
+
+#### Optimizations
+
+### In Progress (at commit time)
+
+* Frustum cullng system
+* ShaderFactory implementation
+* Physics system (engine not chosen yet)
+* Audio system using OpenAL
+
 ## 0.04 - 14-7-2024
 
 ### Added
@@ -77,12 +96,6 @@ and this project adheres to [Semantic Versioning].
 * added move semantics, map capacity, and repeated access to `tmSkinnedMeshRenderer::Update` (30.18%)
 
 #### Engine now runs at 120+ FPS with 4 skeletal animation calculations simultaneously and resource calculation upgrades.
-
-### Deprecated
-
-### Removed
-
-### Fixed
 
 ### In Progress (at commit time)
 

@@ -30,7 +30,7 @@
       "actors": [
         {
           "components": {
-            "tmCamera": {
+            "tmCamera||1": {
               "clear_color": {
                 "x": 0.20000000298023224,
                 "y": 0.30000001192092896,
@@ -38,7 +38,7 @@
               },
               "clear_flags": 0,
               "enabled": true,
-              "far_plane": 1000.0,
+              "far_plane": 10000.0,
               "fov": 60.0,
               "framebuffer_type": 1,
               "near_plane": 9.999999974752427e-07,
@@ -71,7 +71,7 @@
         },
         {
           "components": {
-            "tmLight": {
+            "tmLight||1": {
               "color": {
                 "x": 1.0,
                 "y": 1.0,

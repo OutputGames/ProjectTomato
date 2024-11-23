@@ -77,7 +77,8 @@ extern "C" {
     TMAPI void RunCommand(const char* cmd);
     TMAPI std::string  ReplaceAll(std::string str, const std::string& from, const std::string& to);
     TMAPI bool HasExtension(const std::string& filename, const std::string& extension);
-bool StringContains(const std::string& str, const std::string& substr);
+	TMAPI bool StringContains(const std::string& str, const std::string& substr);
+    TMAPI std::vector<string> StringSplit(std::string& str,std::string del);
 }
 
 #define tfjson(type) \
@@ -107,6 +108,7 @@ namespace glm {
 
 
 	glm::mat4 mulmatSIMD(const glm::mat4& mat1, const glm::mat4& mat2);
+        bool isnan(vec3 v);
 }
 
 struct Logger

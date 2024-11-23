@@ -96,6 +96,7 @@ void tmImage::Start()
         // Loop through the vertices array and fill the tmVertex structures
         for (int i = 0; i < numVertices; ++i)
         {
+            tmVertices[i] = {};
             int offset = i * 8;
             tmVertices[i].position = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
             tmVertices[i].normal = glm::vec3(vertices[offset + 3], vertices[offset + 4], vertices[offset + 5]);

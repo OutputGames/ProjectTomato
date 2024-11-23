@@ -22,6 +22,7 @@ TMAPI void tmInit(int width, int height, string windowName)
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -52,8 +53,9 @@ TMAPI void tmInit(int width, int height, string windowName)
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -67,6 +69,14 @@ TMAPI void tmInit(int width, int height, string windowName)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(core->window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init("#version 130");
+
+#ifdef DEBUG
+
+    tmDebug::tmgl_initdbg();
+
+
+#endif // DEBUG
+
 }
 
 void tmSwap()
@@ -78,6 +88,11 @@ void tmSwap()
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
     glfwMakeContextCurrent(backup_current_context);
+
+#ifdef DEBUG
+    tmDebug::tmgl_endframe();
+#endif
+
 
     glfwSwapBuffers(core->window);
 

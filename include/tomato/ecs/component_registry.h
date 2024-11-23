@@ -5,6 +5,9 @@
 
 #include "util/utils.h"
 #include "actor.h"
+
+#include "misc/phys.h"
+
 #include "rendering/render.h"
 #include "rendering/ui.h"
 
@@ -24,7 +27,7 @@ struct TMAPI ComponentRegistry
 
     };
 
-    using RegisteredComponents = ComponentRegister<tmCamera, MonoComponent, tmMeshRenderer, tmLight, tmSkinnedMeshRenderer, tmAnimator, tmSkeleton, tmImage, tmText>;
+    using RegisteredComponents = ComponentRegister<tmCamera, MonoComponent, tmMeshRenderer, tmLight, tmSkinnedMeshRenderer, tmAnimator, tmSkeleton, tmImage, tmText, tmRigidBody, tmSphereCollider, tmBoxCollider>;
 };
 
 template <typename ... C>

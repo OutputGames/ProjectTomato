@@ -10,6 +10,8 @@
 #include "imgui_ext.hpp"
 #include "par_shapes.h"
 
+#include "misc/debug.h"
+
 #include "stb/stb_image.h"
 #include "util/filesystem_tm.h"
 
@@ -126,7 +128,7 @@ uniform float actorCount_NOREN;
 uniform float metallic_override;
 uniform float roughness_override;
 
-uniform vec4 color_col;
+uniform vec3 color_col;
 
 uniform bool use_color;
 uniform bool use_colormap;
@@ -162,12 +164,12 @@ void main()
     //gAlbedoSpec = WorldPosition;
 
     if (use_color)
-        gAlbedoSpec = color_col;
+        gAlbedoSpec = vec4(color_col,1.0);
     if (use_colormap) {
 		if (do_multiply)
-			gAlbedoSpec *= (color_col * texture(color_map, TexCoords));
+			gAlbedoSpec *= (vec4(color_col,1) * texture(color_map, TexCoords));
 		else
-			gAlbedoSpec = mix(gAlbedoSpec,color_col,texture(color_map, TexCoords).r);
+			gAlbedoSpec = mix(gAlbedoSpec,vec4(color_col,1),texture(color_map, TexCoords).r);
 	}
     if (!use_roughmap)
         gShading.g = roughness_override;
@@ -322,6 +324,40 @@ void tmMeshRenderer::EngineRender()
 
     material->EngineRender();
 
+    /*
+	size_t i1 = mesh->vertexCount;
+	for (int i = 0; i < i1; ++i)
+	{
+        if (i > 0) {
+            var vert = mesh->verts[i];
+
+            int nextI = i + 1;
+            if (nextI >= i1)
+            {
+                nextI = 0;
+            }
+
+            var nextVert = mesh->verts[nextI];
+
+            vec3 startPoint = (vert.position);
+            vec3 endPoint =(nextVert.position);
+
+            startPoint *= transform()->GetGlobalScale();
+            endPoint *= transform()->GetGlobalScale();
+
+            startPoint += transform()->GetGlobalPosition();
+            endPoint += transform()->GetGlobalPosition();
+
+            startPoint = transform()->TransformPoint(startPoint);
+            endPoint = transform()->TransformPoint(endPoint);
+
+            tmglDebugRenderer::line(startPoint, endPoint, dd::colors::Orange);
+  
+        }
+
+	}
+	*/
+
 }
 
 tmShader::tmShader(string vertex, string fragment, bool isPath)
@@ -425,12 +461,7 @@ void tmCamera::Update()
     var actor = GetActor();
    var yaw = actor->transform->rotation.y;
     var pitch = actor->transform->rotation.x;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    var cameraFront = glm::normalize(direction);
+    var cameraFront = transform()->GetForward();
 
     //cameraFront = actor->transform->GetForward();
     //cameraFront = { 0,0,-1 };
@@ -462,7 +493,7 @@ void tmCamera::Update()
 
 void tmCamera::LateUpdate()
 {
-    if (tmeGetCore()->runtimePlaying) {
+    if (tmeGetCore()->runtimePlaying && framebuffer) {
         framebuffer->cameraPosition = GetActor()->transform->position;
         // drawing
         Use();
@@ -473,7 +504,7 @@ void tmCamera::LateUpdate()
             UpdateShader(material->shader, material->settings.useOrtho);
 
         var renderMgr = tmeGetCore()->renderMgr;
-        renderMgr->Draw();
+        renderMgr->Draw(this);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
@@ -515,6 +546,13 @@ void tmCamera::EngineRender()
     ImGui::DragFloat("Far Plane", &FarPlane, 1, NearPlane);
 
     ImGui::Checkbox("Enable occlusion culling", &EnableOcclusionCulling);
+
+    float scale = ImGui::GetWindowSize().x / framebuffer->size.x;
+
+    ImGui::Image((ImTextureID)(framebuffer->gAlb), ImVec2(framebuffer->size.x*scale, framebuffer->size.y*scale), ImVec2(0, 1), ImVec2(1, 0));
+
+    mat4 clip = glm::inverse(GetProjectionMatrix() * GetViewMatrix());
+    tmglDebugRenderer::frustum(clip, dd::colors::White);
 }
 
 tmCamera* tmCamera::GetMainCamera()
@@ -1244,7 +1282,9 @@ tmMesh* tmModel::processMesh(aiMesh* mesh, const aiScene* scene)
             indices.push_back(face.mIndices[j]);
     }
 
-    return new tmMesh(vertices.data(), vertices.size(),indices.size(), indices.data());
+    var tmesh = new tmMesh(vertices.data(), vertices.size(),indices.size(), indices.data());
+    tmesh->verts = vertices;
+    return tmesh;
 }
 
 void tmAnimator::Start()
@@ -1639,7 +1679,7 @@ tmDrawCall* tmRenderMgr::InsertCall(tmVertexBuffer* buffer, unsigned material, s
     return call;
 }
 
-void tmRenderMgr::Draw()
+void tmRenderMgr::Draw(tmBaseCamera* currentCamera)
 {
     for (auto draw_call : drawCalls)
     {
@@ -1781,6 +1821,11 @@ void tmRenderMgr::Draw()
             glDrawArrays(draw_call->buffer->mode, 0, draw_call->buffer->vertexCount);
         }
         glBindVertexArray(0);
+    }
+
+    for (auto callback : callbacks)
+    {
+        callback(currentCamera);
     }
 }
 

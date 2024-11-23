@@ -1,6 +1,9 @@
 #include "lighting.h"
 
 #include "engine.hpp"
+
+#include "misc/debug.h"
+
 #include "stb/stb_image.h"
 
 CLASS_DEFINITION(Component, tmLight)
@@ -66,8 +69,17 @@ void tmLight::EngineRender()
     ImGui::DragFloat("Shadow Far", &farp, 0.1f);
     ImGui::DragFloat("Shadow Angle", &shadowAngle);
 
-    if (lightType == Point)
+    switch (lightType)
     {
+    case Point:
+        tmglDebugRenderer::sphere(transform()->GetGlobalPosition(), glmtodd(color), intensity/10);
+        break;
+    case Directional:
+        tmglDebugRenderer::cone(transform()->GetGlobalPosition(), -transform()->GetForward(), 1.0f, 2.0f, glmtodd(color));
+        break;
+    case Spot:
+        tmglDebugRenderer::cone(transform()->GetGlobalPosition(), -transform()->GetForward(), 0.0f, 2.0f, glmtodd(color));
+        break;
     }
 
 }

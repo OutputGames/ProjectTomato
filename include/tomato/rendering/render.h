@@ -17,6 +17,7 @@
 
 #include "util/filesystem_tm.h"
 
+class tmMeshRenderer;
 class tmSkinnedMeshRenderer;
 class tmShader;
 struct tmBaseCamera;
@@ -271,7 +272,7 @@ struct TMAPI tmBaseCamera
 
     glm::vec3 ClearColor = { 0.2f,0.3f,0.3f };
     float FieldOfView = 60, Size = 5;
-    float NearPlane = EPSILON, FarPlane = 1000;
+    float NearPlane = EPSILON, FarPlane = 10000;
     bool EnableOcclusionCulling;
     tmFramebuffer* framebuffer;
     glm::mat4 view = glm::mat4(1.0), proj = glm::mat4(1.0), orthoProj = glm::mat4(1.0);
@@ -462,12 +463,16 @@ public:
 private:
 
     friend tmSkinnedMeshRenderer;
+    friend tmMeshRenderer;
     friend tmModel;
 
     tmModel* model;
 
     size_t vertexCount, elementCount;
     tmVertexBuffer buffer;
+
+    std::vector<tmVertex> verts;
+
     void setup();
 };
 
@@ -1061,6 +1066,8 @@ class TMAPI tmRenderMgr
 public:
 
     std::vector<tmDrawCall*> drawCalls;
+    std::vector<std::function<void(tmBaseCamera* cam)>> callbacks;
+
     std::vector<tmMaterial*> materials;
 
     tmRenderMgr();
@@ -1068,7 +1075,11 @@ public:
 
     tmDrawCall* InsertCall(tmVertexBuffer* buffer, unsigned material, std::vector<mat4> boneTransforms, glm::mat4 modelMatrix = glm::mat4(1.0),tmActor* actor = nullptr);
 
-    void Draw();
+    void InsertCallback(const std::function<void(tmBaseCamera* cam)>& callback) {
+        callbacks.push_back(callback);
+    }
+
+    void Draw(tmBaseCamera* currentCamera);
 
     void Clear()
     {
@@ -1076,6 +1087,7 @@ public:
         for (auto draw_call : drawCalls) delete draw_call;
 
         drawCalls.clear();
+        callbacks.clear();
     }
 };
 

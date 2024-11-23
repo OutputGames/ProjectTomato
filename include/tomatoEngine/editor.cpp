@@ -18,9 +18,14 @@
 #include "glm/ext/scalar_common.hpp"
 #include "glm/gtx/dual_quaternion.hpp"
 
+#include "misc/debug.h"
+
 #include "rendering/imgui_ext.hpp"
 
 #include "util/filesystem_tm.h"
+
+#define DEBUG_DRAW_IMPLEMENTATION
+#include "debug_draw.hpp"
 
 #define imtogm(v) glm::vec2(v.x, v.y)
 #define gmtoim(v) ImVec2(v.x, v.y)
@@ -193,8 +198,16 @@ vec2 teEditorMgr::transformPoint(float x, float y, vec2 boundMin, vec2 boundMax)
 
 void teEditorMgr::_drawSceneView()
 {
+
+
 	static glm::vec2 boundMin = glm::vec2(0), boundMax = glm::vec2(0);
 	static bool mouseHovering = false;
+
+	float gridSize = 500;
+
+	float gridBounds = gridSize;
+
+	tmglDebugRenderer::grid(gridSize, vec3(floorf(camera_->position.x/(gridBounds)), 0, floorf(camera_->position.z / (gridBounds)))*(gridBounds), 1.f, dd::colors::White);
 
 	camera_->Update(boundMin, boundMax, !mouseHovering);
 
@@ -336,15 +349,39 @@ void teEditorMgr::_drawSceneView()
 			ImGuizmo::Manipulate(&view[0][0], &projection[0][0],
 			                     static_cast<ImGuizmo::OPERATION>(currentGizmoOperation), ImGuizmo::MODE::LOCAL,
 			                     &matrix[0][0]);
+
+
+
+			//tmglDebugRenderer::box(tm_actor->transform->GetGlobalPosition(), dd::colors::Orange, vec3(1, 1, 1));
+
 			//ImGuizmo::DrawCubes(&view[0][0], &projection[0][0], &matrix[0][0], 1);
 
+			if (ImGuizmo::IsUsing()) {
 
-			tm_actor->transform->CopyTransforms(matrix);
+				tm_actor->transform->CopyTransforms(matrix);
+			}
 		} else
 		{
 			_selectedActor = false;
 		}
 
+		for (auto body : tmeGetCore()->GetActiveScene()->physicsMgr->bodies)
+		{
+			//tmglDebugRenderer::sphere((body->position), dd::colors::Green, 0.1f);
+		}
+
+		for (auto body : tmeGetCore()->GetActiveScene()->physicsMgr->colliders)
+		{
+			if (body->body) {
+				if (body->type == Collider::Sphere)
+				{
+					tmglDebugRenderer::sphere((body->body->position), dd::colors::Red, dynamic_cast<SphereCollider*>(body)->radius);
+				} else if (body->type == Collider::Box)
+				{
+					tmglDebugRenderer::box((body->body->position), dd::colors::Red, dynamic_cast<BoxCollider*>(body)->size);
+				}
+			}
+		}
 
 		bool show = true;
 
@@ -486,7 +523,7 @@ void teEditorMgr::_drawDebug()
 		}
 	}
 
-	ImGui::SliderFloat("Camera Speed", &camera_->moveSpeed, EPSILON, 1.5f);
+	ImGui::SliderFloat("Camera Speed", &camera_->moveSpeed, EPSILON, 150.f);
 
 	do_reloading = false;
 	ImGui::Checkbox("Do asset reloading", &do_reloading);
@@ -506,6 +543,8 @@ void teEditorMgr::_drawDebug()
 	{
 		tmCapture();
 	}
+
+	ImGui::DragFloat("Line width", &tmglDebugRenderer::renderer->pointsize, 0.01f);
 
 	ImGui::End();
 }
@@ -799,7 +838,7 @@ void teEditorMgr::_drawProperties()
 			else
 			{
 				ImGui::SameLine();
-				if (ImGui::CollapsingHeader(name.c_str()))
+				if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					component->EngineRender();
 				}
@@ -1624,6 +1663,11 @@ teEditorMgr::teProject::teProject(string name)
 	resMgr = new ResourceManager(assetPath);
 }
 
+void teEditorMgr::teProject::Save()
+{
+	
+}
+
 
 void ResourceManager::ReloadProjectAssembly()
 {
@@ -1741,7 +1785,7 @@ void teEditorMgr::teCamera::Update(glm::vec2 min, glm::vec2 max, bool block)
 	}
 
 	var renderMgr = tmeGetCore()->renderMgr;
-	renderMgr->Draw();
+	renderMgr->Draw(this);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

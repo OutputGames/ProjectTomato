@@ -4,6 +4,8 @@
 #include "engine.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtx/quaternion.hpp"
+
+#include "misc/phys.h"
 //#include "glm/gtx/matrix_decompose.hpp"
 
 using namespace nlohmann;
@@ -34,9 +36,11 @@ nlohmann::json tmActor::Serialize()
 
     json c = json();
 
+    int i = 0;
     for (auto component : components)
     {
-        c[component->GetName()] = component->Serialize();
+        i++;
+        c[component->GetInternalName()+"||"+std::to_string(i)] = component->Serialize();
     }
 
     j["components"] = c;
@@ -508,6 +512,11 @@ tmActor* tmActorMgr::GetSceneActor(int id)
     return tmeGetCore()->GetActiveScene()->actorMgr->GetActor(id);
 }
 
+tmScene::tmScene()
+{
+    physicsMgr = new tmPhysicsMgr;
+}
+
 tmScene::tmScene(nlohmann::json j)
 {
     Deserialize(j.dump());
@@ -614,7 +623,10 @@ void tmScene::OnUpdate()
         }
     }
 
+    physicsMgr->Update();
+
     tmeGetCore()->lighting->Draw();
+    
 
     for (auto vector : actorMgr->actorIndex.GetVector())
     {
@@ -672,7 +684,8 @@ void tmScene::Deserialize(string d)
         if (!actorj["components"].is_null()) {
             for (auto& [key, val] : actorj["components"].items())
             {
-                var comp = actor->AttachComponent(key);
+                var cname = StringSplit(const_cast<std::string&>(key), "||")[0];
+                var comp = actor->AttachComponent(cname);
                 comp->Deserialize(val);
             }
         }

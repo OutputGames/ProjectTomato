@@ -357,6 +357,11 @@ glm::mat4 glm::mulmatSIMD(const glm::mat4& mat1, const glm::mat4& mat2)
     return mat1 * mat2;
 }
 
+bool glm::isnan(vec3 v)
+{
+    return isnan(v.x) || isnan(v.y) || isnan(v.z);
+}
+
 void Logger::Log(std::string msg, Logger::Level logLevel, std::string source)
 {
 	Logger::logger << msg,logLevel,source;
@@ -468,4 +473,20 @@ int tmInput::getKey(int key)
 int tmInput::getMouseButton(int button)
 {
     return glfwGetMouseButton(tmGetCore()->window, button);
+}
+
+std::vector<string> StringSplit(std::string& str, std::string del)
+{
+    std::vector<std::string> result;
+	if (StringContains(str, del))
+	{
+        size_t pos = 0, start = 0, delim_len = del.length();
+
+        while ((pos = str.find(del, start)) != std::string::npos) {
+            result.push_back(str.substr(start, pos - start));
+            start = pos + delim_len;
+        }
+        result.push_back(str.substr(start));
+	}
+    return result;
 }

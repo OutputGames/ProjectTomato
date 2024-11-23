@@ -50,6 +50,7 @@ public:\
     }\
     classname() = default; \
 
+struct tmPhysicsMgr;
 class MonoComponent;
 class Component;
 
@@ -90,7 +91,12 @@ public:
 
         glm::vec3 TransformPoint(glm::vec3 p)
         {
-            return glm::quat(rotation) * p;
+            return glm::quat(glm::radians(GetGlobalRotation())) * p;
+        }
+
+        glm::vec3 LocalTransformPoint(glm::vec3 p)
+        {
+            return glm::quat(glm::radians(rotation)) * p;
         }
 
         glm::vec3 GetUp()
@@ -320,6 +326,20 @@ public:
         return rawname;
     }
 
+    virtual std::string GetInternalName()
+    {
+        std::string rawname = typeid(*this).name();
+
+        std::string sub = "class ";
+
+        std::string::size_type i = rawname.find(sub);
+
+        if (i != std::string::npos)
+            rawname.erase(i, sub.length());
+
+        return rawname;
+    }
+
 public:
     std::string                             value = "uninitialized";
 
@@ -414,10 +434,11 @@ class TMAPI tmScene
 {
 public:
 
-    tmScene() = default;
+    tmScene();
     tmScene(nlohmann::json j);
 
     tmActorMgr* actorMgr = new tmActorMgr;
+    tmPhysicsMgr* physicsMgr;
 
     void OnRuntimeStart();
     void OnRuntimeUpdate();

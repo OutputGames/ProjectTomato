@@ -104,7 +104,7 @@ public:
 		Point,
         Directional,
         Spot
-	} lightType;
+	} lightType = Point;
 
     glm::vec3 color = glm::vec3(1);
     float intensity = 1;

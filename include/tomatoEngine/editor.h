@@ -18,6 +18,8 @@ public:
         ResourceManager* resMgr;
 
         teProject(string name);
+
+        void Save();
     };
 
     struct teCamera : public tmBaseCamera
