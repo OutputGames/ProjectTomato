@@ -1,5 +1,5 @@
 /// @ref gtx_transform
-/// @file glm/gtx/Transform->hpp
+/// @file glm/gtx/transform.hpp
 ///
 /// @see core (dependence)
 /// @see gtc_matrix_transform (dependence)
@@ -9,7 +9,7 @@
 /// @defgroup gtx_transform GLM_GTX_transform
 /// @ingroup gtx
 ///
-/// Include <glm/gtx/Transform->hpp> to use the features of this extension.
+/// Include <glm/gtx/transform.hpp> to use the features of this extension.
 ///
 /// Add transformation matrices
 
@@ -19,12 +19,10 @@
 #include "../glm.hpp"
 #include "../gtc/matrix_transform.hpp"
 
-#if GLM_MESSAGES == GLM_ENABLE && !defined(GLM_EXT_INCLUDED)
-#	ifndef GLM_ENABLE_EXPERIMENTAL
-#		pragma message("GLM: GLM_GTX_transform is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it.")
-#	else
-#		pragma message("GLM: GLM_GTX_transform extension included")
-#	endif
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#	error "GLM: GLM_GTX_transform is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it."
+#elif GLM_MESSAGES == GLM_ENABLE && !defined(GLM_EXT_INCLUDED)
+#	pragma message("GLM: GLM_GTX_transform extension included")
 #endif
 
 namespace glm
@@ -57,4 +55,4 @@ namespace glm
 	/// @}
 }// namespace glm
 
-#include "Transform->inl"
+#include "transform.inl"

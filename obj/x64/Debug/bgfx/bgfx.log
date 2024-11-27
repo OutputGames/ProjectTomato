@@ -1,0 +1,561 @@
+﻿Build started 11/22/2024 9:02:52 PM.
+Logging verbosity is set to: Diagnostic.21:02:52.706     1>Project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" on node 2 (Build target(s)).
+21:02:52.706     1>Target "_CheckForInvalidConfigurationAndPlatform: (TargetId:2)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "SetTelemetryEnvironmentVariables" depends on it):
+21:02:52.706     1>Task "Message" (TaskId:2)
+                   Done executing task "Message". (TaskId:2)
+                   Task "Message" (TaskId:3)
+                   Done executing task "Message". (TaskId:3)
+21:02:52.707     1>Done building target "_CheckForInvalidConfigurationAndPlatform" in project "bgfx.vcxproj".: (TargetId:2)
+21:02:52.707     1>Target "SetTelemetryEnvironmentVariables: (TargetId:3)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.Cpp.DesignTime.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+                   Task "SetEnv" (TaskId:4)
+                   Done executing task "SetEnv". (TaskId:4)
+                   Task "SetEnv" (TaskId:5)
+                   Done executing task "SetEnv". (TaskId:5)
+                   Task "SetEnv" (TaskId:6)
+                   Done executing task "SetEnv". (TaskId:6)
+                   Task "SetEnv" (TaskId:7)
+                   Done executing task "SetEnv". (TaskId:7)
+                   Task "SetEnv" (TaskId:8)
+                   Done executing task "SetEnv". (TaskId:8)
+21:02:52.707     1>Done building target "SetTelemetryEnvironmentVariables" in project "bgfx.vcxproj".: (TargetId:3)
+21:02:52.707     1>Target "_PrepareForBuild: (TargetId:4)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.BuildSteps.Targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:52.707     1>Done building target "_PrepareForBuild" in project "bgfx.vcxproj".: (TargetId:4)
+21:02:52.707     1>Target "_PrepareForReferenceResolution: (TargetId:5)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+21:02:52.707     1>Done building target "_PrepareForReferenceResolution" in project "bgfx.vcxproj".: (TargetId:5)
+21:02:52.707     1>Target "BeforeResolveReferences: (TargetId:6)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+21:02:52.707     1>Done building target "BeforeResolveReferences" in project "bgfx.vcxproj".: (TargetId:6)
+21:02:52.707     1>Target "AssignProjectConfiguration: (TargetId:7)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+                   Task "AssignProjectConfiguration" (TaskId:9)
+                   Done executing task "AssignProjectConfiguration". (TaskId:9)
+21:02:52.708     1>Done building target "AssignProjectConfiguration" in project "bgfx.vcxproj".: (TargetId:7)
+21:02:52.708     1>Target "_SplitProjectReferencesByFileExistence: (TargetId:8)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareProjectReferences" depends on it):
+21:02:52.708     1>Done building target "_SplitProjectReferencesByFileExistence" in project "bgfx.vcxproj".: (TargetId:8)
+21:02:52.708     1>Target "_AddOutputPathToGlobalPropertiesToRemove: (TargetId:9)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_GetProjectReferenceTargetFrameworkProperties" depends on it):
+21:02:52.708     1>Done building target "_AddOutputPathToGlobalPropertiesToRemove" in project "bgfx.vcxproj".: (TargetId:9)
+21:02:52.708     1>Target "_GetProjectReferenceTargetFrameworkProperties: (TargetId:10)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareProjectReferences" depends on it):
+                   Task "MSBuild" (TaskId:10)
+                   Done executing task "MSBuild". (TaskId:10)
+                   Task "SetRidAgnosticValueForProjects" (TaskId:11)
+                   Done executing task "SetRidAgnosticValueForProjects". (TaskId:11)
+21:02:52.708     1>Done building target "_GetProjectReferenceTargetFrameworkProperties" in project "bgfx.vcxproj".: (TargetId:10)
+21:02:52.708     1>Target "PrepareProjectReferences: (TargetId:11)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveProjectReferences" depends on it):
+21:02:52.708     1>Done building target "PrepareProjectReferences" in project "bgfx.vcxproj".: (TargetId:11)
+21:02:52.708     1>Target "ResolveProjectReferences: (TargetId:12)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+21:02:52.708     1>Done building target "ResolveProjectReferences" in project "bgfx.vcxproj".: (TargetId:12)
+21:02:52.709     1>Target "GetFrameworkPaths: (TargetId:13)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveAssemblyReferences" depends on it):
+21:02:52.709     1>Done building target "GetFrameworkPaths" in project "bgfx.vcxproj".: (TargetId:13)
+21:02:52.709     1>Target "GetReferenceAssemblyPaths: (TargetId:14)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveAssemblyReferences" depends on it):
+21:02:52.709     1>Done building target "GetReferenceAssemblyPaths" in project "bgfx.vcxproj".: (TargetId:14)
+21:02:52.709     1>Target "AddExternalIncludDirectoriesToPaths: (TargetId:15)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.Cpp.Current.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "SetBuildDefaultEnvironmentVariables" depends on it):
+21:02:52.709     1>Done building target "AddExternalIncludDirectoriesToPaths" in project "bgfx.vcxproj".: (TargetId:15)
+21:02:52.709     1>Target "SetBuildDefaultEnvironmentVariables: (TargetId:16)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.Cpp.Current.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareForBuild" depends on it):
+                   Task "SetEnv" (TaskId:12)
+                   Done executing task "SetEnv". (TaskId:12)
+                   Task "SetEnv" (TaskId:13)
+                   Done executing task "SetEnv". (TaskId:13)
+                   Task "SetEnv" (TaskId:14)
+                   Done executing task "SetEnv". (TaskId:14)
+                   Task "SetEnv" (TaskId:15)
+                   Done executing task "SetEnv". (TaskId:15)
+                   Task "SetEnv" (TaskId:16)
+                   Done executing task "SetEnv". (TaskId:16)
+21:02:52.709     1>Done building target "SetBuildDefaultEnvironmentVariables" in project "bgfx.vcxproj".: (TargetId:16)
+21:02:52.709     1>Target "GetResolvedWinMD: (TargetId:17)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareForBuild" depends on it):
+21:02:52.709     1>Done building target "GetResolvedWinMD" in project "bgfx.vcxproj".: (TargetId:17)
+21:02:52.709     1>Target "_CheckWindowsSDKInstalled: (TargetId:18)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.Cpp.WindowsSDK.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareForBuild" depends on it):
+21:02:52.710     1>Done building target "_CheckWindowsSDKInstalled" in project "bgfx.vcxproj".: (TargetId:18)
+21:02:52.710     1>Target "SetCABuildNativeEnvironmentVariables: (TargetId:19)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareForBuild" depends on it):
+                   Task "SetEnv" (TaskId:17)
+                   Done executing task "SetEnv". (TaskId:17)
+21:02:52.710     1>Done building target "SetCABuildNativeEnvironmentVariables" in project "bgfx.vcxproj".: (TargetId:19)
+21:02:52.710     1>Target "PrepareForBuild: (TargetId:20)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveAssemblyReferences" depends on it):
+                   Task "MakeDir" (TaskId:18)
+                   Done executing task "MakeDir". (TaskId:18)
+                   Task "CheckVCToolsetVersion" (TaskId:19)
+                   Done executing task "CheckVCToolsetVersion". (TaskId:19)
+                   Task "MakeDir" (TaskId:20)
+                   Done executing task "MakeDir". (TaskId:20)
+21:02:52.711     1>Done building target "PrepareForBuild" in project "bgfx.vcxproj".: (TargetId:20)
+21:02:52.711     1>Target "ResolveSDKReferences: (TargetId:21)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveAssemblyReferences" depends on it):
+21:02:52.711     1>Done building target "ResolveSDKReferences" in project "bgfx.vcxproj".: (TargetId:21)
+21:02:52.711     1>Target "ExpandSDKReferences: (TargetId:22)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveAssemblyReferences" depends on it):
+21:02:52.711     1>Done building target "ExpandSDKReferences" in project "bgfx.vcxproj".: (TargetId:22)
+21:02:52.712     1>Target "ResolveAssemblyReferences: (TargetId:23)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+21:02:52.712     1>Done building target "ResolveAssemblyReferences" in project "bgfx.vcxproj".: (TargetId:23)
+21:02:52.712     1>Target "AfterResolveReferences: (TargetId:24)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ResolveReferences" depends on it):
+21:02:52.712     1>Done building target "AfterResolveReferences" in project "bgfx.vcxproj".: (TargetId:24)
+21:02:52.712     1>Target "ResolveReferences: (TargetId:25)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:52.712     1>Done building target "ResolveReferences" in project "bgfx.vcxproj".: (TargetId:25)
+21:02:52.712     1>Target "InitializeBuildStatus: (TargetId:26)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+                   Task "ReadLinesFromFile" (TaskId:21)
+                   Done executing task "ReadLinesFromFile". (TaskId:21)
+                   Task "WriteLinesToFile" (TaskId:22)
+                   Done executing task "WriteLinesToFile". (TaskId:22)
+                   Task "Touch" (TaskId:23)
+                   Done executing task "Touch". (TaskId:23)
+21:02:52.717     1>Done building target "InitializeBuildStatus" in project "bgfx.vcxproj".: (TargetId:26)
+21:02:52.718     1>Target "BuildGenerateSourcesTraverse: (TargetId:27)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildGenerateSources" depends on it):
+21:02:52.718     1>Done building target "BuildGenerateSourcesTraverse" in project "bgfx.vcxproj".: (TargetId:27)
+21:02:52.718     1>Target "BeforeBuildGenerateSources: (TargetId:28)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.BuildSteps.Targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.718     1>Done building target "BeforeBuildGenerateSources" in project "bgfx.vcxproj".: (TargetId:28)
+21:02:52.718     1>Target "PreBuildEvent: (TargetId:29)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.718     1>Done building target "PreBuildEvent" in project "bgfx.vcxproj".: (TargetId:29)
+21:02:52.718     1>Target "_SelectedFiles: (TargetId:30)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "SelectCustomBuild" depends on it):
+21:02:52.718     1>Done building target "_SelectedFiles" in project "bgfx.vcxproj".: (TargetId:30)
+21:02:52.718     1>Target "SelectCustomBuild: (TargetId:31)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CustomBuild" depends on it):
+21:02:52.718     1>Done building target "SelectCustomBuild" in project "bgfx.vcxproj".: (TargetId:31)
+21:02:52.718     1>Target "ComputeCustomBuildOutput: (TargetId:32)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CustomBuild" depends on it):
+                   Task "MakeDir" (TaskId:24)
+                   Done executing task "MakeDir". (TaskId:24)
+21:02:52.718     1>Done building target "ComputeCustomBuildOutput" in project "bgfx.vcxproj".: (TargetId:32)
+21:02:52.718     1>Target "CustomBuild: (TargetId:33)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+                   Task "GetOutOfDateItems" (TaskId:25)
+                   Done executing task "GetOutOfDateItems". (TaskId:25)
+                   Task "GetOutOfDateItems" (TaskId:26)
+                   Done executing task "GetOutOfDateItems". (TaskId:26)
+21:02:52.719     1>Done building target "CustomBuild" in project "bgfx.vcxproj".: (TargetId:33)
+21:02:52.719     1>Target "CopyFileToFolders: (TargetId:34)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+                   Task "GetOutOfDateItems" (TaskId:27)
+                   Done executing task "GetOutOfDateItems". (TaskId:27)
+21:02:52.719     1>Done building target "CopyFileToFolders" in project "bgfx.vcxproj".: (TargetId:34)
+21:02:52.719     1>Target "_Xsd: (TargetId:35)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.719     1>Done building target "_Xsd" in project "bgfx.vcxproj".: (TargetId:35)
+21:02:52.719     1>Target "MakeDirsForMidl: (TargetId:36)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Midl" depends on it):
+                   Task "Makedir" (TaskId:28)
+                   Done executing task "Makedir". (TaskId:28)
+21:02:52.719     1>Done building target "MakeDirsForMidl" in project "bgfx.vcxproj".: (TargetId:36)
+21:02:52.719     1>Target "ComputeMIDLGeneratedCompileInputs: (TargetId:37)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Midl" depends on it):
+21:02:52.719     1>Done building target "ComputeMIDLGeneratedCompileInputs" in project "bgfx.vcxproj".: (TargetId:37)
+21:02:52.719     1>Target "AfterMidl: (TargetId:38)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Midl" depends on it):
+21:02:52.719     1>Done building target "AfterMidl" in project "bgfx.vcxproj".: (TargetId:38)
+21:02:52.719     1>Target "_Midl: (TargetId:39)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.719     1>Done building target "_Midl" in project "bgfx.vcxproj".: (TargetId:39)
+21:02:52.719     1>Target "AfterBuildGenerateSources: (TargetId:40)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.BuildSteps.Targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.719     1>Done building target "AfterBuildGenerateSources" in project "bgfx.vcxproj".: (TargetId:40)
+21:02:52.719     1>Target "AfterBuildGenerateSourcesEvent: (TargetId:41)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildGenerateSourcesAction" depends on it):
+21:02:52.719     1>Done building target "AfterBuildGenerateSourcesEvent" in project "bgfx.vcxproj".: (TargetId:41)
+21:02:52.719     1>Target "_BuildGenerateSourcesAction: (TargetId:42)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildGenerateSources" depends on it):
+21:02:52.719     1>Done building target "_BuildGenerateSourcesAction" in project "bgfx.vcxproj".: (TargetId:42)
+21:02:52.719     1>Target "BuildGenerateSources: (TargetId:43)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:52.719     1>Done building target "BuildGenerateSources" in project "bgfx.vcxproj".: (TargetId:43)
+21:02:52.719     1>Target "BuildCompileTraverse: (TargetId:44)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildCompile" depends on it):
+21:02:52.719     1>Done building target "BuildCompileTraverse" in project "bgfx.vcxproj".: (TargetId:44)
+21:02:52.719     1>Target "BeforeClCompile: (TargetId:45)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:52.719     1>Done building target "BeforeClCompile" in project "bgfx.vcxproj".: (TargetId:45)
+21:02:52.720     1>Target "ComputeCLInputPDBName: (TargetId:46)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:52.720     1>Done building target "ComputeCLInputPDBName" in project "bgfx.vcxproj".: (TargetId:46)
+21:02:52.720     1>Target "FindReferenceAssembliesForReferences: (TargetId:47)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ComputeReferenceCLInput" depends on it):
+21:02:52.720     1>Done building target "FindReferenceAssembliesForReferences" in project "bgfx.vcxproj".: (TargetId:47)
+21:02:52.720     1>Target "GetReferencedVCProjectsInfo: (TargetId:48)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ComputeReferenceCLInput" depends on it):
+21:02:52.720     1>Done building target "GetReferencedVCProjectsInfo" in project "bgfx.vcxproj".: (TargetId:48)
+21:02:52.720     1>Target "ComputeReferenceCLInput: (TargetId:49)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:52.720     1>Done building target "ComputeReferenceCLInput" in project "bgfx.vcxproj".: (TargetId:49)
+21:02:52.720     1>Target "ComputeStdModulesCompileInputs: (TargetId:50)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:52.720     1>Done building target "ComputeStdModulesCompileInputs" in project "bgfx.vcxproj".: (TargetId:50)
+21:02:52.720     1>Target "FixupCLCompileOptions: (TargetId:51)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:52.722     1>Done building target "FixupCLCompileOptions" in project "bgfx.vcxproj".: (TargetId:51)
+21:02:52.722     1>Target "MakeDirsForCl: (TargetId:52)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+                   Task "MakeDir" (TaskId:29)
+                   Done executing task "MakeDir". (TaskId:29)
+21:02:52.723     1>Done building target "MakeDirsForCl" in project "bgfx.vcxproj".: (TargetId:52)
+21:02:52.723     1>Target "SelectClCompile: (TargetId:53)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ClCompile" depends on it):
+21:02:52.723     1>Done building target "SelectClCompile" in project "bgfx.vcxproj".: (TargetId:53)
+21:02:52.723     1>Target "ClCompile: (TargetId:54)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+                   Task "CL" (TaskId:30)
+                     C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.37.32822\bin\HostX64\x64\CL.exe /c /Ivendor\bx\include /Ivendor\bimg\include /Ivendor\bgfx\include /Ivendor\bgfx\3rdparty /I"vendor\bgfx\3rdparty\directx-headers\include\directx" /Ivendor\bgfx\3rdparty\khronos /Ivendor\bx\include\compat\msvc /ZI /JMC /nologo /W3 /WX- /diagnostics:column /MP /Od /D DEBUG /D BX_CONFIG_DEBUG=1 /D __STDC_FORMAT_MACROS /D _CRT_SECURE_NO_WARNINGS /D _HAS_EXCEPTIONS=0 /D _UNICODE /D UNICODE /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR- /std:c++17 /Fo"obj\x64\Debug\bgfx\\" /Fd"bin\x64\Debug\bgfx.pdb" /external:W3 /Gd /TP /FC /errorReport:prompt /Zc:__cplusplus /Zc:preprocessor vendor\bgfx\src\bgfx.cpp vendor\bgfx\src\debug_renderdoc.cpp vendor\bgfx\src\dxgi.cpp vendor\bgfx\src\glcontext_html5.cpp vendor\bgfx\src\glcontext_wgl.cpp vendor\bgfx\src\nvapi.cpp vendor\bgfx\src\renderer_agc.cpp vendor\bgfx\src\renderer_d3d11.cpp vendor\bgfx\src\renderer_d3d12.cpp vendor\bgfx\src\renderer_gl.cpp vendor\bgfx\src\renderer_gnm.cpp vendor\bgfx\src\renderer_noop.cpp vendor\bgfx\src\renderer_nvn.cpp vendor\bgfx\src\renderer_vk.cpp vendor\bgfx\src\shader.cpp vendor\bgfx\src\shader_dxbc.cpp vendor\bgfx\src\shader_spirv.cpp vendor\bgfx\src\topology.cpp vendor\bgfx\src\vertexlayout.cpp (TaskId:30)
+                     bgfx.cpp (TaskId:30)
+                     debug_renderdoc.cpp (TaskId:30)
+                     dxgi.cpp (TaskId:30)
+                     glcontext_html5.cpp (TaskId:30)
+                     glcontext_wgl.cpp (TaskId:30)
+                     nvapi.cpp (TaskId:30)
+                     renderer_agc.cpp (TaskId:30)
+                     renderer_d3d11.cpp (TaskId:30)
+                     renderer_d3d12.cpp (TaskId:30)
+                     renderer_gl.cpp (TaskId:30)
+                     renderer_gnm.cpp (TaskId:30)
+                     renderer_noop.cpp (TaskId:30)
+                     renderer_nvn.cpp (TaskId:30)
+                     renderer_vk.cpp (TaskId:30)
+                     shader.cpp (TaskId:30)
+                     shader_dxbc.cpp (TaskId:30)
+                     shader_spirv.cpp (TaskId:30)
+                     topology.cpp (TaskId:30)
+                     vertexlayout.cpp (TaskId:30)
+21:02:54.920     1>C:\Users\chris\TomatoEngine\vendor\bgfx\src\renderer_vk.cpp(6248,6): warning C4244: 'argument': conversion from 'VkDeviceSize' to 'uint32_t', possible loss of data
+21:02:54.923     1>C:\Users\chris\TomatoEngine\vendor\bgfx\src\renderer_vk.cpp(6540,4): warning C4244: 'argument': conversion from 'VkDeviceSize' to 'uint32_t', possible loss of data
+                   Done executing task "CL". (TaskId:30)
+21:02:55.473     1>Done building target "ClCompile" in project "bgfx.vcxproj".: (TargetId:54)
+21:02:55.473     1>Target "AfterClCompile: (TargetId:55)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ClCompile" depends on it):
+21:02:55.473     1>Done building target "AfterClCompile" in project "bgfx.vcxproj".: (TargetId:55)
+21:02:55.473     1>Target "_ClCompile: (TargetId:56)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildCompileAction" depends on it):
+21:02:55.473     1>Done building target "_ClCompile" in project "bgfx.vcxproj".: (TargetId:56)
+21:02:55.473     1>Target "BeforeResourceCompile: (TargetId:57)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ResourceCompile" depends on it):
+21:02:55.473     1>Done building target "BeforeResourceCompile" in project "bgfx.vcxproj".: (TargetId:57)
+21:02:55.473     1>Target "MakeDirsForResourceCompile: (TargetId:58)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ResourceCompile" depends on it):
+                   Task "MakeDir" (TaskId:31)
+                   Done executing task "MakeDir". (TaskId:31)
+21:02:55.473     1>Done building target "MakeDirsForResourceCompile" in project "bgfx.vcxproj".: (TargetId:58)
+21:02:55.473     1>Target "AfterResourceCompile: (TargetId:59)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_ResourceCompile" depends on it):
+21:02:55.473     1>Done building target "AfterResourceCompile" in project "bgfx.vcxproj".: (TargetId:59)
+21:02:55.473     1>Target "_ResourceCompile: (TargetId:60)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildCompileAction" depends on it):
+21:02:55.473     1>Done building target "_ResourceCompile" in project "bgfx.vcxproj".: (TargetId:60)
+21:02:55.473     1>Target "BeforeLib: (TargetId:61)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.473     1>Done building target "BeforeLib" in project "bgfx.vcxproj".: (TargetId:61)
+21:02:55.473     1>Target "ComputeLibAdditionalOptions: (TargetId:62)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.473     1>Done building target "ComputeLibAdditionalOptions" in project "bgfx.vcxproj".: (TargetId:62)
+21:02:55.473     1>Target "ComputeRCOutputs: (TargetId:63)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ComputeRCGeneratedLibInputs" depends on it):
+21:02:55.474     1>Done building target "ComputeRCOutputs" in project "bgfx.vcxproj".: (TargetId:63)
+21:02:55.474     1>Target "ComputeRCGeneratedLibInputs: (TargetId:64)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.474     1>Done building target "ComputeRCGeneratedLibInputs" in project "bgfx.vcxproj".: (TargetId:64)
+21:02:55.474     1>Target "ComputeCLOutputs: (TargetId:65)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ComputeCLGeneratedLibInputs" depends on it):
+21:02:55.474     1>Done building target "ComputeCLOutputs" in project "bgfx.vcxproj".: (TargetId:65)
+21:02:55.474     1>Target "ComputeCLGeneratedLibInputs: (TargetId:66)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.474     1>Done building target "ComputeCLGeneratedLibInputs" in project "bgfx.vcxproj".: (TargetId:66)
+21:02:55.474     1>Target "ComputeLibInputsFromProject: (TargetId:67)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.474     1>Done building target "ComputeLibInputsFromProject" in project "bgfx.vcxproj".: (TargetId:67)
+21:02:55.474     1>Target "MakeDirsForLib: (TargetId:68)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+                   Task "MakeDir" (TaskId:32)
+                   Done executing task "MakeDir". (TaskId:32)
+21:02:55.474     1>Done building target "MakeDirsForLib" in project "bgfx.vcxproj".: (TargetId:68)
+21:02:55.474     1>Target "DoLibOutputFilesMatch: (TargetId:69)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.475     1>Done building target "DoLibOutputFilesMatch" in project "bgfx.vcxproj".: (TargetId:69)
+21:02:55.475     1>Target "PreLinkEvent: (TargetId:70)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.475     1>Done building target "PreLinkEvent" in project "bgfx.vcxproj".: (TargetId:70)
+21:02:55.475     1>Target "Lib: (TargetId:71)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+                   Task "LIB" (TaskId:33)
+                     C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.37.32822\bin\HostX64\x64\Lib.exe /OUT:"bin\x64\Debug\bgfx.lib" /NOLOGO /MACHINE:X64 obj\x64\Debug\bgfx\bgfx.obj
+                     obj\x64\Debug\bgfx\debug_renderdoc.obj
+                     obj\x64\Debug\bgfx\dxgi.obj
+                     obj\x64\Debug\bgfx\glcontext_html5.obj
+                     obj\x64\Debug\bgfx\glcontext_wgl.obj
+                     obj\x64\Debug\bgfx\nvapi.obj
+                     obj\x64\Debug\bgfx\renderer_agc.obj
+                     obj\x64\Debug\bgfx\renderer_d3d11.obj
+                     obj\x64\Debug\bgfx\renderer_d3d12.obj
+                     obj\x64\Debug\bgfx\renderer_gl.obj
+                     obj\x64\Debug\bgfx\renderer_gnm.obj
+                     obj\x64\Debug\bgfx\renderer_noop.obj
+                     obj\x64\Debug\bgfx\renderer_nvn.obj
+                     obj\x64\Debug\bgfx\renderer_vk.obj
+                     obj\x64\Debug\bgfx\shader.obj
+                     obj\x64\Debug\bgfx\shader_dxbc.obj
+                     obj\x64\Debug\bgfx\shader_spirv.obj
+                     obj\x64\Debug\bgfx\topology.obj
+                     obj\x64\Debug\bgfx\vertexlayout.obj (TaskId:33)
+                   Done executing task "LIB". (TaskId:33)
+                   Task "Message" (TaskId:34)
+                     bgfx.vcxproj -> C:\Users\chris\TomatoEngine\bin\x64\Debug\bgfx.lib (TaskId:34)
+                   Done executing task "Message". (TaskId:34)
+21:02:55.750     1>Done building target "Lib" in project "bgfx.vcxproj".: (TargetId:71)
+21:02:55.751     1>Target "AfterLib: (TargetId:72)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_Lib" depends on it):
+21:02:55.751     1>Done building target "AfterLib" in project "bgfx.vcxproj".: (TargetId:72)
+21:02:55.751     1>Target "_Lib: (TargetId:73)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildCompileAction" depends on it):
+21:02:55.751     1>Done building target "_Lib" in project "bgfx.vcxproj".: (TargetId:73)
+21:02:55.751     1>Target "AfterBuildCompileEvent: (TargetId:74)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildCompileAction" depends on it):
+21:02:55.751     1>Done building target "AfterBuildCompileEvent" in project "bgfx.vcxproj".: (TargetId:74)
+21:02:55.751     1>Target "_BuildCompileAction: (TargetId:75)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildCompile" depends on it):
+21:02:55.751     1>Done building target "_BuildCompileAction" in project "bgfx.vcxproj".: (TargetId:75)
+21:02:55.751     1>Target "BuildCompile: (TargetId:76)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:55.751     1>Done building target "BuildCompile" in project "bgfx.vcxproj".: (TargetId:76)
+21:02:55.751     1>Target "BuildLinkTraverse: (TargetId:77)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildLink" depends on it):
+21:02:55.751     1>Done building target "BuildLinkTraverse" in project "bgfx.vcxproj".: (TargetId:77)
+21:02:55.751     1>Target "ComputeLegacyManifestEmbedding: (TargetId:78)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.751     1>Done building target "ComputeLegacyManifestEmbedding" in project "bgfx.vcxproj".: (TargetId:78)
+21:02:55.751     1>Target "_ALink: (TargetId:79)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.751     1>Done building target "_ALink" in project "bgfx.vcxproj".: (TargetId:79)
+21:02:55.751     1>Target "_Manifest: (TargetId:80)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.751     1>Done building target "_Manifest" in project "bgfx.vcxproj".: (TargetId:80)
+21:02:55.751     1>Target "RegisterOutput: (TargetId:81)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.751     1>Done building target "RegisterOutput" in project "bgfx.vcxproj".: (TargetId:81)
+21:02:55.751     1>Target "ResolvedXDCMake: (TargetId:82)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_XdcMake" depends on it):
+21:02:55.752     1>Done building target "ResolvedXDCMake" in project "bgfx.vcxproj".: (TargetId:82)
+21:02:55.752     1>Target "ComputeCLCompileGeneratedXDCFiles: (TargetId:83)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_XdcMake" depends on it):
+21:02:55.752     1>Done building target "ComputeCLCompileGeneratedXDCFiles" in project "bgfx.vcxproj".: (TargetId:83)
+21:02:55.752     1>Target "MakeDirsForXdcMake: (TargetId:84)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_XdcMake" depends on it):
+                   Task "MakeDir" (TaskId:35)
+                   Done executing task "MakeDir". (TaskId:35)
+21:02:55.752     1>Done building target "MakeDirsForXdcMake" in project "bgfx.vcxproj".: (TargetId:84)
+21:02:55.752     1>Target "_XdcMake: (TargetId:85)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.752     1>Done building target "_XdcMake" in project "bgfx.vcxproj".: (TargetId:85)
+21:02:55.752     1>Target "ComputeCLCompileGeneratedSbrFiles: (TargetId:86)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BscMake" depends on it):
+21:02:55.752     1>Done building target "ComputeCLCompileGeneratedSbrFiles" in project "bgfx.vcxproj".: (TargetId:86)
+21:02:55.752     1>Target "MakeDirsForBscMake: (TargetId:87)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BscMake" depends on it):
+                   Task "MakeDir" (TaskId:36)
+                   Done executing task "MakeDir". (TaskId:36)
+21:02:55.752     1>Done building target "MakeDirsForBscMake" in project "bgfx.vcxproj".: (TargetId:87)
+21:02:55.752     1>Target "_BscMake: (TargetId:88)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.752     1>Done building target "_BscMake" in project "bgfx.vcxproj".: (TargetId:88)
+21:02:55.752     1>Target "BuiltProjectOutputGroup: (TargetId:89)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CreateRecipeFile" depends on it):
+21:02:55.752     1>Done building target "BuiltProjectOutputGroup" in project "bgfx.vcxproj".: (TargetId:89)
+21:02:55.752     1>Target "AssignTargetPaths: (TargetId:90)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareResourceNames" depends on it):
+                   Task "AssignTargetPath" (TaskId:37)
+                   Done executing task "AssignTargetPath". (TaskId:37)
+                   Task "AssignTargetPath" (TaskId:38)
+                   Done executing task "AssignTargetPath". (TaskId:38)
+                   Task "AssignTargetPath" (TaskId:39)
+                   Done executing task "AssignTargetPath". (TaskId:39)
+                   Task "AssignTargetPath" (TaskId:40)
+                   Done executing task "AssignTargetPath". (TaskId:40)
+21:02:55.752     1>Done building target "AssignTargetPaths" in project "bgfx.vcxproj".: (TargetId:90)
+21:02:55.752     1>Target "SplitResourcesByCulture: (TargetId:91)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareResourceNames" depends on it):
+                   Task "AssignCulture" (TaskId:41)
+                   Done executing task "AssignCulture". (TaskId:41)
+21:02:55.753     1>Done building target "SplitResourcesByCulture" in project "bgfx.vcxproj".: (TargetId:91)
+21:02:55.753     1>Target "CreateCustomManifestResourceNames: (TargetId:92)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareResourceNames" depends on it):
+21:02:55.753     1>Done building target "CreateCustomManifestResourceNames" in project "bgfx.vcxproj".: (TargetId:92)
+21:02:55.753     1>Target "PrepareResourceNames: (TargetId:93)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "SatelliteDllsProjectOutputGroup" depends on it):
+21:02:55.753     1>Done building target "PrepareResourceNames" in project "bgfx.vcxproj".: (TargetId:93)
+21:02:55.753     1>Target "SatelliteDllsProjectOutputGroup: (TargetId:94)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CreateRecipeFile" depends on it):
+21:02:55.753     1>Done building target "SatelliteDllsProjectOutputGroup" in project "bgfx.vcxproj".: (TargetId:94)
+21:02:55.753     1>Target "MakeDirsForFxc: (TargetId:95)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "ContentFilesProjectOutputGroup" depends on it):
+                   Task "MakeDir" (TaskId:42)
+                   Done executing task "MakeDir". (TaskId:42)
+21:02:55.753     1>Done building target "MakeDirsForFxc" in project "bgfx.vcxproj".: (TargetId:95)
+21:02:55.753     1>Target "ContentFilesProjectOutputGroup: (TargetId:96)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CreateRecipeFile" depends on it):
+21:02:55.753     1>Done building target "ContentFilesProjectOutputGroup" in project "bgfx.vcxproj".: (TargetId:96)
+21:02:55.753     1>Target "CreateRecipeFile: (TargetId:97)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+                   Task "GenerateDesktopDeployRecipe" (TaskId:43)
+                   Done executing task "GenerateDesktopDeployRecipe". (TaskId:43)
+21:02:55.755     1>Done building target "CreateRecipeFile" in project "bgfx.vcxproj".: (TargetId:97)
+21:02:55.755     1>Target "_GenerateSatelliteAssemblyInputs: (TargetId:98)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CreateSatelliteAssemblies" depends on it):
+21:02:55.755     1>Done building target "_GenerateSatelliteAssemblyInputs" in project "bgfx.vcxproj".: (TargetId:98)
+21:02:55.755     1>Target "CreateSatelliteAssemblies: (TargetId:99)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.755     1>Done building target "CreateSatelliteAssemblies" in project "bgfx.vcxproj".: (TargetId:99)
+21:02:55.755     1>Target "_Appverifier: (TargetId:100)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.755     1>Done building target "_Appverifier" in project "bgfx.vcxproj".: (TargetId:100)
+21:02:55.755     1>Target "_Deploy: (TargetId:101)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.755     1>Done building target "_Deploy" in project "bgfx.vcxproj".: (TargetId:101)
+21:02:55.755     1>Target "_PopulateCommonStateForGetCopyToOutputDirectoryItems: (TargetId:102)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "GetCopyToOutputDirectoryItems" depends on it):
+21:02:55.755     1>Done building target "_PopulateCommonStateForGetCopyToOutputDirectoryItems" in project "bgfx.vcxproj".: (TargetId:102)
+21:02:55.755     1>Target "GetCopyToOutputDirectoryXamlAppDefs: (TargetId:103)" in file "C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Xaml.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "GetCopyToOutputDirectoryItems" depends on it):
+                   Task "AssignTargetPath" (TaskId:44)
+                   Done executing task "AssignTargetPath". (TaskId:44)
+21:02:55.755     1>Done building target "GetCopyToOutputDirectoryXamlAppDefs" in project "bgfx.vcxproj".: (TargetId:103)
+21:02:55.755     1>Target "GetCopyToOutputDirectoryItems: (TargetId:104)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_CopySourceItemsToOutputDirectory" depends on it):
+                   Task "CallTarget" (TaskId:45)
+21:02:55.755     1>Target "_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences: (TargetId:105)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "GetCopyToOutputDirectoryItems" depends on it):
+                   Task "AssignTargetPath" (TaskId:46)
+                   Done executing task "AssignTargetPath". (TaskId:46)
+21:02:55.756     1>Done building target "_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences" in project "bgfx.vcxproj".: (TargetId:105)
+                   Done executing task "CallTarget". (TaskId:45)
+                   Task "CallTarget" (TaskId:47)
+21:02:55.756     1>Target "_GetCopyToOutputDirectoryItemsFromThisProject: (TargetId:106)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "GetCopyToOutputDirectoryItems" depends on it):
+                   Task "AssignTargetPath" (TaskId:48)
+                   Done executing task "AssignTargetPath". (TaskId:48)
+21:02:55.756     1>Done building target "_GetCopyToOutputDirectoryItemsFromThisProject" in project "bgfx.vcxproj".: (TargetId:106)
+                   Done executing task "CallTarget". (TaskId:47)
+21:02:55.756     1>Done building target "GetCopyToOutputDirectoryItems" in project "bgfx.vcxproj".: (TargetId:104)
+21:02:55.756     1>Target "_CopySourceItemsToOutputDirectory: (TargetId:107)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CopyFilesToOutputDirectory" depends on it):
+21:02:55.756     1>Done building target "_CopySourceItemsToOutputDirectory" in project "bgfx.vcxproj".: (TargetId:107)
+21:02:55.756     1>Target "_CheckForCompileOutputs: (TargetId:108)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "CopyFilesToOutputDirectory" depends on it):
+21:02:55.756     1>Done building target "_CheckForCompileOutputs" in project "bgfx.vcxproj".: (TargetId:108)
+21:02:55.756     1>Target "CopyFilesToOutputDirectory: (TargetId:109)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "PrepareForRun" depends on it):
+21:02:55.757     1>Done building target "CopyFilesToOutputDirectory" in project "bgfx.vcxproj".: (TargetId:109)
+21:02:55.757     1>Target "PrepareForRun: (TargetId:110)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.757     1>Done building target "PrepareForRun" in project "bgfx.vcxproj".: (TargetId:110)
+21:02:55.757     1>Target "PostBuildEvent: (TargetId:111)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "_BuildLinkAction" depends on it):
+21:02:55.757     1>Done building target "PostBuildEvent" in project "bgfx.vcxproj".: (TargetId:111)
+21:02:55.757     1>Target "_BuildLinkAction: (TargetId:112)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "BuildLink" depends on it):
+21:02:55.757     1>Done building target "_BuildLinkAction" in project "bgfx.vcxproj".: (TargetId:112)
+21:02:55.757     1>Target "BuildLink: (TargetId:113)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:55.757     1>Done building target "BuildLink" in project "bgfx.vcxproj".: (TargetId:113)
+21:02:55.757     1>Target "AfterBuild: (TargetId:114)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.BuildSteps.Targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+21:02:55.757     1>Done building target "AfterBuild" in project "bgfx.vcxproj".: (TargetId:114)
+21:02:55.757     1>Target "_CleanGetCurrentAndPriorFileWrites: (TargetId:115)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "IncrementalClean" depends on it):
+                   Task "ReadLinesFromFile" (TaskId:49)
+                   Done executing task "ReadLinesFromFile". (TaskId:49)
+                   Task "ConvertToAbsolutePath" (TaskId:50)
+                   Done executing task "ConvertToAbsolutePath". (TaskId:50)
+                   Task "FindUnderPath" (TaskId:51)
+                   Done executing task "FindUnderPath". (TaskId:51)
+                   Task "FindUnderPath" (TaskId:52)
+                   Done executing task "FindUnderPath". (TaskId:52)
+                   Task "FindUnderPath" (TaskId:53)
+                   Done executing task "FindUnderPath". (TaskId:53)
+                   Task "RemoveDuplicates" (TaskId:54)
+                   Done executing task "RemoveDuplicates". (TaskId:54)
+21:02:55.757     1>Done building target "_CleanGetCurrentAndPriorFileWrites" in project "bgfx.vcxproj".: (TargetId:115)
+21:02:55.757     1>Target "IncrementalClean: (TargetId:116)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+                   Task "FindUnderPath" (TaskId:55)
+                   Done executing task "FindUnderPath". (TaskId:55)
+                   Task "FindUnderPath" (TaskId:56)
+                   Done executing task "FindUnderPath". (TaskId:56)
+                   Task "Delete" (TaskId:57)
+                   Done executing task "Delete". (TaskId:57)
+                   Task "RemoveDuplicates" (TaskId:58)
+                   Done executing task "RemoveDuplicates". (TaskId:58)
+21:02:55.758     1>Done building target "IncrementalClean" in project "bgfx.vcxproj".: (TargetId:116)
+21:02:55.758     1>Target "TlogCleanup: (TargetId:117)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+                   Task "CleanupStaleTlogItems" (TaskId:59)
+                   Done executing task "CleanupStaleTlogItems". (TaskId:59)
+21:02:55.758     1>Done building target "TlogCleanup" in project "bgfx.vcxproj".: (TargetId:117)
+21:02:55.758     1>Target "FinalizeBuildStatus: (TargetId:118)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (target "Build" depends on it):
+                   Task "Delete" (TaskId:60)
+                   Done executing task "Delete". (TaskId:60)
+                   Task "Touch" (TaskId:61)
+                   Done executing task "Touch". (TaskId:61)
+21:02:55.761     1>Done building target "FinalizeBuildStatus" in project "bgfx.vcxproj".: (TargetId:118)
+21:02:55.761     1>Target "Build: (TargetId:119)" in file "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.BuildSteps.Targets" from project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (entry point):
+21:02:55.761     1>Done building target "Build" in project "bgfx.vcxproj".: (TargetId:119)
+21:02:55.761     1>Done Building Project "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (Build target(s)).
+
+Project Performance Summary:
+     3055 ms  C:\Users\chris\TomatoEngine\bgfx.vcxproj   1 calls
+               3055 ms  Build                                      1 calls
+
+Target Performance Summary:
+        0 ms  _ResourceCompile                           1 calls
+        0 ms  RegisterOutput                             1 calls
+        0 ms  _Manifest                                  1 calls
+        0 ms  _ALink                                     1 calls
+        0 ms  ComputeLegacyManifestEmbedding             1 calls
+        0 ms  BuildLinkTraverse                          1 calls
+        0 ms  BuildCompile                               1 calls
+        0 ms  _BuildCompileAction                        1 calls
+        0 ms  AfterBuildCompileEvent                     1 calls
+        0 ms  _Lib                                       1 calls
+        0 ms  AfterLib                                   1 calls
+        0 ms  PreLinkEvent                               1 calls
+        0 ms  MakeDirsForLib                             1 calls
+        0 ms  ComputeLibInputsFromProject                1 calls
+        0 ms  ComputeCLOutputs                           1 calls
+        0 ms  ComputeRCGeneratedLibInputs                1 calls
+        0 ms  ComputeLibAdditionalOptions                1 calls
+        0 ms  BeforeLib                                  1 calls
+        0 ms  AfterResourceCompile                       1 calls
+        0 ms  MakeDirsForResourceCompile                 1 calls
+        0 ms  BeforeResourceCompile                      1 calls
+        0 ms  _ClCompile                                 1 calls
+        0 ms  ComputeCLCompileGeneratedXDCFiles          1 calls
+        0 ms  MakeDirsForXdcMake                         1 calls
+        0 ms  _XdcMake                                   1 calls
+        0 ms  ComputeCLCompileGeneratedSbrFiles          1 calls
+        0 ms  AfterBuild                                 1 calls
+        0 ms  BuildLink                                  1 calls
+        0 ms  _BuildLinkAction                           1 calls
+        0 ms  PostBuildEvent                             1 calls
+        0 ms  PrepareForRun                              1 calls
+        0 ms  _CheckForCompileOutputs                    1 calls
+        0 ms  _CopySourceItemsToOutputDirectory          1 calls
+        0 ms  _GetCopyToOutputDirectoryItemsFromThisProject   1 calls
+        0 ms  GetCopyToOutputDirectoryXamlAppDefs        1 calls
+        0 ms  _PopulateCommonStateForGetCopyToOutputDirectoryItems   1 calls
+        0 ms  AfterClCompile                             1 calls
+        0 ms  _Deploy                                    1 calls
+        0 ms  CreateSatelliteAssemblies                  1 calls
+        0 ms  _GenerateSatelliteAssemblyInputs           1 calls
+        0 ms  MakeDirsForFxc                             1 calls
+        0 ms  SatelliteDllsProjectOutputGroup            1 calls
+        0 ms  PrepareResourceNames                       1 calls
+        0 ms  CreateCustomManifestResourceNames          1 calls
+        0 ms  AssignTargetPaths                          1 calls
+        0 ms  BuiltProjectOutputGroup                    1 calls
+        0 ms  _BscMake                                   1 calls
+        0 ms  MakeDirsForBscMake                         1 calls
+        0 ms  _Appverifier                               1 calls
+        0 ms  SelectClCompile                            1 calls
+        0 ms  Build                                      1 calls
+        0 ms  ResolveReferences                          1 calls
+        0 ms  SelectCustomBuild                          1 calls
+        0 ms  _SelectedFiles                             1 calls
+        0 ms  PreBuildEvent                              1 calls
+        0 ms  BeforeBuildGenerateSources                 1 calls
+        0 ms  AfterResolveReferences                     1 calls
+        0 ms  ResolveAssemblyReferences                  1 calls
+        0 ms  ExpandSDKReferences                        1 calls
+        0 ms  ResolveSDKReferences                       1 calls
+        0 ms  _PrepareForBuild                           1 calls
+        0 ms  SetCABuildNativeEnvironmentVariables       1 calls
+        0 ms  GetResolvedWinMD                           1 calls
+        0 ms  _PrepareForReferenceResolution             1 calls
+        0 ms  AddExternalIncludDirectoriesToPaths        1 calls
+        0 ms  GetReferenceAssemblyPaths                  1 calls
+        0 ms  GetFrameworkPaths                          1 calls
+        0 ms  ResolveProjectReferences                   1 calls
+        0 ms  PrepareProjectReferences                   1 calls
+        0 ms  _AddOutputPathToGlobalPropertiesToRemove   1 calls
+        0 ms  _SplitProjectReferencesByFileExistence     1 calls
+        0 ms  CopyFileToFolders                          1 calls
+        0 ms  _Xsd                                       1 calls
+        0 ms  BeforeResolveReferences                    1 calls
+        0 ms  ComputeMIDLGeneratedCompileInputs          1 calls
+        0 ms  ComputeReferenceCLInput                    1 calls
+        0 ms  AfterMidl                                  1 calls
+        0 ms  GetReferencedVCProjectsInfo                1 calls
+        0 ms  _Midl                                      1 calls
+        0 ms  FindReferenceAssembliesForReferences       1 calls
+        0 ms  ComputeCLInputPDBName                      1 calls
+        0 ms  BeforeClCompile                            1 calls
+        0 ms  BuildCompileTraverse                       1 calls
+        0 ms  AfterBuildGenerateSources                  1 calls
+        0 ms  AfterBuildGenerateSourcesEvent             1 calls
+        0 ms  BuildGenerateSources                       1 calls
+        0 ms  _BuildGenerateSourcesAction                1 calls
+        0 ms  BuildGenerateSourcesTraverse               1 calls
+        1 ms  ComputeCustomBuildOutput                   1 calls
+        1 ms  ResolvedXDCMake                            1 calls
+        1 ms  _CleanGetCurrentAndPriorFileWrites         1 calls
+        1 ms  AssignProjectConfiguration                 1 calls
+        1 ms  IncrementalClean                           1 calls
+        1 ms  TlogCleanup                                1 calls
+        1 ms  CopyFilesToOutputDirectory                 1 calls
+        1 ms  _GetProjectReferenceTargetFrameworkProperties   1 calls
+        1 ms  _CheckWindowsSDKInstalled                  1 calls
+        1 ms  ComputeStdModulesCompileInputs             1 calls
+        1 ms  ComputeCLGeneratedLibInputs                1 calls
+        1 ms  ContentFilesProjectOutputGroup             1 calls
+        1 ms  SetBuildDefaultEnvironmentVariables        1 calls
+        1 ms  CustomBuild                                1 calls
+        1 ms  MakeDirsForMidl                            1 calls
+        1 ms  DoLibOutputFilesMatch                      1 calls
+        1 ms  SetTelemetryEnvironmentVariables           1 calls
+        1 ms  ComputeRCOutputs                           1 calls
+        1 ms  MakeDirsForCl                              1 calls
+        1 ms  GetCopyToOutputDirectoryItems              1 calls
+        1 ms  _GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences   1 calls
+        1 ms  SplitResourcesByCulture                    1 calls
+        1 ms  _CheckForInvalidConfigurationAndPlatform   1 calls
+        2 ms  PrepareForBuild                            1 calls
+        2 ms  CreateRecipeFile                           1 calls
+        2 ms  FixupCLCompileOptions                      1 calls
+        3 ms  FinalizeBuildStatus                        1 calls
+        5 ms  InitializeBuildStatus                      1 calls
+      276 ms  Lib                                        1 calls
+     2750 ms  ClCompile                                  1 calls
+
+Task Performance Summary:
+        0 ms  RemoveDuplicates                           2 calls
+        0 ms  SetRidAgnosticValueForProjects             1 calls
+        0 ms  MakeDir                                   10 calls
+        0 ms  CheckVCToolsetVersion                      1 calls
+        0 ms  FindUnderPath                              5 calls
+        0 ms  ConvertToAbsolutePath                      1 calls
+        0 ms  AssignCulture                              1 calls
+        0 ms  AssignTargetPath                           7 calls
+        1 ms  AssignProjectConfiguration                 1 calls
+        1 ms  CleanupStaleTlogItems                      1 calls
+        1 ms  MSBuild                                    1 calls
+        1 ms  GetOutOfDateItems                          3 calls
+        1 ms  Message                                    3 calls
+        1 ms  CallTarget                                 2 calls
+        1 ms  SetEnv                                    11 calls
+        1 ms  GenerateDesktopDeployRecipe                1 calls
+        2 ms  Delete                                     2 calls
+        2 ms  WriteLinesToFile                           1 calls
+        3 ms  Touch                                      2 calls
+        3 ms  ReadLinesFromFile                          2 calls
+      275 ms  LIB                                        1 calls
+     2744 ms  CL                                         1 calls
+
+Build succeeded.
+
+                   "C:\Users\chris\TomatoEngine\bgfx.vcxproj" (Build target) (1) ->
+                   (ClCompile target) -> 
+                     C:\Users\chris\TomatoEngine\vendor\bgfx\src\renderer_vk.cpp(6248,6): warning C4244: 'argument': conversion from 'VkDeviceSize' to 'uint32_t', possible loss of data
+                     C:\Users\chris\TomatoEngine\vendor\bgfx\src\renderer_vk.cpp(6540,4): warning C4244: 'argument': conversion from 'VkDeviceSize' to 'uint32_t', possible loss of data
+
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.05

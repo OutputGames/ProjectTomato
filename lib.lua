@@ -1,73 +1,140 @@
 
-    project "TomatoRuntime"
-        kind "SharedLib"
+
+local BUILD_DIR = path.join("build", _ACTION)
+if _OPTIONS["cc"] ~= nil then
+	BUILD_DIR = BUILD_DIR .. "_" .. _OPTIONS["cc"]
+end
+local BGFX_DIR = "vendor/bgfx/"
+local BIMG_DIR = "vendor/bimg/"
+local BX_DIR = "vendor/bx/"
+local GLFW_DIR = "vendor/glfw/"
+
+function setBxCompat()
+	filter "action:vs*"
+		includedirs { path.join(BX_DIR, "include/compat/msvc") }
+	filter { "system:windows", "action:gmake" }
+		includedirs { path.join(BX_DIR, "include/compat/mingw") }
+	filter { "system:macosx" }
+		includedirs { path.join(BX_DIR, "include/compat/osx") }
+		buildoptions { "-x objective-c++" }
+
+    buildoptions {
+        "/Zc:__cplusplus",  -- Enable updated __cplusplus macro.
+        "/Zc:preprocessor", -- Enable preprocessor conformance mode.
+    }
+end
+    
+    project "ProjectTomato"
+        kind "ConsoleApp"
         language "C++"
         cppdialect "C++17"
         location "generated\\"
         compileas "C++"
         targetdir "bin/%{cfg.buildcfg}"
-        staticruntime "off"
+        staticruntime "on"
+
+        buildoptions {
+            "/Zc:__cplusplus",  -- Enable updated __cplusplus macro.
+            "/Zc:preprocessor", -- Enable preprocessor conformance mode.
+        }
+
+        includedirs { 
+            path.join(BGFX_DIR, "include"),
+            path.join(BX_DIR, "include"),
+            path.join(GLFW_DIR, "include"),
+            "include/",
+            "vendor/glm/",
+            "vendor/"
+        }
+
+        libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
+        
 
         defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM",  "TOMATO_DLLBUILD",'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"', 'RENDERDOC_HOME="C:/Program Files/RenderDoc"'}
 
         files {
             "include/**",
+            "source/**",
             "resources/**",
             ".editorconfig",
-            "vendor/glm/glm/**" ,
-            "vendor/sdl2/include/**", 
-            "vendor/**.h",
-            "vendor/generator/include/**",
-            "vendor/generator/src/**",
-        }
-        includedirs { 
-            "vendor/glfw/include/", 
-            "include/",
-            "include/tomato",
-            "vendor/assimp/include/",
-            "vendor/","vendor/imgui/" ,
-            "vendor/glm",
-            "vendor/sdl2/include",
-            "vendor/generator/include/",
-            "C:/Program Files/Mono/include/mono-2.0",
-            "C:/Program Files/RenderDoc"
         }
 
-        files {"vendor/imgui/backends/imgui_impl_opengl3.*", "vendor/imgui/backends/imgui_impl_glfw.*"}
-        files {"vendor/imgui/*"}
-        files {"vendor/imgui/misc/debuggers/**", "vendor/imgui/misc/cpp/**"}
+        links { "glfw" }
+        filter "system:windows"
+            links { "gdi32", "kernel32", "psapi" }
+        filter "system:linux"
+            links { "dl", "GL", "pthread", "X11" }
+        filter "system:macosx"
+            links { "QuartzCore.framework", "Metal.framework", "Cocoa.framework", "IOKit.framework", "CoreVideo.framework" }
 
-        libdirs {"vendor/assimp/lib/Release/",  "vendor/generator/lib/%{cfg.buildcfg}/", "vendor/glew/x64",  "C:/Program Files/Mono/lib", "vendor/freetype/"  }
-
-        removefiles { "include/tomatoEngine/**"}
-
-        links {"assimp-vc143-mt.lib","mono-2.0-sgen.lib", "freetype.lib"}
-
-        dependson {"TomatoScript"}
-
-        links {"opengl32", "glew32", "glfw3"}
-        libdirs {"vendor/glfw/lib-vc2022/"}
-        includedirs {"vendor/glfw/include/"}
-
-        --links {"vulkan-1.lib"}
-        --libdirs {"C:/VulkanSDK/1.3.250.0/Lib"}
-        --includedirs {"C:/VulkanSDK/1.3.250.0/Include"}
 
         filter "configurations:Debug"
-            defines { "DEBUG" }
+            defines { "DEBUG", "BX_CONFIG_DEBUG=1" }
             symbols "On"
             debugdir "./"
             runtime "Debug"
             optimize "Off"
-            --links {"SDL2d", "SDL2maind"}
+            links { "bgfxDebug", "bimgDebug", "bxDebug" }
 
         filter "configurations:Release"
-            defines { "NDEBUG" }
+            defines { "NDEBUG", "BX_CONFIG_DEBUG=0" }
             optimize "On"
             runtime "Release"
-            --links {"SDL2", "SDL2main"}
-            
+            links { "bgfxRelease", "bimgRelease", "bxRelease" }
 
+    project "glfw"
+        kind "StaticLib"
+        language "C"
+        staticruntime "on"
+        files
+        {
+            path.join(GLFW_DIR, "include/GLFW/*.h"),
+            path.join(GLFW_DIR, "src/context.c"),
+            path.join(GLFW_DIR, "src/egl_context.*"),
+            path.join(GLFW_DIR, "src/init.c"),
+            path.join(GLFW_DIR, "src/input.c"),
+            path.join(GLFW_DIR, "src/internal.h"),
+            path.join(GLFW_DIR, "src/monitor.c"),
+            path.join(GLFW_DIR, "src/null*.*"),
+            path.join(GLFW_DIR, "src/osmesa_context.*"),
+            path.join(GLFW_DIR, "src/platform.c"),
+            path.join(GLFW_DIR, "src/vulkan.c"),
+            path.join(GLFW_DIR, "src/window.c"),
+        }
+        includedirs { path.join(GLFW_DIR, "include") }
+        filter "system:windows"
+            defines "_GLFW_WIN32"
+            files
+            {
+                path.join(GLFW_DIR, "src/win32_*.*"),
+                path.join(GLFW_DIR, "src/wgl_context.*")
+            }
+        filter "system:linux"
+            defines "_GLFW_X11"
+            files
+            {
+                path.join(GLFW_DIR, "src/glx_context.*"),
+                path.join(GLFW_DIR, "src/linux*.*"),
+                path.join(GLFW_DIR, "src/posix*.*"),
+                path.join(GLFW_DIR, "src/x11*.*"),
+                path.join(GLFW_DIR, "src/xkb*.*")
+            }
+        filter "system:macosx"
+            defines "_GLFW_COCOA"
+            files
+            {
+                path.join(GLFW_DIR, "src/cocoa_*.*"),
+                path.join(GLFW_DIR, "src/posix_thread.h"),
+                path.join(GLFW_DIR, "src/nsgl_context.h"),
+                path.join(GLFW_DIR, "src/egl_context.h"),
+                path.join(GLFW_DIR, "src/osmesa_context.h"),
 
-        
+                path.join(GLFW_DIR, "src/posix_thread.c"),
+                path.join(GLFW_DIR, "src/nsgl_context.m"),
+                path.join(GLFW_DIR, "src/egl_context.c"),
+                path.join(GLFW_DIR, "src/nsgl_context.m"),
+                path.join(GLFW_DIR, "src/osmesa_context.c"),                       
+            }
 
+        filter "action:vs*"
+            defines "_CRT_SECURE_NO_WARNINGS"

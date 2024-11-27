@@ -1,133 +1,95 @@
 
 
-#include "rendering/ui.h"
-
-#include "scripting/script.h"
-#include "tomato/engine.hpp"
-#include "tomato/rendering/render.h"
-#include "tomato/rendering/tmgl.h"
-#include "tomato/util/filesystem_tm.h"
-#include "tomatoEngine/editor.h"
-
-tmCamera* camera;
+#include "tomato/tomato.hpp"
 
 int main(int argc, const char** argv) {
 
-    tmfs::copyFile("scriptcore/bin/Debug/TomatoScript.dll", "scriptcore/TomatoScript.dll");
-    tmeInit(1600, 1200, "TomatoEngine");
-    ImGui::SetCurrentContext(tmGetCore()->ctx);
+	var engine = tmt::engine::init();
 
-    tmEngine* engine = tmeGetCore();
+	tmt::render::Vertex vertices[] = {
+		{ glm::vec3{ +0.5f,+0.5f,-0.5f }, {1,0,0}, {1,1} },
+		{ glm::vec3{ +0.5f,-0.5f,-0.5f }, {0,1,0}, {1,0} },
+		{ glm::vec3{ -0.5f,-0.5f,-0.5f }, {0,0,1}, {0,0} },
+		{ glm::vec3{ -0.5f,+0.5f,-0.5f }, {1,1,1},{0,1} },
 
-    engine->lighting->SetCubemap(new tmCubemap("resources/textures/testhdr.png", true));
+		{ glm::vec3{ +0.5f,+0.5f,0.5f }, {1,0,0}, {1,1} },
+		{ glm::vec3{ +0.5f,-0.5f,0.5f }, {0,1,0},{1,0} },
+		{ glm::vec3{ -0.5f,-0.5f,0.5f }, {0,0,1}, {0,0} },
+		{ glm::vec3{ -0.5f,+0.5f,0.5f }, {1,1,1}, {0,1} },
+	};
 
-    engine->runtimePlaying = true;
+	u16 indices[] = {
+		// back
+		3,2,1,
+		1,0,3,
 
-    teEditorMgr* editor = new teEditorMgr;
-	//editor->currentProject->resMgr->PackResources("out.rres", "resources/");
+		// front
+		5,6,7,
+		7,4,5,
 
-    fs::remove("game.tmg");
+		// left
+		0,1,5,
+		5,4,0,
 
-    if (tmfs::fileExists("game.tmg")) {
-        tmeGetCore()->DeserializeGame(tmfs::loadFileString("game.tmg"));
+		//right
+		7,6,2,
+		2,3,7,
 
-        camera = tmCamera::GetMainCamera();
+		// bottom
+		5,1,2,
+		2,6,5,
 
-        fs::remove("game.tmg");
+		// top
 
-    }
-    else {
+		4,7,3,
+		3,0,4
 
-        /*
+	};
 
-        // world space positions of our cubes
-        glm::vec3 cubePositions[] = {
-            glm::vec3(0.0f,  0.0f,  0.0f),
-            glm::vec3(2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3(2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3(1.3f, -2.0f, -2.5f),
-            glm::vec3(1.5f,  2.0f, -2.5f),
-            glm::vec3(1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
-        };
-
-        tmShader* shader = tmShader::GetDefaultShader();
-
-        var texture = new tmTexture("resources/models/godot_plush/godot_plush_basecolor.png", false);
-        var texture3 = new tmTexture("resources/models/godot_plush/godot_plush_roughness.png", true);
-        var texture4 = new tmTexture("resources/models/godot_plush/godot_plush_roughness.png", true);
-        var texture5 = new tmTexture("resources/models/godot_plush/godot_plush_normal.png", true);
-        var texture2 = new tmTexture("resources/textures/test3.png", true);
-
-        tmMaterial* material = new tmMaterial(shader);
-        material->SetTexture("albedo", texture);
-        material->SetTexture("roughness", texture3);
-        material->SetTexture("metallic", texture4);
-        material->SetTexture("normal", texture5);
-        material->SetField("metallic_override", 1.0f);
-        material->SetField("roughness_override", 0.5f);
+	var mesh = tmt::render::createMesh(vertices, indices,arrsize(vertices), arrsize(indices), tmt::render::Vertex::getVertexLayout());
 
 
-        tmModel* model = tmModel::LoadModel("resources/models/godot_plush.fbx");
 
-        tmActor* map = new tmActor("Map");
-        //map->AttachComponent<MonoComponent>("TestComponent");
+	tmt::render::ShaderInitInfo info = {
+		new tmt::render::SubShader("vert", tmt::render::SubShader::Vertex),
+		new tmt::render::SubShader("frag", tmt::render::SubShader::Fragment),
+	};
 
-        {
-            tmActor* actor = new tmActor("Cube", map);
-            actor->transform->position = glm::vec3{ 0 };
-            actor->transform->rotation = { -90.f,0,0 };
-            actor->transform->scale = glm::vec3{ 50 };
+	var shader = new tmt::render::Shader(info);
 
-            var meshRenderer = actor->AttachComponent<tmMeshRenderer>(model, 0);
-            meshRenderer->materialIndex = 0;
-        }
+	var material = new tmt::render::Material(shader);
+	var uniform = material->GetUniform("time");
 
-        */
+	var texture = new tmt::render::Texture("resources/textures/dcph.png");
+	var color = material->GetUniform("s_texColor");
 
-        tmActor* cameraActor = new tmActor("Camera");
-        cameraActor->transform->position = { 0,0,10 };
-        cameraActor->transform->rotation.y = -90;
-        camera = cameraActor->AttachComponent<tmCamera>();
-        camera->framebuffer = new tmFramebuffer(tmFramebuffer::Deferred, {tmeGetCore()->ScreenWidth, tmeGetCore()->ScreenHeight});
-        //cameraActor->AttachComponent<MonoComponent>(scriptMgr->assemblies[0]->GetMonoComponentIndex("TestComponent"));
+	var obj = new tmt::obj::Object();
+	var meshObj = new tmt::obj::MeshObject();
+	meshObj->mesh = mesh;
+	meshObj->material = material;
 
-        var light = new tmActor("Directional Light");
-        var pointLight = light->AttachComponent<tmLight>();
-        pointLight->lightType = tmLight::Directional;
-        pointLight->intensity = 5;
-        light->transform->rotation = {-15,-30,0};
+	meshObj->SetParent(obj);
 
-        /*
-        var text = new tmActor("Text");
-        var textRenderer = text->AttachComponent<tmText>();
-        textRenderer->text = "Test Hi Hi";
-        */
+	var ctr = 0;
+	while (!glfwWindowShouldClose(engine->renderer->window)) {
 
-        tmfs::writeFileString("game.tmg", tmeGetCore()->SerializeGame());
-        
-    } 
 
-    //scriptMgr->CompileFull();
+		var mat = glm::mat4(1.0);
+		//mat = glm::translate(mat, glm::vec3(glm::sin(ctr*0.01), 0, glm::cos(ctr * 0.01)));
+		mat = glm::scale(mat, glm::vec3{ 1,1,1 });
 
-    teEditorMgr::currentProject = new teEditorMgr::teProject("New Project");
+		uniform->v4 = { flt ctr * 0.14, 0, 0, 0 };
+		color->tex = texture;
 
-    tmLighting::UnloadBRDF();
+		//mesh->draw((mat), material);
 
-    while (!tmGetWindowClose())
-    {
-        tmPoll();
+		obj->Update();
 
-        engine->Update();
+		tmt::render::update();
 
-		editor->DrawUI();
-
-        tmeUpdate();
-
-    }
+		ctr++;
+	}
+	tmt::render::shutdown();
 
     return 0;
 }
