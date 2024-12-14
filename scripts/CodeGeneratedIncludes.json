@@ -2,23 +2,18 @@
   "declares": {
     "BinaryReader": [],
     "ButtonObject": [],
-    "Camera": [
-      "CameraObject"
-    ],
+    "Camera": [],
     "CameraObject": [],
     "ColliderInitInfo": [],
     "ColliderObject": [],
-    "Collision": [
-      "PhysicsBody"
-    ],
+    "Collision": [],
     "CollisionBase": [],
-    "CollisionCallback": [
-      "ColliderObject",
-      "PhysicsBody"
-    ],
+    "CollisionCallback": [],
     "CollisionShape": [],
     "Color": [],
     "ComputeShader": [],
+    "DebugCall": [],
+    "DebugCallType": [],
     "DrawCall": [],
     "EngineInfo": [],
     "GetObjectFromType": [],
@@ -35,12 +30,8 @@
     "Object": [],
     "ObjectLoader": [],
     "Particle": [],
-    "ParticleCollision": [
-      "Particle"
-    ],
-    "ParticleEmitter": [
-      "Particle"
-    ],
+    "ParticleCollision": [],
+    "ParticleEmitter": [],
     "ParticleSystem": [],
     "PhysicalWorld": [],
     "PhysicsBody": [],
@@ -58,7 +49,6 @@
     "StringBinaryReader": [],
     "SubShader": [],
     "Texture": [],
-    "Vertex": [],
     "convertVec3": [],
     "createMesh": [],
     "getCosTime": [],
@@ -78,161 +68,54 @@
   },
   "includes": {
     "BinaryReader": [],
-    "ButtonObject": [
-      "Object"
-    ],
+    "ButtonObject": [],
     "Camera": [],
-    "CameraObject": [
-      "Camera",
-      "Object"
-    ],
-    "ColliderInitInfo": [
-      "CollisionShape",
-      "Mesh"
-    ],
-    "ColliderObject": [
-      "Object",
-      "ColliderInitInfo",
-      "CollisionCallback"
-    ],
-    "Collision": [
-      "CollisionBase"
-    ],
+    "CameraObject": [],
+    "ColliderInitInfo": [],
+    "ColliderObject": [],
+    "Collision": [],
     "CollisionBase": [],
     "CollisionCallback": [],
     "CollisionShape": [],
     "Color": [],
-    "ComputeShader": [
-      "SubShader"
-    ],
-    "DrawCall": [
-      "Shader",
-      "MaterialOverride",
-      "Mesh",
-      "MaterialState"
-    ],
-    "EngineInfo": [
-      "RendererInfo"
-    ],
+    "ComputeShader": [],
+    "DebugCall": [],
+    "DebugCallType": [],
+    "DrawCall": [],
+    "EngineInfo": [],
     "GetObjectFromType": [],
     "GetPrimitive": [],
-    "Gizmos": [
-      "Color"
-    ],
+    "Gizmos": [],
     "Keyboard": [],
-    "Material": [
-      "Shader",
-      "MaterialOverride",
-      "MaterialState",
-      "MaterialOverride"
-    ],
-    "MaterialOverride": [
-      "Texture"
-    ],
+    "Material": [],
+    "MaterialOverride": [],
     "MaterialState": [],
-    "Mesh": [
-      "Vertex",
-      "Material",
-      "Material"
-    ],
-    "MeshObject": [
-      "Mesh",
-      "Material",
-      "PrimitiveType",
-      "Object",
-      "PrimitiveType"
-    ],
-    "Model": [
-      "Mesh"
-    ],
+    "Mesh": [],
+    "MeshObject": [],
+    "Model": [],
     "Mouse": [],
     "Object": [],
-    "ObjectLoader": [
-      "Mesh",
-      "Material",
-      "Object"
-    ],
-    "Particle": [
-      "Color",
-      "ParticleEmitter",
-      "ParticleCollision",
-      "Collision",
-      "Collision",
-      "ParticleCollision"
-    ],
-    "ParticleCollision": [
-      "CollisionBase"
-    ],
-    "ParticleEmitter": [
-      "ParticleSystem",
-      "Object",
-      "Collision",
-      "Collision",
-      "ParticleCollision"
-    ],
-    "ParticleSystem": [
-      "Color",
-      "CollisionShape",
-      "Mesh",
-      "Material",
-      "PrimitiveType"
-    ],
-    "PhysicalWorld": [
-      "PhysicsBody",
-      "PhysicsBody"
-    ],
-    "PhysicsBody": [
-      "CollisionCallback",
-      "Object",
-      "ParticleCollision",
-      "Collision",
-      "ColliderObject",
-      "ColliderObject",
-      "Collision",
-      "ParticleCollision"
-    ],
+    "ObjectLoader": [],
+    "Particle": [],
+    "ParticleCollision": [],
+    "ParticleEmitter": [],
+    "ParticleSystem": [],
+    "PhysicalWorld": [],
+    "PhysicsBody": [],
     "PrimitiveType": [],
-    "Ray": [
-      "RaycastHit"
-    ],
-    "RaycastHit": [
-      "PhysicsBody"
-    ],
+    "Ray": [],
+    "RaycastHit": [],
     "Rect": [],
-    "RenderTexture": [
-      "Texture"
-    ],
+    "RenderTexture": [],
     "RendererInfo": [],
-    "Scene": [
-      "PhysicalWorld",
-      "Object"
-    ],
-    "Shader": [
-      "MaterialOverride",
-      "ShaderInitInfo",
-      "SubShader",
-      "MaterialOverride",
-      "ShaderInitInfo"
-    ],
-    "ShaderInitInfo": [
-      "SubShader"
-    ],
-    "ShaderUniform": [
-      "Texture"
-    ],
-    "SpriteObject": [
-      "Material",
-      "Color",
-      "Object",
-      "Texture"
-    ],
+    "Scene": [],
+    "Shader": [],
+    "ShaderInitInfo": [],
+    "ShaderUniform": [],
+    "SpriteObject": [],
     "StringBinaryReader": [],
-    "SubShader": [
-      "ShaderUniform",
-      "ShaderUniform"
-    ],
+    "SubShader": [],
     "Texture": [],
-    "Vertex": [],
     "convertVec3": [],
     "createMesh": [],
     "getCosTime": [],

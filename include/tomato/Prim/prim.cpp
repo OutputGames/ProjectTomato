@@ -1,11 +1,11 @@
 #include "prim.hpp" 
-#include "globals.cpp" 
+#include "globals.hpp" 
 
 tmt::render::Mesh *tmt::prim::GetPrimitive(PrimitiveType type)
 {
     if (!primitives.contains(type))
     {
-        Vertex *vertices;
+        tmt::render::Vertex *vertices;
         u16 *indices;
 
         size_t vertCount, indCount;
@@ -13,7 +13,7 @@ tmt::render::Mesh *tmt::prim::GetPrimitive(PrimitiveType type)
         switch (type)
         {
         case Quad: {
-            vertices = new Vertex[4]{
+            vertices = new tmt::render::Vertex[4]{
                 {glm::vec3{0, 0, 0}, glm::vec3{1}, glm::vec2{0, 0}},
                 {glm::vec3{1, 0, 0}, glm::vec3{1}, glm::vec2{1, 0}},
                 {glm::vec3{1, 1, 0}, glm::vec3{1}, glm::vec2{1, 1}},
@@ -48,7 +48,7 @@ tmt::render::Mesh *tmt::prim::GetPrimitive(PrimitiveType type)
         break;
         }
 
-        var mesh = createMesh(vertices, indices, vertCount, indCount, Vertex::getVertexLayout());
+        var mesh = createMesh(vertices, indices, vertCount, indCount, tmt::render::Vertex::getVertexLayout());
 
         primitives.insert(std::make_pair(type, mesh));
     }

@@ -2,11 +2,24 @@
 #define PRIM_H
 
 #include "utils.hpp" 
-#include "tomato/Render/Mesh.hpp"
-#include "tomato/Prim/PrimitiveType.hpp"
+
+
+
+namespace tmt::render {
+ struct Mesh;
+ }
 
 
 namespace tmt::prim {
+
+enum PrimitiveType;
+
+enum PrimitiveType
+{
+    Quad,
+    Cube,
+    Sphere
+};
 
 render::Mesh *GetPrimitive(PrimitiveType type);
 ;

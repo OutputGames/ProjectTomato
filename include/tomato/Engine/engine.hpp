@@ -2,10 +2,22 @@
 #define ENGINE_H
 
 #include "utils.hpp" 
-#include "tomato/Engine/EngineInfo.hpp"
+
+
+
+namespace tmt::render {
+ struct RendererInfo;
+ }
 
 
 namespace tmt::engine {
+
+struct EngineInfo;
+
+struct EngineInfo
+{
+    render::RendererInfo *renderer;
+};
 
 EngineInfo *init();
 

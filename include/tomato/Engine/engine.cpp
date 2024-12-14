@@ -1,5 +1,5 @@
 #include "engine.hpp" 
-#include "globals.cpp" 
+#include "globals.hpp" 
 
 tmt::engine::EngineInfo *tmt::engine::init()
 {

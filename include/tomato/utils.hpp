@@ -67,11 +67,6 @@ typedef unsigned char byte;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/compatibility.hpp>
 
-inline float randomFloat()
-{
-    return (float)(rand()) / (float)(RAND_MAX);
-}
-
 inline int randomInt(int a, int b)
 {
     if (a > b)
@@ -113,6 +108,7 @@ using string = std::string;
 
 #include "bullet3/src/btBulletDynamicsCommon.h"
 
+#include "vertex.h"
 
 #define READ_FUNC(type,name) type Read##name() { return Read<##type>(); };
 

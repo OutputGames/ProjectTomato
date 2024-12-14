@@ -1,5 +1,5 @@
 #include "time.hpp" 
-#include "globals.cpp" 
+#include "globals.hpp" 
 
 float tmt::time::getTime()
 {

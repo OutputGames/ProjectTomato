@@ -5,7 +5,10 @@
 
 
 
+
+
 namespace tmt::math {
+
 
 float *vec4toArray(glm::vec4 v);
 

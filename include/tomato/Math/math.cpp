@@ -1,5 +1,5 @@
 #include "math.hpp" 
-#include "globals.cpp" 
+#include "globals.hpp" 
 
 float *tmt::math::vec4toArray(glm::vec4 v)
 {

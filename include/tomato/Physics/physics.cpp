@@ -1,5 +1,79 @@
-#include "PhysicalWorld.hpp" 
-#include "globals.cpp" 
+#include "physics.hpp" 
+#include "globals.hpp" 
+
+btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
+                                                          const btCollisionObjectWrapper *colObj0Wrap, int partId0,
+                                                          int index0, const btCollisionObjectWrapper *colObj1Wrap,
+                                                          int partId1, int index1)
+{
+    btCollisionObjectWrapper *thisObj, *other;
+    int thisIdx, otherIdx;
+    int thisPart, otherPart;
+    btVector3 thisPos, otherPos;
+    btVector3 thisNormal, otherNormal;
+
+    if (colObj0Wrap->getCollisionShape() == collisionObjs[collider->pId])
+    {
+        thisObj = const_cast<btCollisionObjectWrapper *>(colObj0Wrap);
+        other = const_cast<btCollisionObjectWrapper *>(colObj1Wrap);
+
+        thisIdx = index0;
+        otherIdx = index1;
+
+        thisPart = partId0;
+        otherPart = partId1;
+
+        thisPos = cp.getPositionWorldOnA();
+        thisNormal = -cp.m_normalWorldOnB;
+
+        otherPos = cp.getPositionWorldOnB();
+        otherNormal = cp.m_normalWorldOnB;
+    }
+    else
+    {
+        thisObj = const_cast<btCollisionObjectWrapper *>(colObj1Wrap);
+        other = const_cast<btCollisionObjectWrapper *>(colObj0Wrap);
+
+        thisIdx = index1;
+        otherIdx = index0;
+
+        thisPart = partId1;
+        otherPart = partId0;
+
+        otherPos = cp.getPositionWorldOnA();
+        otherNormal = -cp.m_normalWorldOnB;
+
+        thisPos = cp.getPositionWorldOnB();
+        thisPos = cp.m_normalWorldOnB;
+    }
+
+    var particle = static_cast<particle::Particle *>(other->getCollisionShape()->getUserPointer());
+
+    if (particle)
+    {
+        ParticleCollision col{};
+
+        col.contactPoint = convertVec3(thisPos);
+        col.normal = convertVec3(thisNormal);
+        col.faceId = thisIdx;
+        col.other = particle;
+
+        body->OnParticleCollision(col);
+    }
+    else
+    {
+        Collision col{};
+
+        col.contactPoint = convertVec3(thisPos);
+        col.normal = convertVec3(thisNormal);
+        col.faceId = thisIdx;
+        col.other = bodies[other->getCollisionShape()->getUserIndex()];
+
+        body->OnCollision(col);
+    }
+
+    return 0;
+}
 
 tmt::physics::PhysicalWorld::PhysicalWorld()
 {
@@ -321,3 +395,310 @@ std::vector<tmt::physics::PhysicsBody *> tmt::physics::PhysicalWorld::GetGameObj
     }
 }
 
+tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForBox(glm::vec3 bounds)
+{
+
+    var info = ColliderInitInfo();
+
+    info.bounds = bounds;
+
+    info.s = Box;
+
+    return info;
+}
+
+tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForSphere(float radius)
+{
+    var info = ColliderInitInfo();
+
+    info.radius = radius;
+    info.s = Sphere;
+
+    return info;
+}
+
+tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForCapsule(float radius, float height)
+{
+    var info = ColliderInitInfo();
+
+    info.radius = radius;
+    info.height = height;
+    info.s = Capsule;
+
+    return info;
+}
+
+tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForMesh(render::Mesh *mesh)
+{
+    var info = ColliderInitInfo();
+
+    info.mesh = mesh;
+    info.s = Mesh;
+
+    return info;
+}
+
+tmt::physics::ColliderObject::ColliderObject(ColliderInitInfo i, Object *parent)
+{
+    SetParent(parent);
+    initInfo = i;
+    var shape = ShapeFromInfo(i);
+    if (i.s == Mesh)
+    {
+        var scale = convertVec3(GetGlobalScale());
+        shape->setLocalScaling(scale);
+    }
+
+    shape->setUserIndex(-1);
+
+    pId = collisionObjs.size();
+    collisionObjs.push_back(shape);
+}
+
+tmt::physics::PhysicsBody::PhysicsBody(ColliderObject *collisionObj, float mass) : Object()
+{
+    if (!collisionObj->parent)
+    {
+        collisionObj->SetParent(this);
+    }
+
+    this->mass = mass;
+    cPID = collisionObj->pId;
+
+    collisionObjs[cPID]->setUserIndex(bodies.size());
+
+    bodies.push_back(this);
+}
+
+void tmt::physics::PhysicsBody::Update()
+{
+    if (!parent)
+        transRelation = Self;
+
+    if (!doneFirstPhysicsUpdate)
+    {
+        pId = physicalBodies.size();
+
+        bool isDynamic = (mass != 0.f);
+
+        btVector3 localInertia(0, 0, 0);
+        if (isDynamic)
+            collisionObjs[cPID]->calculateLocalInertia(mass, localInertia);
+
+        btTransform startTransform;
+        startTransform.setIdentity();
+
+        if (transRelation == Self)
+        {
+            startTransform.setOrigin(convertVec3(position));
+            startTransform.setRotation(convertQuat(rotation));
+        }
+        else
+        {
+            startTransform.setOrigin(convertVec3(parent->position));
+            startTransform.setRotation(convertQuat(parent->rotation));
+        }
+
+        auto myMotionState = new btDefaultMotionState(startTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collisionObjs[cPID], localInertia);
+
+        var rigidBody = new btRigidBody(rbInfo);
+
+        rigidBody->setActivationState(DISABLE_DEACTIVATION);
+
+        dynamicsWorld->addRigidBody(rigidBody);
+
+        physicalBodies.push_back(rigidBody);
+    }
+    else
+    {
+        // var callback = *callback_;
+
+        // dynamicsWorld->contactTest(physicalBodies[pId].object, callback);
+    }
+
+    var pBody = physicalBodies[pId];
+    pBody->setUserPointer(this);
+    // CONSTRAINTS !!! >x<
+
+    if (pBody && pBody->getMotionState())
+    {
+        var motionState = pBody->getMotionState();
+        btTransform transform;
+        motionState->getWorldTransform(transform);
+        // transform = pBody->getWorldTransform();
+
+        if (transRelation == Self)
+        {
+            var p = position;
+
+            position = convertVec3(transform.getOrigin());
+
+            // transform.setOrigin(convertVec3(p));
+        }
+        else
+        {
+            var p = parent->position;
+            var r = parent->rotation;
+
+            parent->position = convertVec3(transform.getOrigin());
+
+            parent->rotation = convertQuatEuler(transform.getRotation());
+
+            transform.setIdentity();
+
+            transform.setOrigin(convertVec3(p));
+            transform.setRotation(convertQuat(r));
+
+            motionState->setWorldTransform(transform);
+        }
+    }
+
+    //
+
+    // pBody->activate();
+}
+
+void tmt::physics::PhysicsBody::SetVelocity(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setLinearVelocity(convertVec3(v));
+}
+
+glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
+{
+    var pBody = physicalBodies[pId];
+
+    return convertVec3(pBody->getLinearVelocity());
+}
+
+void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setAngularVelocity(convertVec3(v));
+}
+
+void tmt::physics::PhysicsBody::AddImpulse(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->applyCentralImpulse(convertVec3(v));
+}
+
+void tmt::physics::PhysicsBody::AddForce(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->applyCentralForce(convertVec3(v));
+}
+
+void tmt::physics::PhysicsBody::SetLinearFactor(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setLinearFactor(convertVec3(v));
+}
+
+void tmt::physics::PhysicsBody::SetAngularFactor(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setAngularFactor(convertVec3(v));
+}
+
+void tmt::physics::PhysicsBody::SetDamping(float linear, float angular)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setDamping(linear, angular);
+}
+
+void tmt::physics::PhysicsBody::AddCollisionEvent(std::function<void(Collision)> func)
+
+{
+
+    collisionEvents.push_back(func);
+}
+
+void tmt::physics::PhysicsBody::AddParticleCollisionEvent(std::function<void(ParticleCollision)> func)
+
+{
+
+    particleCollisionEvents.push_back(func);
+}
+
+glm::vec3 tmt::physics::PhysicsBody::GetBasisColumn(float v)
+{
+    var pBody = physicalBodies[pId];
+
+    var basis = pBody->getWorldTransform().getBasis();
+
+    var vector = basis.getColumn(v);
+
+    return convertVec3(vector);
+}
+
+glm::vec3 tmt::physics::PhysicsBody::GetBasisRow(float v)
+{
+    var pBody = physicalBodies[pId];
+
+    var basis = pBody->getWorldTransform().getBasis();
+
+    var vector = basis.getRow(v);
+
+    return convertVec3(vector);
+}
+
+void tmt::physics::PhysicsBody::OnCollision(Collision c)
+{
+    for (auto collision_event : collisionEvents)
+    {
+        collision_event(c);
+    }
+}
+
+void tmt::physics::PhysicsBody::OnParticleCollision(ParticleCollision c)
+{
+    for (auto collision_event : particleCollisionEvents)
+    {
+        collision_event(c);
+    }
+}
+
+tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
+{
+    auto start = convertVec3(position);
+    auto end = convertVec3(position + (direction * maxDistance));
+    btCollisionWorld::ClosestRayResultCallback callback(start, end);
+
+    dynamicsWorld->rayTest(start, end, callback);
+
+    if (callback.hasHit())
+    {
+        var point = callback.m_hitPointWorld;
+        var nrm = callback.m_hitNormalWorld;
+
+        var obj = callback.m_collisionObject;
+
+        auto hit = new RaycastHit;
+
+        hit->point = convertVec3(point);
+        hit->normal = convertVec3(nrm);
+
+        PhysicsBody *goA = nullptr;
+
+        var goai = obj->getCollisionShape()->getUserIndex();
+
+        if (goai != -1)
+        {
+            goA = bodies[goai];
+        }
+
+        hit->hit = goA;
+
+        return hit;
+    }
+    return nullptr;
+}

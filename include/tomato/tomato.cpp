@@ -1,4 +1,6 @@
-#include "tomato.hpp"
+#include "_tomato.hpp"
+
+
 #include "bx/math.h"
 #include "bimg/include/bimg/bimg.h"
 
@@ -8,15 +10,14 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-#define PAR_SHAPES_IMPLEMENTATION
 #include <complex.h>
 
+#define PAR_SHAPES_IMPLEMENTATION
 #include "par_shapes.h"
 
 #include "tomato_generated/cube.h"
 
-static void glfw_errorCallback(int error, const char* description)
+void glfw_errorCallback(int error, const char* description)
 {
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
@@ -27,9 +28,9 @@ tmt::render::Color tmt::render::Color::Blue = {0, 0, 1, 1};
 tmt::render::Color tmt::render::Color::Green = {0, 1, 0, 1};
 tmt::render::Color tmt::render::Color::Red = {1, 0, 0, 1};
 
-static tmt::render::RendererInfo* renderer;
+tmt::render::RendererInfo* renderer;
 std::vector<tmt::render::DrawCall> calls;
-std::vector<tmt::debug::Gizmos::DebugCall> debugCalls;
+std::vector<tmt::debug::DebugCall> debugCalls;
 
 
 glm::vec2 mousep = {0, 0};
@@ -44,7 +45,9 @@ int counterTime = 0;
 float deltaTime = 1.0f / 60.0f;
 float lastTime = 0;
 
-bgfx::UniformHandle orthoHandle, timeHandle, vposHandle;
+bgfx::UniformHandle orthoHandle;
+bgfx::UniformHandle timeHandle;
+bgfx::UniformHandle vposHandle;
 
 bool subHandlesLoaded = false;
 
@@ -179,7 +182,7 @@ void tmt::render::Shader::Push(int viewId, MaterialOverride** overrides, size_t 
 		{
 			var name = overrides[i]->name;
 
-			var pair = std::make_pair<std::string, MaterialOverride>(name, *overrides[i]);
+			var pair = std::make_pair(name, *overrides[i]);
 			m_overrides.insert(pair);
 		}
 	}
@@ -697,7 +700,7 @@ void tmt::render::update()
 		dde.setColor(d.color.getHex());
 		switch (d.type)
 		{
-			case debug::Gizmos::Line:
+			case debug::Line:
 				{
 					dde.push();
 
@@ -707,7 +710,7 @@ void tmt::render::update()
 					dde.pop();
 				}
 				break;
-			case debug::Gizmos::Sphere:
+			case debug::Sphere:
 				{
 					dde.push();
 
@@ -946,7 +949,7 @@ tmt::render::Mesh* tmt::prim::GetPrimitive(PrimitiveType type)
 {
 	if (!primitives.contains(type))
 	{
-		Vertex* vertices;
+		tmt::render::Vertex* vertices;
 		u16* indices;
 
 		size_t vertCount, indCount;
@@ -955,7 +958,7 @@ tmt::render::Mesh* tmt::prim::GetPrimitive(PrimitiveType type)
 		{
 			case Quad:
 				{
-					vertices = new Vertex[4]
+					vertices = new tmt::render::Vertex[4]
 					{
 						{glm::vec3{0, 0, 0}, glm::vec3{1}, glm::vec2{0, 0}},
 						{glm::vec3{1, 0, 0}, glm::vec3{1}, glm::vec2{1, 0}},
@@ -995,7 +998,7 @@ tmt::render::Mesh* tmt::prim::GetPrimitive(PrimitiveType type)
 				break;
 		}
 
-		var mesh = createMesh(vertices, indices, vertCount, indCount, Vertex::getVertexLayout());
+		var mesh = createMesh(vertices, indices, vertCount, indCount, tmt::render::Vertex::getVertexLayout());
 
 		primitives.insert(std::make_pair(type, mesh));
 	}
@@ -1104,6 +1107,7 @@ float tmt::math::magnitude(glm::vec3 v)
 
 tmt::obj::Object::~Object()
 {
+
 }
 
 void tmt::obj::Object::Update()
@@ -2587,8 +2591,7 @@ tmt::physics::ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent)
 	collisionObjs.push_back(shape);
 }
 
-tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForBox(glm::vec3 bounds)
-{
+tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForBox(glm::vec3 bounds) {
 	var info = ColliderInitInfo();
 
 	info.bounds = bounds;

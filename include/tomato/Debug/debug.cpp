@@ -1,5 +1,5 @@
-#include "Gizmos.hpp" 
-#include "globals.cpp" 
+#include "debug.hpp" 
+#include "globals.hpp" 
 
 void tmt::debug::Gizmos::DrawLine(glm::vec3 start, glm::vec3 end)
 {
@@ -14,4 +14,3 @@ void tmt::debug::Gizmos::DrawSphere(glm::vec3 position, float radius)
 
     debugCalls.push_back(DebugCall{Sphere, position, glm::vec3{0}, radius, clr});
 }
-

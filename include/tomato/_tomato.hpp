@@ -961,21 +961,22 @@ namespace tmt
 
 	namespace debug
 	{
+		enum DebugCallType
+		{
+			Line,
+			Sphere
+		};
+
+		struct DebugCall
+		{
+			DebugCallType type;
+			glm::vec3 origin, direction;
+			float radius;
+			render::Color color;
+		};
+
 		struct Gizmos
 		{
-			enum DebugCallType
-			{
-				Line,
-				Sphere
-			};
-
-			struct DebugCall
-			{
-				DebugCallType type;
-				glm::vec3 origin, direction;
-				float radius;
-				render::Color color;
-			};
 
 			inline static render::Color color = render::Color::White;
 

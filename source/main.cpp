@@ -65,12 +65,12 @@ int main(int argc, const char** argv) {
 		});
 		*/
 
-	var map = tmt::obj::MeshObject::FromPrimitive(tmt::render::prim::Cube);
+	var map = tmt::obj::MeshObject::FromPrimitive(tmt::prim::Cube);
 	map->name = "Map";
 	map->scale = { 50,1,50 };
 	map->position.y = 0;
 
-	var miniMap = tmt::obj::MeshObject::FromPrimitive(tmt::render::prim::Cube);
+	var miniMap = tmt::obj::MeshObject::FromPrimitive(tmt::prim::Cube);
 	miniMap->name = "MiniMap";
 	miniMap->scale = { 1,0.01,1 };
 
@@ -106,7 +106,7 @@ int main(int argc, const char** argv) {
 	{
 		for (int y = 0; y < 2; y++)
 		{
-			var mdl = tmt::obj::MeshObject::FromPrimitive(tmt::render::prim::Cube);
+			var mdl = tmt::obj::MeshObject::FromPrimitive(tmt::prim::Cube);
 			mdl->material->GetUniform("u_color")->v4 = tmt::render::Color::Green.getData();
 
 			mdl->position = { x * 1.1f,10,y*1.1f };

@@ -1,5 +1,504 @@
 #include "render.hpp" 
-#include "globals.cpp" 
+#include "globals.hpp" 
+
+void tmt::render::ShaderUniform::Use()
+{
+    switch (type)
+    {
+    case bgfx::UniformType::Sampler:
+        if (tex)
+        {
+            setTexture(0, handle, tex->handle);
+        }
+        break;
+    case bgfx::UniformType::End:
+        break;
+    case bgfx::UniformType::Vec4:
+        setUniform(handle, math::vec4toArray(v4));
+        break;
+    case bgfx::UniformType::Mat3:
+        setUniform(handle, math::mat3ToArray(m3));
+        break;
+    case bgfx::UniformType::Mat4: {
+        float m[4][4];
+        for (int x = 0; x < 4; ++x)
+        {
+            for (int y = 0; y < 4; ++y)
+            {
+                m[x][y] = m4[x][y];
+            }
+        }
+
+        setUniform(handle, m);
+    }
+    break;
+    case bgfx::UniformType::Count:
+        break;
+    default:
+        break;
+    }
+}
+
+tmt::render::SubShader::SubShader(string name, ShaderType type)
+{
+    string shaderPath = "";
+
+    switch (bgfx::getRendererType())
+    {
+    case bgfx::RendererType::Noop:
+    case bgfx::RendererType::Direct3D11:
+    case bgfx::RendererType::Direct3D12:
+        shaderPath = "runtime/shaders/dx/";
+        break;
+    case bgfx::RendererType::Gnm:
+        shaderPath = "shaders/pssl/";
+        break;
+    case bgfx::RendererType::Metal:
+        shaderPath = "shaders/metal/";
+        break;
+    case bgfx::RendererType::OpenGL:
+        shaderPath = "runtime/shaders/gl/";
+        break;
+    case bgfx::RendererType::OpenGLES:
+        shaderPath = "shaders/essl/";
+        break;
+    case bgfx::RendererType::Vulkan:
+        shaderPath = "runtime/shaders/spirv/";
+        break;
+    // case bgfx::RendererType::Nvn:
+    // case bgfx::RendererType::WebGPU:
+    case bgfx::RendererType::Count:
+        handle = BGFX_INVALID_HANDLE;
+        return; // count included to keep compiler warnings happy
+    }
+
+    shaderPath += name;
+
+    switch (type)
+    {
+    case Vertex:
+        shaderPath += ".cvbsh";
+        break;
+    case Fragment:
+        shaderPath += ".cfbsh";
+        break;
+    case Compute:
+        shaderPath += ".ccbsh";
+        break;
+        // default: shaderPath += ".cbsh"; break;
+    }
+
+    std::ifstream in(shaderPath, std::ifstream::ate | std::ifstream::binary);
+
+    in.seekg(0, std::ios::end);
+    std::streamsize size = in.tellg();
+    in.seekg(0, std::ios::beg);
+
+    const bgfx::Memory *mem = bgfx::alloc(size);
+    in.read(reinterpret_cast<char *>(mem->data), size);
+
+    in.close();
+
+    handle = createShader(mem);
+
+    var unis = std::vector<bgfx::UniformHandle>();
+    var uniformCount = getShaderUniforms(handle);
+    unis.resize(uniformCount);
+    getShaderUniforms(handle, unis.data(), uniformCount);
+
+    std::vector<string> uniNames;
+
+    for (int i = 0; i < uniformCount; i++)
+    {
+        bgfx::UniformInfo info = {};
+
+        getUniformInfo(unis[i], info);
+
+        if (std::find(uniNames.begin(), uniNames.end(), info.name) == uniNames.end())
+        {
+            string iname = info.name;
+
+            if (iname.rfind("iu_", 0) == 0)
+            {
+                // pos=0 limits the search to the prefix
+                continue;
+            }
+
+            var uniform = new ShaderUniform();
+
+            uniform->name = info.name;
+            uniform->type = info.type;
+            uniform->handle = unis[i];
+
+            uniforms.push_back(uniform);
+            uniNames.push_back(info.name);
+        }
+    }
+}
+
+tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
+{
+    for (var uni : uniforms)
+    {
+        if (uni->name == name)
+            return uni;
+    }
+
+    return {};
+}
+
+tmt::render::Shader::Shader(ShaderInitInfo info)
+{
+    program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, true);
+
+    subShaders.push_back(info.vertexProgram);
+    subShaders.push_back(info.fragmentProgram);
+}
+
+void tmt::render::Shader::Push(int viewId, MaterialOverride **overrides, size_t oc)
+{
+    std::map<std::string, MaterialOverride> m_overrides;
+
+    if (overrides != nullptr)
+    {
+        for (int i = 0; i < oc; ++i)
+        {
+            var name = overrides[i]->name;
+
+            var pair = std::make_pair(name, *overrides[i]);
+            m_overrides.insert(pair);
+        }
+    }
+
+    for (var shader : subShaders)
+    {
+        for (var uni : shader->uniforms)
+        {
+            if (overrides != nullptr)
+            {
+                if (m_overrides.contains(uni->name))
+                {
+                    var ovr = m_overrides.find(uni->name)->second;
+                    uni->v4 = ovr.v4;
+                    uni->m3 = ovr.m3;
+                    uni->m4 = ovr.m4;
+                    uni->tex = ovr.tex;
+                }
+            }
+
+            uni->Use();
+        }
+    }
+
+    submit(viewId, program);
+}
+
+tmt::render::ComputeShader::ComputeShader(SubShader *shader)
+{
+    program = createProgram(shader->handle, true);
+    internalShader = shader;
+}
+
+void tmt::render::ComputeShader::SetUniform(string name, bgfx::UniformType::Enum type, const void *data)
+{
+    var uni = createUniform(name.c_str(), type);
+
+    setUniform(uni, data);
+
+    destroy(uni);
+}
+
+void tmt::render::ComputeShader::SetMat4(string name, glm::mat4 m)
+{
+    // internalShader->GetUniform()
+    for (int i = 0; i < 4; ++i)
+    {
+        SetUniform(name + "[" + std::to_string(i) + "]", bgfx::UniformType::Vec4, math::vec4toArray(m[0]));
+    }
+}
+
+void tmt::render::ComputeShader::Run(int vid, glm::vec3 groups)
+{
+    for (var uni : internalShader->uniforms)
+    {
+        uni->Use();
+    }
+
+    dispatch(vid, program, groups.x, groups.y, groups.z);
+}
+
+tmt::render::MaterialOverride *tmt::render::Material::GetUniform(string name)
+{
+    for (auto override : overrides)
+        if (override->name == name)
+            return override;
+
+    return nullptr;
+}
+
+u64 tmt::render::Material::GetMaterialState()
+{
+    u64 v = state.cull;
+    v |= state.depth;
+    v |= BGFX_STATE_WRITE_MASK;
+
+    return v;
+}
+
+tmt::render::Material::Material(Shader *shader)
+{
+    Reload(shader);
+}
+
+void tmt::render::Material::Reload(Shader *shader)
+{
+    if (shader)
+    {
+        this->shader = shader;
+        for (auto sub_shader : shader->subShaders)
+        {
+            for (auto uniform : sub_shader->uniforms)
+            {
+                var ovr = new MaterialOverride();
+                ovr->name = uniform->name;
+
+                overrides.push_back(ovr);
+            }
+        }
+    }
+}
+
+void tmt::render::Mesh::draw(glm::mat4 transform, Material *material)
+{
+    var drawCall = DrawCall();
+
+    drawCall.mesh = this;
+    drawCall.state = material->GetMaterialState();
+    drawCall.matrixMode = material->state.matrixMode;
+
+    for (int x = 0; x < 4; ++x)
+    {
+        for (int y = 0; y < 4; ++y)
+        {
+            drawCall.transformMatrix[x][y] = transform[x][y];
+        }
+    }
+
+    drawCall.program = material->shader;
+    if (material->overrides.size() > 0)
+    {
+        drawCall.overrides = material->overrides.data();
+        drawCall.overrideCt = material->overrides.size();
+    }
+    else
+        drawCall.overrides = nullptr;
+
+    pushDrawCall(drawCall);
+}
+
+tmt::render::Model::Model(string path)
+{
+    Assimp::Importer import;
+    const aiScene *scene =
+        import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < scene->mNumMeshes; ++i)
+    {
+        var msh = scene->mMeshes[i];
+
+        std::vector<Vertex> vertices;
+
+        for (int j = 0; j < msh->mNumVertices; ++j)
+        {
+            var pos = msh->mVertices[j];
+            var norm = msh->mNormals[j];
+            var uv = msh->mTextureCoords[0][j];
+
+            var vertex = Vertex{};
+
+            vertex.position = glm::vec3{pos.x, pos.y, pos.z};
+            vertex.normal = glm::vec3{norm.x, norm.y, norm.z};
+            vertex.uv0 = glm::vec2{uv.x, uv.y};
+            vertices.push_back(vertex);
+        }
+
+        std::vector<u16> indices;
+
+        for (unsigned int i = 0; i < msh->mNumFaces; i++)
+        {
+            aiFace face = msh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++)
+                indices.push_back(face.mIndices[j]);
+        }
+
+        meshes.push_back(
+            createMesh(vertices.data(), indices.data(), vertices.size(), indices.size(), Vertex::getVertexLayout()));
+        materialIndices.push_back(msh->mMaterialIndex);
+    }
+}
+
+tmt::render::Model::Model(const aiScene *scene)
+{
+    for (int i = 0; i < scene->mNumMeshes; ++i)
+    {
+        var msh = scene->mMeshes[i];
+
+        std::vector<Vertex> vertices;
+
+        for (int j = 0; j < msh->mNumVertices; ++j)
+        {
+            var pos = msh->mVertices[j];
+            var norm = msh->mNormals[j];
+            var uv = msh->mTextureCoords[0][j];
+
+            var vertex = Vertex{};
+
+            vertex.position = glm::vec3{pos.x, pos.y, pos.z};
+            vertex.normal = glm::vec3{norm.x, norm.y, norm.z};
+            vertex.uv0 = glm::vec2{uv.x, uv.y};
+            vertices.push_back(vertex);
+        }
+
+        std::vector<u16> indices;
+
+        for (unsigned int i = 0; i < msh->mNumFaces; i++)
+        {
+            aiFace face = msh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++)
+                indices.push_back(face.mIndices[j]);
+        }
+
+        meshes.push_back(
+            createMesh(vertices.data(), indices.data(), vertices.size(), indices.size(), Vertex::getVertexLayout()));
+        materialIndices.push_back(msh->mMaterialIndex);
+    }
+}
+
+tmt::render::Texture::Texture(string path)
+{
+    int nrChannels;
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+    uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_POINT; // Adjust as needed
+    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+
+    // Create the texture in bgfx, passing the image data directly
+    handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
+                             false, // no mip-maps
+                             1,     // single layer
+                             textureFormat, textureFlags,
+                             bgfx::copy(data, width * height * nrChannels) // copies the image data
+    );
+
+    stbi_image_free(data);
+
+    format = textureFormat;
+}
+
+tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory *mem)
+{
+    handle = createTexture2D(width, height, false, 1, tf, flags, mem);
+
+    format = tf;
+    this->width = width;
+    this->height = height;
+}
+
+tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 cf)
+{
+    const bgfx::Memory *mem = nullptr;
+    if (format == bgfx::TextureFormat::RGBA8)
+    {
+        // std::vector<GLubyte> pixels(width * height * 4, (GLubyte)0xffffffff);
+        // mem = bgfx::copy(pixels.data(), width * height* 4);
+    }
+
+    realTexture = new Texture(width, height, format,
+                              BGFX_TEXTURE_COMPUTE_WRITE | BGFX_TEXTURE_RT | BGFX_SAMPLER_MIN_POINT |
+                                  BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP,
+                              mem);
+
+    handle = createFrameBuffer(1, &realTexture->handle, false);
+    this->format = format;
+
+    bgfx::setViewName(vid, "RenderTexture");
+    bgfx::setViewClear(vid, cf);
+    bgfx::setViewRect(vid, 0, 0, width, height);
+    setViewFrameBuffer(vid, handle);
+}
+
+float *tmt::render::Camera::GetView()
+{
+    var Front = GetFront();
+    var Up = GetUp();
+
+    float view[16];
+
+    mtxLookAt(view, bx::Vec3(position.x, position.y, position.z), math::convertVec3(position + Front),
+              bx::Vec3(Up.x, Up.y, Up.z));
+
+    return view;
+}
+
+float *tmt::render::Camera::GetProjection()
+{
+    float proj[16];
+
+    bx::mtxProj(proj, (FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
+                0.01f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+    return proj;
+}
+
+glm::vec3 tmt::render::Camera::GetFront()
+{
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+    direction.y = sin(glm::radians(rotation.x));
+    direction.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+    glm::vec3 Front = normalize(direction);
+
+    return Front;
+}
+
+glm::vec3 tmt::render::Camera::GetUp()
+{
+    var Front = GetFront();
+
+    glm::vec3 Right = normalize(cross(Front, glm::vec3{0, 1, 0}));
+    // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower
+    // movement.
+    glm::vec3 Up = normalize(cross(Right, Front));
+
+    return Up;
+}
+
+tmt::render::Camera *tmt::render::Camera::GetMainCamera()
+{
+    return mainCamera;
+}
+
+tmt::render::Camera::Camera()
+{
+    mainCamera = this;
+}
+
+bgfx::VertexLayout tmt::render::Vertex::getVertexLayout()
+{
+    var layout = bgfx::VertexLayout();
+    layout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+
+    return layout;
+}
 
 tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertCount, u32 triSize,
                                            bgfx::VertexLayout layout)
@@ -291,7 +790,7 @@ void tmt::render::update()
         dde.setColor(d.color.getHex());
         switch (d.type)
         {
-        case debug::Gizmos::Line: {
+        case debug::Line: {
             dde.push();
 
             dde.moveTo(math::convertVec3(d.origin));
@@ -300,7 +799,7 @@ void tmt::render::update()
             dde.pop();
         }
         break;
-        case debug::Gizmos::Sphere: {
+        case debug::Sphere: {
             dde.push();
 
             // dde.moveTo(math::convertVec3(d.origin));
