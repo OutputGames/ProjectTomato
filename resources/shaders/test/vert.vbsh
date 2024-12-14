@@ -3,6 +3,25 @@ $output v_color0, v_texcoord0, v_pos, v_normal
 
 #include <bgfx_shader.sh>
 
+mat3 cofactor(mat4 _m)
+{
+	// Reference:
+	// Cofactor of matrix. Use to transform normals. The code assumes the last column of _m is [0,0,0,1].
+	// https://www.shadertoy.com/view/3s33zj
+	// https://github.com/graphitemaster/normals_revisited
+	return mat3(
+		_m[1][1]*_m[2][2]-_m[1][2]*_m[2][1],
+		_m[1][2]*_m[2][0]-_m[1][0]*_m[2][2],
+		_m[1][0]*_m[2][1]-_m[1][1]*_m[2][0],
+		_m[0][2]*_m[2][1]-_m[0][1]*_m[2][2],
+		_m[0][0]*_m[2][2]-_m[0][2]*_m[2][0],
+		_m[0][1]*_m[2][0]-_m[0][0]*_m[2][1],
+		_m[0][1]*_m[1][2]-_m[0][2]*_m[1][1],
+		_m[0][2]*_m[1][0]-_m[0][0]*_m[1][2],
+		_m[0][0]*_m[1][1]-_m[0][1]*_m[1][0]
+		);
+}
+
 void main()
 {
 	vec4 pos = mul(u_modelViewProj, vec4(a_position, 1.0));
@@ -15,5 +34,5 @@ void main()
 	vec3 m_pos = mul(u_model[0], vec4(a_position, 1.0)).xyz;
 
 	v_pos = m_pos;
-	v_normal = mul(u_modelView, vec4(a_normal, 1.0)).xyz;
+	v_normal = mul(cofactor(u_model[0]), a_normal).xyz;
 }

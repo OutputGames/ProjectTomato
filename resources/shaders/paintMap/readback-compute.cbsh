@@ -1,0 +1,81 @@
+/*
+ * Copyright 2014 Stanlo Slasinski. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ */
+
+#include "bgfx_compute.sh"
+
+BUFFER_RO(positions, vec3,0);
+BUFFER_RO(uvs, vec2,1);
+
+IMAGE2D_WO(colorBuffer, rgba32f, 2);
+
+IMAGE2D_RW(paintMap, rgba8, 3);
+
+BUFFER_RO(indices, uint, 4);
+
+uniform vec4 u_collisionPoint;
+
+vec3 barycentric(vec3 p, vec3 a, vec3 b, vec3 c) {
+    vec3 v0 = b - a, v1 = c - a, v2 = p - a;
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0 - v - w;
+    return vec3(u, v, w);
+}
+
+NUM_THREADS(1, 1, 1)
+void main()
+{
+
+    // Transform collision point into object space
+    vec3 collisionObjSpace = u_collisionPoint.xyz;
+
+    int j = 0;
+    int k = 0;
+
+    // Example: Iterate through triangles (simplified for illustration)
+    int i = u_collisionPoint.w * 3; 
+    uint index0 = indices[i];
+    uint index1 = indices[i+1];
+    uint index2 = indices[i+2];
+
+    vec3 a = positions[index0];
+    vec3 b = positions[index1];
+    vec3 c = positions[index2];
+
+    for (int l = 0; l < i; l++) {
+        j++;
+        if (j >= 7) {
+            j = 0;
+            k++;
+        }
+    }
+
+    vec3 baryCoords = barycentric(collisionObjSpace, a, b, c);
+
+    // Interpolate UVs using barycentric coordinates
+    vec2 uv = baryCoords.x * uvs[index0] + baryCoords.y * uvs[index1] + baryCoords.z * uvs[index2];
+    // Use uv as needed (e.g., sample a texture)
+
+    int paint_map_size = imageSize(paintMap).x;
+    ivec2 uv_pixels = ivec2(uv * paint_map_size);
+    uv_pixels.x = clamp(uv_pixels.x, 0, paint_map_size - 1);
+    uv_pixels.y = clamp(uv_pixels.y, 0, paint_map_size - 1);
+
+
+
+    imageStore(colorBuffer, ivec2(0,0), imageLoad(paintMap, uv_pixels));
+    imageStore(paintMap, uv_pixels, vec4(uv.x,uv.y,1,1));
+    imageStore(colorBuffer, ivec2(1,0), vec4(baryCoords,1));
+    imageStore(colorBuffer, ivec2(2,0), vec4_splat(1));
+
+    if (baryCoords.x >= 0.0 && baryCoords.y >= 0.0 && (baryCoords.x + baryCoords.y < 1)) {
+    }
+}

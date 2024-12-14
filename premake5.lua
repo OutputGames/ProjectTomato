@@ -30,5 +30,6 @@
     
 
     include("lib.lua")
-    --include("engine.lua")
+    include("test.lua")
+    --include("vendor/bullet3/build3/premake4.lua")
     --include("scriptcore.lua")

@@ -1,0 +1,29 @@
+$input a_position, a_normal, a_texcoord0
+$output v_color0, v_texcoord0, v_pos, v_normal, paint_map_size, fragDepth
+
+#include <bgfx_shader.sh>
+#include <bgfx_compute.sh>
+
+uniform vec4 paintBallDirection;
+uniform mat4 paintSpaceMatrix;
+uniform mat4 modelMatrix;
+
+void main()
+{
+
+	v_texcoord0 = a_texcoord0;
+	v_normal = normalize(a_normal);
+	v_color0 = vec4((paintBallDirection.xyz), paintBallDirection.w);
+
+	//mat4 paintSpaceMatrix = u_proj;
+	//mat4 modelMatrix = u_model[0];
+
+	mat4 pmm = mul(paintSpaceMatrix, modelMatrix);
+
+	gl_Position = mul(pmm, vec4(a_position,1.0));
+
+	vec4 m_pos = mul(modelMatrix, vec4(a_position, 1.0));
+	v_pos = mul(paintSpaceMatrix, m_pos);
+	paint_map_size = paintBallDirection.w;
+	fragDepth = v_pos.z;
+}

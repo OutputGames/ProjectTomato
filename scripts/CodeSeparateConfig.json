@@ -1,0 +1,25 @@
+{
+    "includeOverrides": {
+        "PhysicalWorld": [ "tomato/Physics/PhysicsBody.hpp" ],
+        "Gizmos": ["tomato/Render/Color.hpp"],
+        "MeshObject": ["tomato/Prim/PrimitiveType.hpp"],
+        "ObjectLoader": ["tomato/Render/Mesh.hpp", "tomato/Render/Material.hpp", "tomato/Obj/Object.hpp"],
+        "Scene": [ "tomato/Obj/Object.hpp" ],
+        "Particle": ["tomato/Physics/Collision.hpp", "tomato/Physics/ParticleCollision.hpp"],
+        "ParticleEmitter": ["tomato/Physics/Collision.hpp", "tomato/Physics/ParticleCollision.hpp"],
+        "ParticleSystem": ["tomato/Physics/CollisionShape.hpp", "tomato/Render/Mesh.hpp", "tomato/Render/Material.hpp", "tomato/prim/PrimitiveType.hpp"],
+        "ColliderObject": ["tomato/Physics/CollisionCallback.hpp"],
+        "PhysicsBody": ["tomato/Physics/ColliderObject.hpp", "tomato/Physics/Collision.hpp", "tomato/Physics/ParticleCollision.hpp"],
+        "Camera": ["tomato/Obj/CameraObject.hpp"],
+        "DrawCall": ["tomato/Render/MaterialState.hpp"],
+        "Material": ["tomato/Render/MaterialOverride.hpp"],
+        "Mesh": ["tomato/Render/Material.hpp"],
+        "Model": ["tomato/Render/Mesh.hpp"],
+        "Shader": ["tomato/Render/SubShader.hpp", "tomato/Render/MaterialOverride.hpp", "tomato/Render/ShaderInitInfo.hpp"],
+        "SubShader": ["tomato/Render/ShaderUniform.hpp"]
+    },
+
+    "defineOverrides": {
+    }
+
+}

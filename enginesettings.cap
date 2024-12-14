@@ -1,28 +1,28 @@
 {
     "rdocCaptureSettings": 1,
     "settings": {
-        "autoStart": false,
+        "autoStart": true,
         "commandLine": "",
         "environment": [
         ],
-        "executable": "C:\\Users\\chris\\TomatoEngine\\bin\\Debug\\TomatoEditor.exe",
+        "executable": "D:\\Code\\ImportantRepos\\TomatoEngine\\bin\\Debug\\TestTomatoProject.exe",
         "inject": false,
-        "numQueuedFrames": 2,
+        "numQueuedFrames": 3,
         "options": {
             "allowFullscreen": true,
             "allowVSync": true,
             "apiValidation": false,
             "captureAllCmdLists": false,
-            "captureCallstacks": false,
+            "captureCallstacks": true,
             "captureCallstacksOnlyDraws": false,
             "debugOutputMute": true,
             "delayForDebugger": 0,
-            "hookIntoChildren": false,
+            "hookIntoChildren": true,
             "refAllResources": false,
             "softMemoryLimit": 0,
             "verifyBufferAccess": false
         },
-        "queuedFrameCap": 5,
-        "workingDir": "C:/Users/chris/TomatoEngine"
+        "queuedFrameCap": 99,
+        "workingDir": "D:/Code/ImportantRepos/TomatoEngine"
     }
 }

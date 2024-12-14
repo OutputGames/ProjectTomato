@@ -1,0 +1,22 @@
+$input a_position, a_normal, a_texcoord0
+$output v_color0, v_texcoord0, v_pos, v_normal
+
+#include <bgfx_shader.sh>
+uniform mat4 iu_ortho;
+
+void main()
+{
+	vec4 pos = mul(u_model[0], vec4(a_position, 1.0));
+
+	pos = mul(iu_ortho, pos);
+
+	gl_Position = pos;
+
+	v_color0 = vec4(a_normal, 1.0);
+	v_texcoord0 = a_position.xy;
+
+	vec3 m_pos = mul(u_model[0], vec4(a_position, 1.0)).xyz;
+
+	v_pos = m_pos;
+	v_normal = mul(u_modelView, vec4(a_normal, 1.0)).xyz;
+}

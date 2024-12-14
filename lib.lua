@@ -9,6 +9,18 @@ local BIMG_DIR = "vendor/bimg/"
 local BX_DIR = "vendor/bx/"
 local GLFW_DIR = "vendor/glfw/"
 
+local BULLET_LIBS = {
+    "BulletDynamics",
+    "Bullet3Collision",
+    "Bullet3Common",
+    "Bullet3Dynamics",
+    "Bullet3Geometry",
+    "LinearMath",
+    "BulletInverseDynamics",
+    "BulletCollision",
+    "BulletDynamics"
+}
+
 function setBxCompat()
 	filter "action:vs*"
 		includedirs { path.join(BX_DIR, "include/compat/msvc") }
@@ -24,10 +36,10 @@ function setBxCompat()
     }
 end
     
-    project "ProjectTomato"
-        kind "ConsoleApp"
+    project "TomatoRuntime"
+        kind "StaticLib"
         language "C++"
-        cppdialect "C++17"
+        cppdialect "C++20"
         location "generated\\"
         compileas "C++"
         targetdir "bin/%{cfg.buildcfg}"
@@ -44,11 +56,15 @@ end
             path.join(GLFW_DIR, "include"),
             "include/",
             "vendor/glm/",
-            "vendor/"
+            "vendor/",
+            "vendor/assimp/include/",
+            "vendor/bullet3/src/",
+            "vendor/bimg/include/",
+            "include/tomato/"
         }
 
         libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
-        
+    
 
         defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM",  "TOMATO_DLLBUILD",'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"', 'RENDERDOC_HOME="C:/Program Files/RenderDoc"'}
 
@@ -58,6 +74,10 @@ end
             "resources/**",
             ".editorconfig",
         }
+
+        removefiles { "include/testproject/**"}
+
+        removefiles { "include/tomato/_tomato.hpp", "include/tomato/tomato.cpp" }
 
         links { "glfw" }
         filter "system:windows"
@@ -74,13 +94,21 @@ end
             debugdir "./"
             runtime "Debug"
             optimize "Off"
-            links { "bgfxDebug", "bimgDebug", "bxDebug" }
+            links { "bgfxDebug", "bimgDebug", "bxDebug", "assimp-vc143-mtd" }
+            libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
+            for _, lib in ipairs(BULLET_LIBS) do
+                links { lib .. "_Debug" }
+            end
 
         filter "configurations:Release"
             defines { "NDEBUG", "BX_CONFIG_DEBUG=0" }
             optimize "On"
             runtime "Release"
-            links { "bgfxRelease", "bimgRelease", "bxRelease" }
+            links { "bgfxRelease", "bimgRelease", "bxRelease", "assimp-vc143-mt" }
+            libdirs {"vendor/assimp/lib/Release/", "vendor/bullet3/lib/Release/"}
+            for _, lib in ipairs(BULLET_LIBS) do
+                links { lib }
+            end
 
     project "glfw"
         kind "StaticLib"

@@ -10,3 +10,6 @@ Makefile
 *.vcxproj.filters
 *.vcxproj.user
 *cmake*
+runtime/
+temp/
+obj/
