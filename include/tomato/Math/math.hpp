@@ -21,6 +21,12 @@ inline bx::Vec3 convertVec3(glm::vec3 v)
     return bx::Vec3{v.x, v.y, v.z};
 };
 
+    inline glm::vec3 convertVec3(float* arr)
+    { return glm::vec3{arr[0], arr[1], arr[2]};
+    }
+
+        inline glm::vec2 convertVec2(float* arr) { return glm::vec2{arr[0], arr[1] }; }
+
 inline glm::vec3 convertVec3(aiVector3D v)
 {
     return glm::vec3{v.x, v.y, v.z};
@@ -29,6 +35,7 @@ inline glm::vec3 convertVec3(aiVector3D v)
 glm::vec3 slerp(glm::vec3 start, glm::vec3 end, float t);
 
 glm::vec3 lerp(glm::vec3 start, glm::vec3 end, float t);
+float lerp(float start, float end, float t);
 
 float magnitude(glm::vec3 v);
 ;

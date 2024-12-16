@@ -47,7 +47,14 @@ btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
         thisPos = cp.m_normalWorldOnB;
     }
 
-    var particle = static_cast<particle::Particle *>(other->getCollisionShape()->getUserPointer());
+    var optr = other->getCollisionShape()->getUserPointer();
+    var oidx = other->getCollisionShape()->getUserIndex();
+
+    var particle = static_cast<particle::Particle*>(optr);
+    PhysicsBody* obody = nullptr;
+
+    if (oidx > -1)
+        obody = bodies[oidx];
 
     if (particle)
     {
@@ -60,16 +67,98 @@ btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
 
         body->OnParticleCollision(col);
     }
-    else
+    else if (obody)
     {
         Collision col{};
 
         col.contactPoint = convertVec3(thisPos);
         col.normal = convertVec3(thisNormal);
         col.faceId = thisIdx;
-        col.other = bodies[other->getCollisionShape()->getUserIndex()];
+
+        col.other = obody;
 
         body->OnCollision(col);
+    }
+
+    return 0;
+}
+
+btScalar tmt::physics::ParticleCollisionCallback::addSingleResult(btManifoldPoint& cp,
+    const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap,
+    int partId1, int index1)
+{
+    btCollisionObjectWrapper *thisObj, *other;
+    int thisIdx, otherIdx;
+    int thisPart, otherPart;
+    btVector3 thisPos, otherPos;
+    btVector3 thisNormal, otherNormal;
+
+    if (colObj0Wrap->getCollisionShape() == collisionObjs[particle->cPID])
+    {
+        thisObj = const_cast<btCollisionObjectWrapper*>(colObj0Wrap);
+        other = const_cast<btCollisionObjectWrapper*>(colObj1Wrap);
+
+        thisIdx = index0;
+        otherIdx = index1;
+
+        thisPart = partId0;
+        otherPart = partId1;
+
+        thisPos = cp.getPositionWorldOnA();
+        thisNormal = -cp.m_normalWorldOnB;
+
+        otherPos = cp.getPositionWorldOnB();
+        otherNormal = cp.m_normalWorldOnB;
+    }
+    else
+    {
+        thisObj = const_cast<btCollisionObjectWrapper*>(colObj1Wrap);
+        other = const_cast<btCollisionObjectWrapper*>(colObj0Wrap);
+
+        thisIdx = index1;
+        otherIdx = index0;
+
+        thisPart = partId1;
+        otherPart = partId0;
+
+        otherPos = cp.getPositionWorldOnA();
+        otherNormal = -cp.m_normalWorldOnB;
+
+        thisPos = cp.getPositionWorldOnB();
+        thisPos = cp.m_normalWorldOnB;
+    }
+
+    var optr = other->getCollisionShape()->getUserPointer();
+    var oidx = other->getCollisionShape()->getUserIndex();
+
+    var particle = static_cast<particle::Particle*>(optr);
+    PhysicsBody* obody = nullptr;
+
+    if (oidx > -1)
+        obody = bodies[oidx];
+
+    if (particle)
+    {
+        ParticleCollision col{};
+
+        col.contactPoint = convertVec3(thisPos);
+        col.normal = convertVec3(thisNormal);
+        col.faceId = thisIdx;
+        col.other = particle;
+
+        particle->OnParticleCollision(col);
+    }
+    else if (obody)
+    {
+        Collision col{};
+
+        col.contactPoint = convertVec3(thisPos);
+        col.normal = convertVec3(thisNormal);
+        col.faceId = thisIdx;
+
+        col.other = obody;
+
+        particle->OnCollision(col);
     }
 
     return 0;
@@ -88,6 +177,8 @@ tmt::physics::PhysicalWorld::PhysicalWorld()
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, configuration);
 
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
+
+    AddLayer(0);
 }
 
 void tmt::physics::PhysicalWorld::Update()
@@ -170,9 +261,10 @@ void tmt::physics::PhysicalWorld::Update()
 
                 var lpta = (obA->getWorldTransform().inverse() * ptA);
                 var lptb = (obB->getWorldTransform().inverse() * ptB);
-                var faceIdA = -1;
-                var faceIdB = -1;
+                var faceIdA = pt.m_index1;
+                var faceIdB = pt.m_index0;
 
+                /*
                 if (goA)
                 {
                     var colObj = goA->GetObjectFromType<ColliderObject>();
@@ -229,6 +321,7 @@ void tmt::physics::PhysicalWorld::Update()
                         }
                     }
                 }
+                */
 
                 std::function<CollisionBase(bool)> CreateCollisionBase = [this, lpta, ptA, nrmA, lptb, ptB, nrmB,
                                                                           faceIdA, faceIdB](bool a) -> CollisionBase {
@@ -323,6 +416,18 @@ void tmt::physics::PhysicalWorld::Update()
         }
     }
 
+    /*
+    for (auto body : bodies)
+    {
+        dynamicsWorld->contactTest(physicalBodies[body->pId], body->callback_);
+    }
+
+    for (auto managed_particle : managed_particles)
+    {
+        dynamicsWorld->contactTest(physicalBodies[managed_particle->pId], managed_particle->_callback);
+    }
+    */
+
     doneFirstPhysicsUpdate = true;
 }
 
@@ -353,6 +458,31 @@ void tmt::physics::PhysicalWorld::RemoveBody(int pid, int cpid)
         }
     }
 }
+
+short tmt::physics::PhysicalWorld::AddLayer(short mask)
+{
+    var l = 1 << layers.size();
+    layerMasks.push_back(mask);
+    layers.push_back(l);
+    return l;
+}
+
+short tmt::physics::PhysicalWorld::AddLayer()
+{
+    var l = 1 << layers.size();
+
+    short m = l;
+
+    for (short layer : layers)
+        m |= layer;
+ 
+    layerMasks.push_back(m);
+    layers.push_back(l);
+    return l;
+}
+
+inline short tmt::physics::PhysicalWorld::GetLayer(short idx) { return layers[idx]; }
+
 
 std::vector<tmt::physics::PhysicsBody *> tmt::physics::PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody *collider)
 {
@@ -467,6 +597,10 @@ tmt::physics::PhysicsBody::PhysicsBody(ColliderObject *collisionObj, float mass)
 
     collisionObjs[cPID]->setUserIndex(bodies.size());
 
+    callback_ = CollisionCallback();
+    callback_.body = this;
+    callback_.collider = collisionObj;
+
     bodies.push_back(this);
 }
 
@@ -505,6 +639,7 @@ void tmt::physics::PhysicsBody::Update()
         var rigidBody = new btRigidBody(rbInfo);
 
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
+        rigidBody->setUserIndex2(physicalBodies.size());
 
         dynamicsWorld->addRigidBody(rigidBody);
 

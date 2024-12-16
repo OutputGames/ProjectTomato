@@ -1,5 +1,6 @@
 #include "render.hpp" 
-#include "globals.hpp" 
+#include "globals.hpp"
+#include "vertex.h"
 
 void tmt::render::ShaderUniform::Use()
 {
@@ -298,48 +299,110 @@ void tmt::render::Mesh::draw(glm::mat4 transform, Material *material)
 
 tmt::render::Model::Model(string path)
 {
-    Assimp::Importer import;
-    const aiScene *scene =
-        import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
-
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    if (path.ends_with(".tmdl"))
     {
-        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
-        return;
+        var reader = new fs::BinaryReader(path);
+
+        var tmdlSig = reader->ReadString(4);
+
+        if (tmdlSig != "TMDL")
+        {
+            std::cout << "Incorrect tmdl format!" << std::endl;
+            return;
+        }
+
+        var meshCount = reader->ReadInt32();
+
+        for (int i = 0; i < meshCount; ++i)
+        {
+            var tmshSig = reader->ReadString(4);
+            if (tmshSig == "TMSH")
+            {
+                var vtxCount = reader->ReadInt32();
+                var vertices = new Vertex[vtxCount];
+
+                reader->Skip(4);
+
+                for (int i = 0; i < vtxCount; ++i)
+                {
+                    glm::vec3 p = math::convertVec3(reader->ReadFloatArray(3));
+                    glm::vec3 n = math::convertVec3(reader->ReadFloatArray(3));
+                    glm::vec2 u = math::convertVec2(reader->ReadFloatArray(2));
+
+                    Vertex vtx = {p, n, u};
+                    vertices[i] = vtx;
+                }
+
+                reader->Skip(4);
+                var idxCount = reader->ReadInt32();
+                var incs = new u16[idxCount];
+
+                for (int i = 0; i < idxCount; ++i)
+                {
+                    incs[i] = reader->ReadUInt16();
+                }
+
+                var materialIndex = reader->ReadInt32();
+
+                meshes.push_back(createMesh(vertices, incs, vtxCount, idxCount, Vertex::getVertexLayout()));
+                materialIndices.push_back((materialIndex));
+            }
+        }
+
     }
-
-    for (int i = 0; i < scene->mNumMeshes; ++i)
+    else
     {
-        var msh = scene->mMeshes[i];
 
-        std::vector<Vertex> vertices;
 
-        for (int j = 0; j < msh->mNumVertices; ++j)
+        Assimp::Importer import;
+        const aiScene* scene = import.ReadFile(path,
+                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
+                                                   aiProcess_FindInvalidData | aiProcess_PreTransformVertices);
+
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
-            var pos = msh->mVertices[j];
-            var norm = msh->mNormals[j];
-            var uv = msh->mTextureCoords[0][j];
-
-            var vertex = Vertex{};
-
-            vertex.position = glm::vec3{pos.x, pos.y, pos.z};
-            vertex.normal = glm::vec3{norm.x, norm.y, norm.z};
-            vertex.uv0 = glm::vec2{uv.x, uv.y};
-            vertices.push_back(vertex);
+            std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+            return;
         }
 
-        std::vector<u16> indices;
-
-        for (unsigned int i = 0; i < msh->mNumFaces; i++)
+        for (int i = 0; i < scene->mNumMeshes; ++i)
         {
-            aiFace face = msh->mFaces[i];
-            for (unsigned int j = 0; j < face.mNumIndices; j++)
-                indices.push_back(face.mIndices[j]);
-        }
+            var msh = scene->mMeshes[i];
 
-        meshes.push_back(
-            createMesh(vertices.data(), indices.data(), vertices.size(), indices.size(), Vertex::getVertexLayout()));
-        materialIndices.push_back(msh->mMaterialIndex);
+            std::vector<Vertex> vertices;
+
+            for (int j = 0; j < msh->mNumVertices; ++j)
+            {
+                var pos = msh->mVertices[j];
+                var norm = msh->mNormals[j];
+                var uv = msh->mTextureCoords[0][j];
+
+                var vertex = Vertex{};
+
+                vertex.position = glm::vec3{pos.x, pos.y, pos.z};
+                vertex.normal = glm::vec3{norm.x, norm.y, norm.z};
+                vertex.uv0 = glm::vec2{uv.x, uv.y};
+                vertices.push_back(vertex);
+            }
+
+            std::vector<u16> indices;
+
+            for (unsigned int i = 0; i < msh->mNumFaces; i++)
+            {
+                aiFace face = msh->mFaces[i];
+                for (unsigned int j = 0; j < face.mNumIndices; j++)
+                    indices.push_back(face.mIndices[j]);
+            }
+
+            Vertex* verts = new Vertex[vertices.size()];
+            std::copy(vertices.begin(), vertices.end(), verts);
+
+            u16* incs = new u16[indices.size()];
+            std::copy(indices.begin(), indices.end(), incs);
+
+            meshes.push_back(createMesh(verts, incs, vertices.size(), indices.size(), Vertex::getVertexLayout()));
+            materialIndices.push_back(msh->mMaterialIndex);
+        }
     }
 }
 
@@ -508,8 +571,10 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
     u16 indeS = sizeof(u16) * triSize;
 
     var mesh = new Mesh();
-    mesh->vertices = data;
+    //memcpy(mesh->vertices, data, sizeof(data));
+    //memcpy(mesh->indices, indices, sizeof(indices));
     mesh->indices = indices;
+    mesh->vertices = data;
 
     {
         const bgfx::Memory *mem = bgfx::alloc(vertS);
@@ -694,7 +759,22 @@ void tmt::render::update()
 
     const bgfx::Stats *stats = bgfx::getStats();
 
-    bgfx::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(bgfx::getRendererType()));
+    //bgfx::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(bgfx::getRendererType()));
+
+    for (auto d : debugCalls)
+    {
+        switch (d.type)
+        {
+            case debug::Text:
+            {
+                    bgfx::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
+            }
+                break;
+            default:
+                break;
+                ;
+        }
+    }
 
     bgfx::setDebug(BGFX_DEBUG_TEXT);
 
@@ -808,7 +888,9 @@ void tmt::render::update()
 
             dde.pop();
         }
-        break;
+            break;
+            default:
+            break;;
         }
     }
 
@@ -816,7 +898,7 @@ void tmt::render::update()
 
     debugCalls.clear();
 
-    bgfx::frame();
+    frameTime = bgfx::frame();
     glfwPollEvents();
     counterTime++;
 

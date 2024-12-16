@@ -17,6 +17,7 @@ struct StringBinaryReader : std::stringstream
     StringBinaryReader(string data);
 
     READ_FUNC(u16, UInt16);
+    READ_FUNC(u32, UInt32);
     READ_FUNC(u8, Byte);
 
     template <typename T> T Read()
@@ -66,7 +67,7 @@ struct StringBinaryReader : std::stringstream
     string ReadString(int size);
 };
 
-struct BinaryReader : std::istream
+struct BinaryReader : std::ifstream
 {
     enum ByteOrder
     {
@@ -74,7 +75,7 @@ struct BinaryReader : std::istream
         LittleEndian
     } byteOrder;
 
-    BinaryReader(std::streambuf *path);
+    BinaryReader(std::string path);
 
     template <typename T> T Read()
     {
@@ -107,6 +108,17 @@ struct BinaryReader : std::istream
         return list;
     }
 
+    u16* ReadUInt16Array(int size) {
+        var arr = new u16[size];
+
+        for (int i = 0; i < size; ++i)
+        {
+            arr[size] = ReadUInt16();
+        }
+
+        return arr;
+    }
+
     u64 ReadUInt64();
     u32 ReadUInt32();
     u16 ReadUInt16();
@@ -118,9 +130,25 @@ struct BinaryReader : std::istream
     ByteOrder ReadByteOrder();
     u8 ReadByte();
 
+    void Skip(int count)
+    {
+         seekg(count, std::ios::_Seekcur);
+    }
+
     float ReadSingle()
     {
         return Read<float>();
+    }
+
+    float* ReadFloatArray(int ct) {
+        var arr = new float[ct];
+
+        for (int i = 0; i < ct; ++i)
+        {
+            arr[i] = ReadSingle();
+        }
+
+        return arr;
     }
 
     float ReadHalfFloat()
@@ -134,6 +162,7 @@ struct BinaryReader : std::istream
     }
 
     u32 ReadOffset();
+    string ReadString(int size);
 
     size_t fileSize;
 

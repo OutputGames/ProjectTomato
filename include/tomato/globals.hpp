@@ -29,6 +29,7 @@ extern tmt::render::Shader* defaultShader;
 extern int counterTime;
 extern float deltaTime;
 extern float lastTime;
+extern u32 frameTime;
 extern bgfx::UniformHandle orthoHandle;
 extern bgfx::UniformHandle timeHandle;
 extern bgfx::UniformHandle vposHandle;

@@ -38,6 +38,8 @@ struct Keyboard
 
     static KeyState GetKey(int key);
 };
+
+    float GetAxis(string axis);
 ;
 
 }

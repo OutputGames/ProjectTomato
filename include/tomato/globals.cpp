@@ -25,6 +25,7 @@ tmt::render::Shader* defaultShader;
 int counterTime = 0;
 float deltaTime = 1.0f / 60.0f;
 float lastTime = 0;
+u32 frameTime = 0;
 bgfx::UniformHandle orthoHandle;
 bgfx::UniformHandle timeHandle;
 bgfx::UniformHandle vposHandle;
@@ -311,7 +312,8 @@ btCollisionShape* ShapeFromInfo(tmt::physics::ColliderInitInfo i)
 
 				for (int j = 0; j < i.mesh->vertexCount; ++j)
 				{
-					vertices[j] = i.mesh->vertices[j].position;
+                    var vert = i.mesh->vertices[j].position;
+                    vertices[j] = vert;
 				}
 
 				auto indexVertexArray = new btTriangleIndexVertexArray(

@@ -95,6 +95,7 @@ struct Particle
 
     int pId = -1;
     u16 cPID = -1;
+    physics::ParticleCollisionCallback _callback;
 };
 
 struct ParticleEmitter : obj::Object

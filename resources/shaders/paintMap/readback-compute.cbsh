@@ -30,6 +30,14 @@ vec3 barycentric(vec3 p, vec3 a, vec3 b, vec3 c) {
     return vec3(u, v, w);
 }
 
+ivec2 paintMapProject(vec2 uv, int paint_map_size) {
+    ivec2 uv_pixels = ivec2(uv * paint_map_size);
+    uv_pixels.x = clamp(uv_pixels.x, 0, paint_map_size - 1);
+    uv_pixels.y = clamp(uv_pixels.y, 0, paint_map_size - 1);
+
+    return uv_pixels;
+}
+
 NUM_THREADS(1, 1, 1)
 void main()
 {
@@ -73,6 +81,9 @@ void main()
 
     imageStore(colorBuffer, ivec2(0,0), imageLoad(paintMap, uv_pixels));
     imageStore(paintMap, uv_pixels, vec4(uv.x,uv.y,1,1));
+    imageStore(paintMap, paintMapProject(uvs[index0], paint_map_size), vec4(1,0,0,1));
+    imageStore(paintMap, paintMapProject(uvs[index1], paint_map_size), vec4(0,1,0,1));
+    imageStore(paintMap, paintMapProject(uvs[index2], paint_map_size), vec4(0,0,1,1));
     imageStore(colorBuffer, ivec2(1,0), vec4(baryCoords,1));
     imageStore(colorBuffer, ivec2(2,0), vec4_splat(1));
 

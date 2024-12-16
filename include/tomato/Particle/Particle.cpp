@@ -74,7 +74,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
         particle->position = {0, 0, 0};
         particle->rotation = {0, 0, 0};
         particle->emitterParent = this;
-        particle->velocity = particle->GetUp();
+        particle->velocity = particle->GetForward();
 
         switch (system->shape.type)
         {
@@ -90,6 +90,8 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
         if (system->collision.useColliders)
         {
             particle->pId = physicalBodies.size();
+            particle->_callback = physics::ParticleCollisionCallback();
+            particle->_callback.particle = particle;
 
             physics::ColliderInitInfo info{system->collision.shape, particle->scale, particle->scale.x,
                                            particle->scale.y};
@@ -130,7 +132,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
 
             managed_particles.push_back(particle);
 
-            rigidBody->applyCentralImpulse(convertVec3(particle->GetUp() * system->startSpeed));
+            rigidBody->applyCentralImpulse(convertVec3(GetForward() * system->startSpeed));
         }
         else
         {

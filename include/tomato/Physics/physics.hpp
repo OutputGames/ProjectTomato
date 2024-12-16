@@ -59,6 +59,15 @@ struct CollisionCallback : btCollisionWorld::ContactResultCallback
                              const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1) override;
 };
 
+    struct ParticleCollisionCallback : btCollisionWorld::ContactResultCallback
+{
+        particle::Particle* particle;
+
+    // Overriding the callback method
+    btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0,
+                             const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override;
+};
+
 struct PhysicalWorld
 {
     PhysicalWorld();
@@ -67,8 +76,17 @@ struct PhysicalWorld
 
     void RemoveBody(int pid, int cpid);
 
+    short AddLayer(short mask);
+    short AddLayer();
+    short GetLayer(short idx);
+
     std::vector<PhysicsBody *> GetGameObjectsCollidingWith(PhysicsBody *collider);
+
+    std::vector<short> layerMasks;
+    std::vector<short> layers;
 };
+
+
 
 enum CollisionShape
 {
@@ -124,6 +142,7 @@ struct ColliderObject : obj::Object
 struct PhysicsBody : obj::Object
 {
     float mass = 1;
+    int layer = 0;
 
     PhysicsBody(ColliderObject *collisionObj, float mass = 1);
 
@@ -158,7 +177,7 @@ struct PhysicsBody : obj::Object
     friend PhysicalWorld;
     friend CollisionCallback;
 
-    CollisionCallback *callback_;
+    CollisionCallback callback_;
 
     u16 pId = -1;
     u16 cPID = -1;

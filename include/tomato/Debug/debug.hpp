@@ -16,7 +16,8 @@ struct Gizmos;
 enum DebugCallType
 {
     Line,
-    Sphere
+    Sphere,
+    Text
 };
 
 struct DebugCall
@@ -25,6 +26,7 @@ struct DebugCall
     glm::vec3 origin, direction;
     float radius;
     render::Color color;
+    string text = "";
 };
 
 struct Gizmos
@@ -34,6 +36,7 @@ struct Gizmos
 
     static void DrawLine(glm::vec3 start, glm::vec3 end);
     static void DrawSphere(glm::vec3 position, float radius);
+    static void _DrawText(glm::vec2 pos,string text);
 };
 ;
 

@@ -17,6 +17,9 @@ float getSinTime();
 float getCosTime();
 
 float getDeltaTime();
+
+u32 getFrameTime();
+
 ;
 
 }

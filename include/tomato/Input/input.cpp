@@ -45,3 +45,45 @@ tmt::input::Keyboard::KeyState tmt::input::Keyboard::GetKey(int key)
 
     return static_cast<KeyState>(state);
 }
+
+float tmt::input::GetAxis(string axis)
+{
+    var a = 0.0f;
+
+    if (axis == "Horizontal")
+    {
+
+        var l = (Keyboard::GetKey(GLFW_KEY_LEFT) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_A) == Keyboard::Hold);
+
+        var r =
+            (Keyboard::GetKey(GLFW_KEY_RIGHT) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_D) == Keyboard::Hold);
+
+        if (l)
+        {
+            a = 1;
+        }
+        else if (r)
+        {
+            a = -1;
+        }
+    }
+    else if (axis == "Vertical")
+    {
+
+        var u = (Keyboard::GetKey(GLFW_KEY_UP) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_W) == Keyboard::Hold);
+
+        var d = (Keyboard::GetKey(GLFW_KEY_DOWN) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_A) == Keyboard::Hold);
+
+        if (u)
+        {
+            a = 1;
+        }
+        else if (d)
+        {
+            a = -1;
+        }
+    }
+
+    return a;
+}
+

@@ -52,7 +52,8 @@ string tmt::fs::StringBinaryReader::ReadString(int size)
     return s;
 }
 
-tmt::fs::BinaryReader::BinaryReader(std::streambuf *data) : std::istream(data)
+
+tmt::fs::BinaryReader::BinaryReader(std::string path) : std::ifstream(path, std::ios::binary)
 {
     fileSize = tellg();
 }
@@ -104,4 +105,16 @@ u32 tmt::fs::BinaryReader::ReadOffset()
 {
     var offset = static_cast<u32>(ReadUInt64());
     return offset == 0 ? 0 : offset;
+}
+
+string tmt::fs::BinaryReader::ReadString(int size)
+{
+    string s = "";
+
+    for (int i = 0; i < size; ++i)
+    {
+        s += Read<char>();
+    }
+
+    return s;
 }

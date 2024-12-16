@@ -20,3 +20,6 @@ float tmt::time::getDeltaTime()
 {
     return deltaTime;
 }
+
+u32 tmt::time::getFrameTime()
+{ return frameTime; }
