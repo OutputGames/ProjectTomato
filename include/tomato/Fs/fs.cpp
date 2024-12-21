@@ -96,9 +96,9 @@ tmt::fs::BinaryReader::ByteOrder tmt::fs::BinaryReader::ReadByteOrder()
     return bom;
 }
 
-u8 tmt::fs::BinaryReader::ReadByte()
+unsigned char tmt::fs::BinaryReader::ReadByte()
 {
-    return Read<u8>();
+    return Read<unsigned char>();
 }
 
 u32 tmt::fs::BinaryReader::ReadOffset()
@@ -117,4 +117,10 @@ string tmt::fs::BinaryReader::ReadString(int size)
     }
 
     return s;
+}
+
+string tmt::fs::BinaryReader::ReadString()
+{
+    var size = ReadInt32();
+    return ReadString(size);
 }

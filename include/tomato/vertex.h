@@ -9,6 +9,8 @@ namespace tmt::render {
         glm::vec3 position = glm::vec3(0.0);
         glm::vec3 normal = glm::vec3(0);
         glm::vec2 uv0 = glm::vec2(0.5);
+        glm::i16vec4 boneIds = glm::i16vec4(-1);
+        glm::vec4 boneWeights = glm::vec4(1);
 
         static bgfx::VertexLayout getVertexLayout();
     };

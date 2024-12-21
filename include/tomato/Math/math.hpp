@@ -25,12 +25,43 @@ inline bx::Vec3 convertVec3(glm::vec3 v)
     { return glm::vec3{arr[0], arr[1], arr[2]};
     }
 
+    inline glm::vec4 convertVec4(float* arr, int arrSize)
+    {
+
+        var v = glm::vec4();
+
+        for (int i = 0; i < arrSize; ++i)
+        {
+            v[i] = arr[i];
+        }
+
+        return v;
+    }
+    inline glm::ivec4 convertIVec4(int* arr, int arrSize)
+    {
+
+        var v = glm::ivec4(-1);
+
+        for (int i = 0; i < arrSize; ++i)
+        {
+            v[i] = arr[i];
+        }
+
+        return v;
+    }
+
         inline glm::vec2 convertVec2(float* arr) { return glm::vec2{arr[0], arr[1] }; }
 
 inline glm::vec3 convertVec3(aiVector3D v)
 {
     return glm::vec3{v.x, v.y, v.z};
 };
+
+inline glm::quat convertQuat(aiQuaternion v)
+{
+    return glm::quat{v.w,v.x, v.y, v.z};
+};
+
 
 glm::vec3 slerp(glm::vec3 start, glm::vec3 end, float t);
 

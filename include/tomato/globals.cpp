@@ -29,6 +29,7 @@ u32 frameTime = 0;
 bgfx::UniformHandle orthoHandle;
 bgfx::UniformHandle timeHandle;
 bgfx::UniformHandle vposHandle;
+bgfx::UniformHandle animHandle;
 bool subHandlesLoaded = false;
 std::map<tmt::prim::PrimitiveType, tmt::render::Mesh*> primitives;
 std::tuple<tmt::render::Vertex*, u16*, u16, u16> convertMesh(par_shapes_mesh* mesh)

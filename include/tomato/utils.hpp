@@ -60,9 +60,11 @@ typedef unsigned char byte;
 #include <tuple>
 #include <span>
 #include <cstring>
+#include <array>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/compatibility.hpp>
@@ -78,6 +80,11 @@ inline int randomInt(int a, int b)
 
 inline float randomFloat(float min, float max) {
     return min + ((float)rand() / RAND_MAX) * (max - min);
+}
+
+inline void CombineVectors(std::vector<glm::vec3>& v1, std::vector<glm::vec3>& v2)
+{
+    v1.insert(v1.end(), v2.begin(), v2.end());
 }
 
 using string = std::string;
@@ -111,6 +118,6 @@ using string = std::string;
 #include "vertex.h"
 
 #define READ_FUNC(type,name) type Read##name() { return Read<##type>(); };
-
+#define MAX_BONE_MATRICES 250
 
 #endif // TM_UTILS

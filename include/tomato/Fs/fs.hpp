@@ -28,16 +28,16 @@ struct StringBinaryReader : std::stringstream
         return header;
     }
 
-    template <typename T> std::vector<T> ReadArray(int count)
+    template <typename T> T* ReadArray(int count)
     {
-        std::vector<T> t;
+        T* arr = new T[count];
 
         for (int i = 0; i < count; i++)
         {
-            t.push_back(Read<T>());
+            arr[i] = (Read<T>());
         }
 
-        return t;
+        return arr;
     }
 
     template <typename T> std::vector<T> ReadArray(ulong offset, int count)
@@ -85,13 +85,13 @@ struct BinaryReader : std::ifstream
         return header;
     }
 
-    template <typename T> std::vector<T> ReadArray(int count)
+    template <typename T> T* ReadArray(int count)
     {
-        std::vector<T> t;
+        T* t = new T[count];
 
         for (int i = 0; i < count; i++)
         {
-            t.push_back(Read<T>());
+            t[i] = Read<T>();
         }
 
         return t;
@@ -108,12 +108,39 @@ struct BinaryReader : std::ifstream
         return list;
     }
 
+    bool CheckSignature(string sig)
+    {
+        var s = ReadString(sig.size());
+        return s == sig;
+    }
+
+    glm::vec3 ReadVec3() { return glm::vec3(ReadSingle(), ReadSingle(), ReadSingle()); }
+    glm::vec4 ReadVec4() { return glm::vec4(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle()); }
+    glm::vec2 ReadVec2() { return glm::vec2(ReadSingle(), ReadSingle()); }
+    glm::quat ReadQuat()
+    {
+        var v = ReadVec4();
+        return glm::quat(v.w,v.x,v.y,v.z);
+    }
+
     u16* ReadUInt16Array(int size) {
         var arr = new u16[size];
 
         for (int i = 0; i < size; ++i)
         {
             arr[size] = ReadUInt16();
+        }
+
+        return arr;
+    }
+
+    u8* ReadByteArray(int size)
+    {
+        var arr = new u8[size];
+
+        for (int i = 0; i < size; ++i)
+        {
+            arr[size] = ReadByte();
         }
 
         return arr;
@@ -127,8 +154,10 @@ struct BinaryReader : std::ifstream
     s32 ReadInt32();
     s64 ReadInt64();
 
+
+
     ByteOrder ReadByteOrder();
-    u8 ReadByte();
+    unsigned char ReadByte();
 
     void Skip(int count)
     {
@@ -139,6 +168,8 @@ struct BinaryReader : std::ifstream
     {
         return Read<float>();
     }
+
+
 
     float* ReadFloatArray(int ct) {
         var arr = new float[ct];
@@ -163,6 +194,7 @@ struct BinaryReader : std::ifstream
 
     u32 ReadOffset();
     string ReadString(int size);
+string ReadString();
 
     size_t fileSize;
 

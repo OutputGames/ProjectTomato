@@ -2,8 +2,16 @@
 #define RENDER_H
 
 #include "utils.hpp" 
+#include "Fs/fs.hpp"
+#include "Obj/obj.hpp"
 
 
+struct aiNode;
+
+namespace tmt::obj
+{
+    struct Object;
+}
 
 namespace tmt::obj {
  struct CameraObject;
@@ -12,7 +20,7 @@ namespace tmt::obj {
 
 namespace tmt::render {
 
-struct RendererInfo;
+    struct RendererInfo;
 struct ShaderInitInfo;
 struct ShaderUniform;
 struct SubShader;
@@ -154,12 +162,18 @@ struct Material
     Shader *shader;
     std::vector<MaterialOverride *> overrides;
 
-    MaterialOverride *GetUniform(string name);
+    MaterialOverride *GetUniform(string name, bool force = false);
     u64 GetMaterialState();
 
     Material(Shader *shader = nullptr);
 
     void Reload(Shader *shader);
+};
+
+    struct MaterialDescription
+{
+    string Name;
+    std::map<string, string> Textures;
 };
 
 struct Mesh
@@ -171,28 +185,188 @@ struct Mesh
     size_t vertexCount, indexCount;
     Vertex *vertices;
     u16 *indices;
+    Model* model = nullptr;
+    int idx = -1;
 
-    void draw(glm::mat4 t, Material *material);
+    void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
 };
 
-struct Model
+    struct Animation
+    {
+        string name;
+
+        float duration;
+        int ticksPerSecond;
+
+        struct NodeChannel
+        {
+            string name;
+            int id = -1;
+
+            template<typename T>
+            struct NodeKey
+            {
+                float time;
+                T value;
+            };
+
+            std::vector<NodeKey<glm::vec3>> positions;
+            std::vector<NodeKey<glm::quat>> rotations;
+            std::vector<NodeKey<glm::vec3>> scales;
+
+        };
+        std::vector<NodeChannel*> nodeChannels;
+
+        Animation(fs::BinaryReader* reader);
+        Animation() = default;
+    };
+
+    struct Skeleton
+    {
+        struct Bone
+        {
+            string name;
+            int id;
+            glm::vec3 position, scale;
+            glm::quat rotation;
+        };
+
+        std::vector<Bone*> bones;
+        string rootName;
+
+        Skeleton(fs::BinaryReader* reader);
+    };
+
+    struct Model
 {
     std::vector<Mesh *> meshes;
     std::vector<int> materialIndices;
+    std::vector<Texture*> textures;
+    std::vector<MaterialDescription*> materials;
+    std::vector<Animation*> animations;
+    Skeleton* skeleton;
 
     Model(string path);
     Model(const aiScene *scene);
+    Model(fs::BinaryReader* reader);
+
+    tmt::obj::Object* CreateObject(Shader*shader=nullptr);
+
+    Texture* GetTextureFromName(string name);
+
+        Material* CreateMaterial(int index, Shader* shader);
+    Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
+
+    private:
+    void LoadFromAiScene(const aiScene* scene);
+    
 };
 
-struct Texture
+    struct SceneDescription
+    {
+        struct Node
+        {
+            string name;
+
+            glm::vec3 position;
+            glm::quat rotation;
+            glm::vec3 scale;
+
+            std::vector<Node*> children;
+            std::vector<int> meshIndices;
+
+            Node* parent = nullptr;
+            int id;
+            bool isBone;
+            SceneDescription* scene;
+
+            Node() = default;
+
+            Node(fs::BinaryReader* reader, SceneDescription* scene);
+            Node(aiNode* node, SceneDescription* scene);
+
+            tmt::obj::Object* ToObject();
+        };
+
+        string name;
+        std::vector<Model*> models;
+        Node* rootNode;
+
+        Mesh* GetMesh(int idx);
+
+        SceneDescription(string path);
+
+        obj::Object* ToObject();
+    };
+
+    
+    struct BoneObject : tmt::obj::Object
+    {
+        int id = -1;
+        int Load(SceneDescription::Node* node, int count);
+    };
+
+    struct SkeletonObject : tmt::obj::Object
+    {
+        std::vector<BoneObject*> bones;
+
+        std::vector<glm::mat4> boneMatrices;
+
+        void Update() override;
+
+        void Load(SceneDescription::Node* node);
+
+        BoneObject* GetBone(string name);
+    };
+
+    struct Animator : tmt::obj::Object
+    {
+
+        struct AnimationBone
+        {
+
+            Animation* animation = nullptr;
+            Animation::NodeChannel* channel = nullptr;
+
+            std::tuple<glm::vec3, glm::quat, glm::vec3> Update(float animationTime);
+
+            int GetPositionIndex(float animationTime);
+            int GetRotationIndex(float animationTime);
+            int GetScaleIndex(float animationTime);
+
+            float GetScaleFactor(float lasttime, float nexttime, float animationTime);
+
+
+            glm::vec3 InterpolatePosition(float animationTime);
+            glm::quat InterpolateRotation(float animationTime);
+            glm::vec3 InterpolateScaling(float animationTime);
+        };
+
+        SkeletonObject* skeleton = nullptr;
+
+        std::vector<AnimationBone*> animationBones;
+
+        Animation* currentAnimation = nullptr;
+        float time = 0;
+
+        void Update() override;
+
+        void LoadAnimationBones();
+
+    };
+ 
+
+    struct Texture
 {
+    string name;
     bgfx::TextureHandle handle;
     bgfx::TextureFormat::Enum format;
 
     int width, height;
 
     Texture(string path);
-    Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory *mem = nullptr);
+    Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
+            string name = "");
 };
 
 struct RenderTexture
@@ -264,6 +438,8 @@ struct Color
     static Color White, Red, Blue, Green;
 };
 
+    using MatrixArray = std::vector<float>;
+
 struct DrawCall
 {
     u64 state;
@@ -273,11 +449,16 @@ struct DrawCall
 
     Mesh *mesh;
     float transformMatrix[4][4];
+    std::vector<glm::mat4> animationMatrices;
+    //float animationMatrices[4][4][MAX_BONE_MATRICES];
+    int matrixCount = 0;
     Shader *program;
     MaterialState::MatrixMode matrixMode;
 };
 
-Mesh *createMesh(Vertex *data, u16 *indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl);
+    MatrixArray GetMatrixArray(glm::mat4 m);
+
+Mesh *createMesh(Vertex *data, u16 *indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl, Model* model=nullptr);
 
 void pushDrawCall(DrawCall d);
 
