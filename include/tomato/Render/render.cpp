@@ -1519,8 +1519,17 @@ float *tmt::render::Camera::GetProjection()
     float proj[16];
 
     bx::mtxProj(proj, glm::radians(FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
-                0.01f,INFINITY , bgfx::getCaps()->homogeneousDepth);
+                NearPlane,FarPlane , bgfx::getCaps()->homogeneousDepth);
     return proj;
+}
+
+glm::mat4 tmt::render::Camera::GetView_m4()
+{ return glm::lookAt(position, position + GetFront(), GetUp()); }
+
+glm::mat4 tmt::render::Camera::GetProjection_m4()
+{
+    return glm::perspective(glm::radians(FOV),
+                            static_cast<float>(renderer -> windowWidth) / static_cast<float>(renderer->windowHeight), NearPlane, FarPlane);
 }
 
 glm::vec3 tmt::render::Camera::GetFront()

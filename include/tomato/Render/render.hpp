@@ -428,9 +428,14 @@ struct Camera
     glm::vec3 position;
     glm::quat rotation;
     float FOV = 90.0f;
+    float NearPlane = 0.001f;
+    float FarPlane = 1000.0f;
 
     float *GetView();
     float *GetProjection();
+
+    glm::mat4 GetView_m4();
+    glm::mat4 GetProjection_m4();
 
     glm::vec3 GetFront();
     glm::vec3 GetUp();

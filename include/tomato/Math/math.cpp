@@ -48,6 +48,9 @@ glm::vec3 tmt::math::slerp(glm::vec3 start, glm::vec3 end, float t)
     return startNormalized * cos(theta) + endPerpendicular * sin(theta);
 }
 
+glm::vec3 tmt::math::lerp(glm::vec3 start, glm::vec3 end, float t)
+{ return glm::mix(start, end, t); }
+
 float tmt::math::lerp(float start, float end, float t)
 {
     return glm::lerp(start, end, t);

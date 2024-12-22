@@ -18,7 +18,7 @@ enum PrimitiveType
 {
     Quad,
     Cube,
-    Sphere
+    Sphere,
 };
 
 render::Mesh *GetPrimitive(PrimitiveType type);

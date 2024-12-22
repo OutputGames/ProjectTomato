@@ -11,6 +11,36 @@ glm::vec2 tmt::input::Mouse::GetMouseDelta()
     return mousedelta;
 }
 
+glm::vec3 unprojectMouseToWorld(int mouseX, int mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
+                                const glm::mat4& projMatrix)
+{
+    // Convert mouse coordinates to normalized device coordinates (NDC)
+    float ndcX = (2.0f * flt mouseX) / flt screenWidth - 1.0f;
+    float ndcY = 1.0f - (2.0f * flt mouseY) / flt screenHeight; // Invert Y axis for NDC
+    float ndcZ = 1.0f;
+
+    glm::vec3 ndc{ndcX, ndcY, ndcZ};
+
+    // Create a point in NDC space
+    glm::vec4 clipCoords = glm::vec4(ndcX, ndcY, -1.0f, 1.0f); // Use -1.0 for near clipping plane
+
+    glm::vec4 ray_eye = glm::inverse(projMatrix) * clipCoords;
+
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1, 0.0);
+
+    glm::vec3 ray_wor = (glm::inverse(viewMatrix) * ray_eye);
+
+    ray_wor = glm::normalize(ray_wor);
+
+    return ray_wor;
+}
+
+glm::vec3 tmt::input::Mouse::GetWorldMousePosition(render::Camera* camera)
+{
+    return unprojectMouseToWorld(mousep.x, mousep.y, renderer->windowWidth, renderer->windowHeight, camera->GetView_m4(),
+                                 camera->GetProjection_m4());
+}
+
 tmt::input::Mouse::MouseButtonState tmt::input::Mouse::GetMouseButton(int i)
 {
     int state = glfwGetMouseButton(renderer->window, i);
