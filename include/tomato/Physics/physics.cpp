@@ -854,7 +854,7 @@ tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
     return nullptr;
 }
 
-bool tmt::physics::OBB::Check(OBB* other, glm::vec3& collisionNormal, glm::vec3& collisionPoint)
+bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
 {
     // Extract the properties of the OBBs
     const glm::vec3& centerA = this->center;
@@ -889,107 +889,67 @@ bool tmt::physics::OBB::Check(OBB* other, glm::vec3& collisionNormal, glm::vec3&
         }
     }
 
+    float minOverlap = std::numeric_limits<float>::max();
+    glm::vec3 minAxis;
+
     // Test axes L = A0, A1, A2
     for (int i = 0; i < 3; ++i)
     {
-        if (std::abs(t[i]) > halfExtentsA[i] + glm::dot(halfExtentsB, AbsR[i]))
+        float overlap = halfExtentsA[i] + glm::dot(halfExtentsB, AbsR[i]) - std::abs(t[i]);
+        if (overlap < 0)
         {
-            collisionNormal = axesA[i];
             return false;
+        }
+        else if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            minAxis = axesA[i] * (t[i] < 0 ? -1.0f : 1.0f);
         }
     }
 
     // Test axes L = B0, B1, B2
     for (int i = 0; i < 3; ++i)
     {
-        if (std::abs(glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i]))) >
-            glm::dot(halfExtentsA, glm::vec3(AbsR[0][i], AbsR[1][i], AbsR[2][i])) + halfExtentsB[i])
+        float overlap = glm::dot(halfExtentsA, glm::vec3(AbsR[0][i], AbsR[1][i], AbsR[2][i])) + halfExtentsB[i] -
+            std::abs(glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i])));
+        if (overlap < 0)
         {
-            collisionNormal = axesB[i];
             return false;
+        }
+        else if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            minAxis = axesB[i] * (glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i])) < 0 ? -1.0f : 1.0f);
         }
     }
 
-    // Test axis L = A0 x B0
-    if (std::abs(t[2] * R[1][0] - t[1] * R[2][0]) > halfExtentsA[1] * AbsR[2][0] + halfExtentsA[2] * AbsR[1][0] +
-            halfExtentsB[1] * AbsR[0][2] + halfExtentsB[2] * AbsR[0][1])
+    // Test cross products of axes
+    for (int i = 0; i < 3; ++i)
     {
-        collisionNormal = glm::cross(axesA[0], axesB[0]);
-        return false;
+        for (int j = 0; j < 3; ++j)
+        {
+            float overlap = halfExtentsA[(i + 1) % 3] * AbsR[(i + 2) % 3][j] +
+                halfExtentsA[(i + 2) % 3] * AbsR[(i + 1) % 3][j] + halfExtentsB[(j + 1) % 3] * AbsR[i][(j + 2) % 3] +
+                halfExtentsB[(j + 2) % 3] * AbsR[i][(j + 1) % 3] -
+                std::abs(t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j]);
+            if (overlap < 0)
+            {
+                return false;
+            }
+            else if (overlap < minOverlap)
+            {
+                minOverlap = overlap;
+                minAxis = glm::cross(axesA[i], axesB[j]) *
+                    (t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j] < 0 ? -1.0f : 1.0f);
+            }
+        }
     }
 
-    // Test axis L = A0 x B1
-    if (std::abs(t[2] * R[1][1] - t[1] * R[2][1]) > halfExtentsA[1] * AbsR[2][1] + halfExtentsA[2] * AbsR[1][1] +
-            halfExtentsB[0] * AbsR[0][2] + halfExtentsB[2] * AbsR[0][0])
-    {
-        collisionNormal = glm::cross(axesA[0], axesB[1]);
-        return false;
-    }
-
-    // Test axis L = A0 x B2
-    if (std::abs(t[2] * R[1][2] - t[1] * R[2][2]) > halfExtentsA[1] * AbsR[2][2] + halfExtentsA[2] * AbsR[1][2] +
-            halfExtentsB[0] * AbsR[0][1] + halfExtentsB[1] * AbsR[0][0])
-    {
-        collisionNormal = glm::cross(axesA[0], axesB[2]);
-        return false;
-    }
-
-    // Test axis L = A1 x B0
-    if (std::abs(t[0] * R[2][0] - t[2] * R[0][0]) > halfExtentsA[0] * AbsR[2][0] + halfExtentsA[2] * AbsR[0][0] +
-            halfExtentsB[1] * AbsR[1][2] + halfExtentsB[2] * AbsR[1][1])
-    {
-        collisionNormal = glm::cross(axesA[1], axesB[0]);
-        return false;
-    }
-
-    // Test axis L = A1 x B1
-    if (std::abs(t[0] * R[2][1] - t[2] * R[0][1]) > halfExtentsA[0] * AbsR[2][1] + halfExtentsA[2] * AbsR[0][1] +
-            halfExtentsB[0] * AbsR[1][2] + halfExtentsB[2] * AbsR[1][0])
-    {
-        collisionNormal = glm::cross(axesA[1], axesB[1]);
-        return false;
-    }
-
-    // Test axis L = A1 x B2
-    if (std::abs(t[0] * R[2][2] - t[2] * R[0][2]) > halfExtentsA[0] * AbsR[2][2] + halfExtentsA[2] * AbsR[0][2] +
-            halfExtentsB[0] * AbsR[1][1] + halfExtentsB[1] * AbsR[1][0])
-    {
-        collisionNormal = glm::cross(axesA[1], axesB[2]);
-        return false;
-    }
-
-    // Test axis L = A2 x B0
-    if (std::abs(t[1] * R[0][0] - t[0] * R[1][0]) > halfExtentsA[0] * AbsR[1][0] + halfExtentsA[1] * AbsR[0][0] +
-            halfExtentsB[1] * AbsR[2][2] + halfExtentsB[2] * AbsR[2][1])
-    {
-        collisionNormal = glm::cross(axesA[2], axesB[0]);
-        return false;
-    }
-
-    // Test axis L = A2 x B1
-    if (std::abs(t[1] * R[0][1] - t[0] * R[1][1]) > halfExtentsA[0] * AbsR[1][1] + halfExtentsA[1] * AbsR[0][1] +
-            halfExtentsB[0] * AbsR[2][2] + halfExtentsB[2] * AbsR[2][0])
-    {
-        collisionNormal = glm::cross(axesA[2], axesB[1]);
-        return false;
-    }
-
-    // Test axis L = A2 x B2
-    if (std::abs(t[1] * R[0][2] - t[0] * R[1][2]) > halfExtentsA[0] * AbsR[1][2] + halfExtentsA[1] * AbsR[0][2] +
-            halfExtentsB[0] * AbsR[2][1] + halfExtentsB[1] * AbsR[2][0])
-    {
-        collisionNormal = glm::cross(axesA[2], axesB[2]);
-        return false;
-    }
-
-    // No separating axis found, the OBBs must be intersecting
-    collisionNormal = glm::vec3(0.0f); // No specific normal axis
-
-    // Calculate collision point
-    collisionPoint = (centerA + centerB) * 0.5f;
-
+    // Return the minimum translation vector
+    mtv = minAxis * minOverlap;
     return true;
 }
+
 
 tmt::physics::OBB* tmt::physics::OBB::FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation)
 {

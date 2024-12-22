@@ -205,11 +205,14 @@ struct RaycastHit
 
     struct OBB
     {
-        glm::vec3 center;
+        glm::vec3 center, velocity;
         glm::vec3 halfSize;
         glm::mat3 axis;
 
-        bool Check(OBB* other, glm::vec3& collisionNormal, glm::vec3& collisionPoint);
+        int layer = 0;
+        void* userData = nullptr;
+
+        bool Check(OBB* other, glm::vec3& mtv);
 
         static OBB* FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation);
     }
