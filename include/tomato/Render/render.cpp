@@ -675,7 +675,7 @@ glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     glm::mat4 offset(1.0);
     if (bone != nullptr)
     {
-        offset = bone->offsetMatrix;
+        //offset = bone->offsetMatrix;
     }
     return offset;
 }
@@ -829,10 +829,6 @@ void tmt::render::Animator::Update()
         for (auto animation_bone : animationBones)
         {
             var bone = skeleton->GetBone(animation_bone->channel->name);
-            glm::vec3 pos, scl;
-            glm::quat rot;
-            glm::vec3 sk;
-            glm::vec4 prs;
 
             //debug::Gizmos::DrawSphere(pos, 0.1f);
 
@@ -1393,6 +1389,13 @@ tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
         bone->rotation = rot;
         bone->scale = scl;
 
+        for (int j = 0; j < 4; ++j)
+        {
+            for (int k = 0; k < 4; ++k)
+            {
+                bone->offsetMatrix[j][k] = reader->ReadSingle();
+            }
+        }
 
         bones.push_back(bone);
     }
@@ -1508,7 +1511,7 @@ float *tmt::render::Camera::GetProjection()
     float proj[16];
 
     bx::mtxProj(proj, glm::radians(FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
-                0.01f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+                0.01f,INFINITY , bgfx::getCaps()->homogeneousDepth);
     return proj;
 }
 
