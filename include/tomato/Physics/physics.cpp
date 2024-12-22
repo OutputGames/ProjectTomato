@@ -696,6 +696,8 @@ void tmt::physics::PhysicsBody::Update()
 
 void tmt::physics::PhysicsBody::SetVelocity(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->setLinearVelocity(convertVec3(v));
@@ -703,6 +705,8 @@ void tmt::physics::PhysicsBody::SetVelocity(glm::vec3 v)
 
 glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
 {
+    if (pId >= physicalBodies.size())
+        return glm::vec3{0};
     var pBody = physicalBodies[pId];
 
     return convertVec3(pBody->getLinearVelocity());
@@ -710,6 +714,8 @@ glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
 
 void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->setAngularVelocity(convertVec3(v));
@@ -717,6 +723,8 @@ void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
 
 void tmt::physics::PhysicsBody::AddImpulse(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->applyCentralImpulse(convertVec3(v));
@@ -724,6 +732,8 @@ void tmt::physics::PhysicsBody::AddImpulse(glm::vec3 v)
 
 void tmt::physics::PhysicsBody::AddForce(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->applyCentralForce(convertVec3(v));
@@ -731,6 +741,8 @@ void tmt::physics::PhysicsBody::AddForce(glm::vec3 v)
 
 void tmt::physics::PhysicsBody::SetLinearFactor(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->setLinearFactor(convertVec3(v));
@@ -738,6 +750,8 @@ void tmt::physics::PhysicsBody::SetLinearFactor(glm::vec3 v)
 
 void tmt::physics::PhysicsBody::SetAngularFactor(glm::vec3 v)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->setAngularFactor(convertVec3(v));
@@ -745,6 +759,8 @@ void tmt::physics::PhysicsBody::SetAngularFactor(glm::vec3 v)
 
 void tmt::physics::PhysicsBody::SetDamping(float linear, float angular)
 {
+    if (pId >= physicalBodies.size())
+        return;
     var pBody = physicalBodies[pId];
 
     pBody->setDamping(linear, angular);
@@ -836,4 +852,152 @@ tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
         return hit;
     }
     return nullptr;
+}
+
+bool tmt::physics::OBB::Check(OBB* other, glm::vec3& collisionNormal, glm::vec3& collisionPoint)
+{
+    // Extract the properties of the OBBs
+    const glm::vec3& centerA = this->center;
+    const glm::vec3& centerB = other->center;
+    const glm::vec3& halfExtentsA = this->halfSize;
+    const glm::vec3& halfExtentsB = other->halfSize;
+    const glm::mat3& axesA = this->axis;
+    const glm::mat3& axesB = other->axis;
+
+    // Compute the rotation matrix expressing B in A's coordinate frame
+    glm::mat3 R;
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            R[i][j] = glm::dot(axesA[i], axesB[j]);
+        }
+    }
+
+    // Compute the translation vector
+    glm::vec3 t = centerB - centerA;
+    // Bring translation into A's coordinate frame
+    t = glm::vec3(glm::dot(t, axesA[0]), glm::dot(t, axesA[1]), glm::dot(t, axesA[2]));
+
+    // Compute common subexpressions
+    glm::mat3 AbsR;
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            AbsR[i][j] = std::abs(R[i][j]) + std::numeric_limits<float>::epsilon();
+        }
+    }
+
+    // Test axes L = A0, A1, A2
+    for (int i = 0; i < 3; ++i)
+    {
+        if (std::abs(t[i]) > halfExtentsA[i] + glm::dot(halfExtentsB, AbsR[i]))
+        {
+            collisionNormal = axesA[i];
+            return false;
+        }
+    }
+
+    // Test axes L = B0, B1, B2
+    for (int i = 0; i < 3; ++i)
+    {
+        if (std::abs(glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i]))) >
+            glm::dot(halfExtentsA, glm::vec3(AbsR[0][i], AbsR[1][i], AbsR[2][i])) + halfExtentsB[i])
+        {
+            collisionNormal = axesB[i];
+            return false;
+        }
+    }
+
+    // Test axis L = A0 x B0
+    if (std::abs(t[2] * R[1][0] - t[1] * R[2][0]) > halfExtentsA[1] * AbsR[2][0] + halfExtentsA[2] * AbsR[1][0] +
+            halfExtentsB[1] * AbsR[0][2] + halfExtentsB[2] * AbsR[0][1])
+    {
+        collisionNormal = glm::cross(axesA[0], axesB[0]);
+        return false;
+    }
+
+    // Test axis L = A0 x B1
+    if (std::abs(t[2] * R[1][1] - t[1] * R[2][1]) > halfExtentsA[1] * AbsR[2][1] + halfExtentsA[2] * AbsR[1][1] +
+            halfExtentsB[0] * AbsR[0][2] + halfExtentsB[2] * AbsR[0][0])
+    {
+        collisionNormal = glm::cross(axesA[0], axesB[1]);
+        return false;
+    }
+
+    // Test axis L = A0 x B2
+    if (std::abs(t[2] * R[1][2] - t[1] * R[2][2]) > halfExtentsA[1] * AbsR[2][2] + halfExtentsA[2] * AbsR[1][2] +
+            halfExtentsB[0] * AbsR[0][1] + halfExtentsB[1] * AbsR[0][0])
+    {
+        collisionNormal = glm::cross(axesA[0], axesB[2]);
+        return false;
+    }
+
+    // Test axis L = A1 x B0
+    if (std::abs(t[0] * R[2][0] - t[2] * R[0][0]) > halfExtentsA[0] * AbsR[2][0] + halfExtentsA[2] * AbsR[0][0] +
+            halfExtentsB[1] * AbsR[1][2] + halfExtentsB[2] * AbsR[1][1])
+    {
+        collisionNormal = glm::cross(axesA[1], axesB[0]);
+        return false;
+    }
+
+    // Test axis L = A1 x B1
+    if (std::abs(t[0] * R[2][1] - t[2] * R[0][1]) > halfExtentsA[0] * AbsR[2][1] + halfExtentsA[2] * AbsR[0][1] +
+            halfExtentsB[0] * AbsR[1][2] + halfExtentsB[2] * AbsR[1][0])
+    {
+        collisionNormal = glm::cross(axesA[1], axesB[1]);
+        return false;
+    }
+
+    // Test axis L = A1 x B2
+    if (std::abs(t[0] * R[2][2] - t[2] * R[0][2]) > halfExtentsA[0] * AbsR[2][2] + halfExtentsA[2] * AbsR[0][2] +
+            halfExtentsB[0] * AbsR[1][1] + halfExtentsB[1] * AbsR[1][0])
+    {
+        collisionNormal = glm::cross(axesA[1], axesB[2]);
+        return false;
+    }
+
+    // Test axis L = A2 x B0
+    if (std::abs(t[1] * R[0][0] - t[0] * R[1][0]) > halfExtentsA[0] * AbsR[1][0] + halfExtentsA[1] * AbsR[0][0] +
+            halfExtentsB[1] * AbsR[2][2] + halfExtentsB[2] * AbsR[2][1])
+    {
+        collisionNormal = glm::cross(axesA[2], axesB[0]);
+        return false;
+    }
+
+    // Test axis L = A2 x B1
+    if (std::abs(t[1] * R[0][1] - t[0] * R[1][1]) > halfExtentsA[0] * AbsR[1][1] + halfExtentsA[1] * AbsR[0][1] +
+            halfExtentsB[0] * AbsR[2][2] + halfExtentsB[2] * AbsR[2][0])
+    {
+        collisionNormal = glm::cross(axesA[2], axesB[1]);
+        return false;
+    }
+
+    // Test axis L = A2 x B2
+    if (std::abs(t[1] * R[0][2] - t[0] * R[1][2]) > halfExtentsA[0] * AbsR[1][2] + halfExtentsA[1] * AbsR[0][2] +
+            halfExtentsB[0] * AbsR[2][1] + halfExtentsB[1] * AbsR[2][0])
+    {
+        collisionNormal = glm::cross(axesA[2], axesB[2]);
+        return false;
+    }
+
+    // No separating axis found, the OBBs must be intersecting
+    collisionNormal = glm::vec3(0.0f); // No specific normal axis
+
+    // Calculate collision point
+    collisionPoint = (centerA + centerB) * 0.5f;
+
+    return true;
+}
+
+tmt::physics::OBB* tmt::physics::OBB::FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation)
+{
+    var box = new OBB;
+
+    box->center = position;
+    box->halfSize = size / 2.0f;
+    box->axis = glm::mat3_cast(rotation);
+
+    return box;
 }

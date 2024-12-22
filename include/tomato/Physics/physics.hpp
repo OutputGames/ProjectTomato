@@ -202,6 +202,17 @@ struct RaycastHit
     glm::vec3 point, normal;
     PhysicsBody *hit;
 };
+
+    struct OBB
+    {
+        glm::vec3 center;
+        glm::vec3 halfSize;
+        glm::mat3 axis;
+
+        bool Check(OBB* other, glm::vec3& collisionNormal, glm::vec3& collisionPoint);
+
+        static OBB* FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation);
+    }
 ;
 
 }

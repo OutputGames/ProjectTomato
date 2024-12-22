@@ -69,6 +69,9 @@ typedef unsigned char byte;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/easing.hpp>
+#include <glm/gtx/type_aligned.hpp>
+#include <glm/matrix.hpp>
 
 inline int randomInt(int a, int b)
 {
