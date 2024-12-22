@@ -205,7 +205,7 @@ struct RaycastHit
 
     struct OBB
     {
-        glm::vec3 center, velocity;
+        glm::vec3 center, velocity = {0,0,0};
         glm::vec3 halfSize;
         glm::mat3 axis;
 
