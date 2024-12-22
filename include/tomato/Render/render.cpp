@@ -731,7 +731,7 @@ int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
 {
     for (int index = 0; index < channel->positions.size() - 1; ++index)
     {
-        if (animationTime < channel->positions[index + 1].time)
+        if (animationTime <= channel->positions[index + 1].time)
             return index;
     }
     assert(0);
@@ -741,7 +741,7 @@ int tmt::render::Animator::AnimationBone::GetRotationIndex(float animationTime)
 {
     for (int index = 0; index < channel->rotations.size() - 1; ++index)
     {
-        if (animationTime < channel->rotations[index + 1].time)
+        if (animationTime <= channel->rotations[index + 1].time)
             return index;
     }
     assert(0);
@@ -751,7 +751,7 @@ int tmt::render::Animator::AnimationBone::GetScaleIndex(float animationTime)
 {
     for (int index = 0; index < channel->scales.size() - 1; ++index)
     {
-        if (animationTime < channel->scales[index + 1].time)
+        if (animationTime <= channel->scales[index + 1].time)
             return index;
     }
     assert(0);
