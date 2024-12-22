@@ -77,7 +77,8 @@ struct ParticleSystem
 
 struct Particle
 {
-    glm::vec3 position, rotation, scale;
+    glm::vec3 position, scale;
+    glm::quat rotation;
     glm::vec3 velocity;
     render::Color color;
     float lifetime = 0;

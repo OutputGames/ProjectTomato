@@ -17,6 +17,7 @@ tmt::render::Color tmt::render::Color::Red = {1, 0, 0, 1};
 tmt::render::RendererInfo* renderer;
 std::vector<tmt::render::DrawCall> calls;
 std::vector<tmt::debug::DebugCall> debugCalls;
+std::vector<std::function<void()>> debugFuncs;
 glm::vec2 mousep;
 glm::vec2 mousedelta;
 tmt::render::Camera* mainCamera;
@@ -200,6 +201,11 @@ btQuaternion convertQuat(glm::vec3 q)
 	z = qu.z;
 
 	return btQuaternion(y, x, z);
+};
+
+btQuaternion convertQuat(glm::quat q)
+{
+    return btQuaternion(q.x, q.y,q.z,q.w);
 };
 void ApplyTransform(tmt::physics::PhysicsBody* body, btTransform transform)
 {

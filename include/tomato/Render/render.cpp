@@ -1,6 +1,7 @@
 #include "render.hpp" 
 #include "globals.hpp"
 #include "vertex.h"
+#include "common/imgui/imgui.h"
 
 void tmt::render::ShaderUniform::Use()
 {
@@ -361,14 +362,33 @@ tmt::render::Material* tmt::render::Model::CreateMaterial(MaterialDescription* m
     return material;
 }
 
+void tmt::render::SceneDescription::Node::SetParent(Node* parent)
+{
+    if (this->parent)
+    {
+        this->parent->children.erase(std::find(this->parent->children.begin(), this->parent->children.end(), this));
+        this->parent = nullptr;
+    }
+
+    if (parent)
+    {
+
+        this->parent = parent;
+        this->parent->children.push_back(this);
+    }
+    
+}
+
+void tmt::render::SceneDescription::Node::AddChild(Node* child)
+{ child->SetParent(this); }
+
 tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescription* scene)
 {
     name = reader->ReadString();
 
     position = reader->ReadVec3();
 
-    var rot = reader->ReadVec4();
-    rotation = glm::quat(rot.w, rot.x,rot.y,rot.z);
+    rotation = reader->ReadQuat();
 
     scale = reader->ReadVec3();
     this->scene = scene;
@@ -412,8 +432,63 @@ tmt::render::SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
     }
     for (int i = 0; i < node->mNumChildren; ++i)
     {
-        children.push_back(new Node(node->mChildren[i], scene));
+        var c = (new Node(node->mChildren[i], scene));
+        c->SetParent(this);
     }
+
+}
+
+tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNode(string name)
+{
+    if (this->name == name)
+        return this;
+    for (auto child : children)
+    {
+        var node = child->GetNode(name);
+        if (node)
+            return node;
+    }
+    return nullptr;
+}
+
+tmt::render::SceneDescription::Node* tmt::render::SceneDescription::GetNode(string name)
+{
+    return rootNode->GetNode(name);
+}
+
+tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNode(aiNode* node)
+{
+    {
+        bool p = true;
+        if (parent && node->mParent)
+        {
+            p = parent->name == node->mParent->mName.C_Str();
+        }
+        if (p)
+        {
+            if (name == node->mName.C_Str())
+                return this;
+        }
+    }
+
+    for (auto child : children)
+    {
+        var n = child->GetNode(node);
+        if (n)
+            return n;
+    }
+    return nullptr;
+}
+
+tmt::render::Model* tmt::render::SceneDescription::GetModel(string name)
+{
+    for (auto model : models)
+    {
+        if (model->name == name)
+            return model;
+    }
+
+    return nullptr;
 }
 
 tmt::render::Mesh* tmt::render::SceneDescription::GetMesh(int idx)
@@ -433,35 +508,65 @@ tmt::render::Mesh* tmt::render::SceneDescription::GetMesh(int idx)
     return nullptr;
 }
 
-tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject()
+tmt::render::SceneDescription::Node* tmt::render::SceneDescription::GetNode(aiNode* node)
+{
+    return rootNode->GetNode(node);
+}
+
+tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
 {
     var obj = new tmt::obj::Object();
 
     obj->name = name;
     obj->position = position;
-    obj->rotation = glm::eulerAngles(rotation);
+    obj->rotation = (rotation);
     obj->scale = scale;
 
     for (int mesh_index : meshIndices)
     {
         var mesh = scene->GetMesh(mesh_index);
         var mshObj = tmt::obj::MeshObject::FromBasicMesh(mesh);
+        mshObj->name = "Mesh";
         mshObj->material = mesh->model->CreateMaterial(mesh->model->materialIndices[mesh_index], defaultShader);
         mshObj->SetParent(obj);
     }
 
     for (auto child : children)
     {
-        bool isArmature = (child->isBone && !isBone) || (child->name == "Armature");
+        bool isArmature = (child->name == "Armature");
         if (isArmature)
         {
             var skele = new SkeletonObject();
+
+            if (modelIndex > -1)
+                skele->skeleton = scene->models[modelIndex]->skeleton;
+
             skele->Load(child);
+
+
             obj->AddChild(skele);
             continue;
         }
 
-        obj->AddChild(child->ToObject());
+        int midx = -1;
+        if (child->name.starts_with("TMDL_"))
+        {
+            var model = scene->GetModel(child->name);
+            if (model)
+            {
+                int j = 0;
+                for (auto m : scene->models)
+                {
+                    if (m == model)
+                        break;
+                    j++;
+                }
+
+                midx = j;
+            }
+        }
+
+        obj->AddChild(child->ToObject(midx));
     }
 
     return obj;
@@ -481,10 +586,11 @@ tmt::render::SceneDescription::SceneDescription(string path)
         name = reader->ReadString();
         rootNode = new Node(reader, this);
 
+
         var modelCount = reader->ReadInt32();
         for (int i = 0; i < modelCount; ++i)
         {
-            models.push_back(new Model(reader));
+            models.push_back(new Model(reader, this));
         }
 
         reader->close();
@@ -494,8 +600,7 @@ tmt::render::SceneDescription::SceneDescription(string path)
     {
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
-                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
-                                                   aiProcess_FindInvalidData | aiProcess_PreTransformVertices | aiProcess_PopulateArmatureData);
+                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_PopulateArmatureData | aiProcess_ValidateDataStructure);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -503,11 +608,18 @@ tmt::render::SceneDescription::SceneDescription(string path)
             return;
         }
 
-        name = scene->mRootNode->mName.C_Str();
-        rootNode = new Node(scene->mRootNode, this);
+        var fpath = std::filesystem::path(path);
+
+        name = fpath.filename().filename().string();
+        rootNode = new Node();
+        rootNode->name = name;
+        rootNode->scene = this;
+
+        var realRoot = new Node(scene->mRootNode, this);
+        realRoot->SetParent(rootNode);
 
         {
-            var model = new Model(scene);
+            var model = new Model(scene, this);
             models.push_back(model);
         }
 
@@ -517,12 +629,8 @@ tmt::render::SceneDescription::SceneDescription(string path)
 
 tmt::obj::Object* tmt::render::SceneDescription::ToObject()
 {
-    var obj = new tmt::obj::Object();
-    obj->name = name;
 
-    obj->AddChild(rootNode->ToObject());
-
-    return obj;
+    return rootNode->ToObject();
 }
 
 int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
@@ -534,7 +642,7 @@ int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
             var bone = new BoneObject();
             bone->name = child->name;
             bone->position = child->position;
-            bone->rotation = glm::eulerAngles(child->rotation);
+            bone->rotation = (child->rotation);
             bone->scale = child->scale;
             count++;
             bone->id = count;
@@ -546,8 +654,35 @@ int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
     return count;
 }
 
+glm::mat4 tmt::render::BoneObject::GetGlobalOffsetMatrix()
+{
+    var offset = GetOffsetMatrix();
+
+    if (parent)
+    {
+        var boneParent = parent->Cast<BoneObject>();
+
+        if (boneParent)
+        {
+            offset *= boneParent->GetGlobalOffsetMatrix();
+        }
+    }
+
+    return offset;
+}
+
+glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
+    glm::mat4 offset(1.0);
+    if (bone != nullptr)
+    {
+        offset = bone->offsetMatrix;
+    }
+    return offset;
+}
+
 void tmt::render::SkeletonObject::Load(SceneDescription::Node* node)
 {
+    name = node->name;
     var ct = -1;
     for (auto child : node->children)
     {
@@ -556,7 +691,7 @@ void tmt::render::SkeletonObject::Load(SceneDescription::Node* node)
             var bone = new BoneObject();
             bone->name = child->name;
             bone->position = child->position;
-            bone->rotation = glm::eulerAngles(child->rotation);
+            bone->rotation = (child->rotation);
             bone->scale = child->scale;
             ct++;
             bone->id = ct;
@@ -579,12 +714,17 @@ tmt::render::BoneObject* tmt::render::SkeletonObject::GetBone(string name)
     return nullptr;
 }
 
-std::tuple<glm::vec3, glm::quat, glm::vec3> tmt::render::Animator::AnimationBone::Update(float animationTime)
+bool tmt::render::SkeletonObject::IsSkeletonBone(BoneObject* bone)
+{
+    return std::find(bones.begin(), bones.end(), bone) != bones.end();
+}
+
+glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
 {
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    return std::make_tuple(translation, rotation, scale);
+    return glm::mat4(1.0);
 }
 
 int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
@@ -654,8 +794,8 @@ glm::quat tmt::render::Animator::AnimationBone::InterpolateRotation(float animat
         GetScaleFactor(channel->rotations[p0Index].time, channel->rotations[p1Index].time, animationTime);
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index].value, channel->rotations[p1Index].value, scaleFactor);
-    //finalRotation = glm::normalize(finalRotation);
-    return finalRotation;
+    finalRotation = glm::normalize(finalRotation);
+    return (finalRotation);
 }
 
 glm::vec3 tmt::render::Animator::AnimationBone::InterpolateScaling(float animationTime)
@@ -691,13 +831,17 @@ void tmt::render::Animator::Update()
             var bone = skeleton->GetBone(animation_bone->channel->name);
             glm::vec3 pos, scl;
             glm::quat rot;
-            std::tie(pos,rot,scl) = animation_bone->Update(time);
+            glm::vec3 sk;
+            glm::vec4 prs;
 
-            debug::Gizmos::DrawSphere(pos, 0.1f);
+            //debug::Gizmos::DrawSphere(pos, 0.1f);
 
-            bone->position = pos;
-            bone->rotation = glm::degrees(glm::eulerAngles(rot));
-            bone->scale = scl;
+            //glm::decompose(m, scl, rot, pos, sk,prs);
+
+            bone->position = animation_bone->InterpolatePosition(time);
+            bone->rotation = animation_bone->InterpolateRotation(time);
+            bone->scale = animation_bone->InterpolateScaling(time);
+            //bone->SetTransform(m);
         }
     }
 
@@ -717,19 +861,33 @@ void tmt::render::Animator::LoadAnimationBones()
     }
 }
 
+void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentTransform)
+{
+    if (bone == nullptr)
+    {
+        if (skeleton->skeleton != nullptr)
+        {
+            bone = skeleton->skeleton->GetBone(name);
+        }
+    }
+
+    skeleton->boneMatrices[bone->id] = GetTransform() * GetOffsetMatrix();
+
+}
+
+
 void tmt::render::SkeletonObject::Update()
 {
 
     boneMatrices.clear();
+    boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
     for (auto bone : bones)
     {
-        var mat = bone->GetTransform();
-
-        boneMatrices.push_back(mat);
-
-        debug::Gizmos::DrawSphere(bone->GetGlobalPosition(), 0.1f);
+        bone->CalculateBoneMatrix(this, glm::mat4(1.0));
     }
+
+    
 
     Object::Update();
 }
@@ -762,11 +920,38 @@ tmt::render::Model::Model(string path)
     }
 }
 
+tmt::render::Skeleton::Bone* tmt::render::Skeleton::GetBone(string name)
+{
+    for (auto value : bones)
+    {
+        if (value->name == name)
+            return value;
+    }
+
+    return nullptr;
+}
+
 tmt::render::Model::Model(const aiScene *scene)
 { LoadFromAiScene(scene); }
 
-void tmt::render::Model::LoadFromAiScene(const aiScene* scene)
+tmt::render::Model::Model(const aiScene* scene, SceneDescription* description)
+{ LoadFromAiScene(scene, description); }
+
+void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 {
+    name = "TMDL_"+std::string(scene->mName.C_Str());
+    skeleton = new Skeleton();
+
+    SceneDescription::Node* modelNode;
+    if (description)
+    {
+
+        modelNode = new SceneDescription::Node;
+        modelNode->name = name;
+        modelNode->scene = description;
+        modelNode->SetParent(description->rootNode);
+    }
+
     for (int i = 0; i < scene->mNumMeshes; ++i)
     {
         var msh = scene->mMeshes[i];
@@ -789,11 +974,72 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene)
 
         std::vector<u16> indices;
 
-        for (unsigned int i = 0; i < msh->mNumFaces; i++)
+        for (unsigned int j = 0; j < msh->mNumFaces; j++)
         {
-            aiFace face = msh->mFaces[i];
-            for (unsigned int j = 0; j < face.mNumIndices; j++)
-                indices.push_back(face.mIndices[j]);
+            aiFace face = msh->mFaces[j];
+            for (unsigned int k = 0; k < face.mNumIndices; k++)
+                indices.push_back(face.mIndices[k]);
+        }
+
+        for (int j = 0; j < msh->mNumBones; ++j)
+        {
+            var b = msh->mBones[j];
+
+            Skeleton::Bone* bone = nullptr;
+
+            if (skeleton->GetBone(b->mName.C_Str()) == nullptr)
+            {
+
+                bone = new Skeleton::Bone;
+                bone->name = b->mName.C_Str();
+                bone->id = skeleton->bones.size();
+
+                for (int k = 0; k < b->mNumWeights; ++k)
+                {
+                    var weight = b->mWeights[k];
+                    bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
+                    vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
+                }
+
+                skeleton->bones.push_back(bone);
+            }
+            else
+            {
+                bone = skeleton->GetBone(b->mName.C_Str());
+
+                for (int k = 0; k < b->mNumWeights; ++k)
+                {
+                    var weight = b->mWeights[k];
+                    bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
+                    vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
+                }
+            }
+
+            aiVector3D p, s;
+            aiQuaternion q;
+            b->mOffsetMatrix.Decompose(s, q, p);
+
+            bone->offsetMatrix = math::convertMat4(b->mOffsetMatrix);
+
+
+            if (description)
+            {
+
+                if (j == 0)
+                {
+                    var anode = description->GetNode(b->mArmature);
+
+                    skeleton->rootName = b->mName.C_Str();
+                    if (anode != description->rootNode)
+                    {
+                        anode->SetParent(modelNode);
+                    }
+                }
+
+                var bnode = description->GetNode(b->mNode);
+                if (bnode)
+                    bnode->isBone = true;
+            }
         }
 
         Vertex* verts = new Vertex[vertices.size()];
@@ -806,6 +1052,27 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene)
 
         meshes.push_back(mesh);
         materialIndices.push_back(msh->mMaterialIndex);
+
+
+
+        if (description) {
+            var mnd = description->GetNode(msh->mName.C_Str());
+
+            var meshNode = new SceneDescription::Node;
+            meshNode->name = msh->mName.C_Str();
+
+            meshNode->meshIndices.push_back(i);
+            meshNode->SetParent(modelNode);
+
+            meshNode->position = mnd->position;
+            meshNode->rotation = mnd->rotation;
+            meshNode->scale = mnd->scale;
+            meshNode->scene = description;
+
+            mnd->SetParent(nullptr);
+
+            delete mnd;
+        }
     }
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
@@ -883,9 +1150,20 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene)
         animations.push_back(animation);
     }
 
+    for (int i = 0; i < scene->mNumSkeletons; ++i)
+    {
+        var skl = scene->mSkeletons[i];
+        
+
+        break;
+    }
+
+    if (description)
+        modelNode->SetParent(description->rootNode);
+
 }
 
-tmt::render::Model::Model(fs::BinaryReader* reader)
+tmt::render::Model::Model(fs::BinaryReader* reader, SceneDescription* description)
 {
     var tmdlSig = reader->ReadString(4);
 
@@ -897,6 +1175,18 @@ tmt::render::Model::Model(fs::BinaryReader* reader)
         return;
     }
 
+    name = reader->ReadString();
+
+    SceneDescription::Node* modelNode;
+    if (description)
+    {
+
+        modelNode = new SceneDescription::Node;
+        modelNode->name = name;
+        modelNode->scene = description;
+        modelNode->SetParent(description->rootNode);
+    }
+
     var meshCount = reader->ReadInt32();
 
     for (int i = 0; i < meshCount; ++i)
@@ -904,6 +1194,8 @@ tmt::render::Model::Model(fs::BinaryReader* reader)
         var tmshSig = reader->ReadString(4);
         if (tmshSig == "TMSH")
         {
+            var name = reader->ReadString();
+
             var vtxCount = reader->ReadInt32();
             var vertices = new Vertex[vtxCount];
 
@@ -1215,20 +1507,14 @@ float *tmt::render::Camera::GetProjection()
 {
     float proj[16];
 
-    bx::mtxProj(proj, (FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
+    bx::mtxProj(proj, glm::radians(FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
                 0.01f, 100.0f, bgfx::getCaps()->homogeneousDepth);
     return proj;
 }
 
 glm::vec3 tmt::render::Camera::GetFront()
 {
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
-    direction.y = sin(glm::radians(rotation.x));
-    direction.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
-    glm::vec3 Front = normalize(direction);
-
-    return Front;
+    return rotation * glm::vec3{0,0,1};
 }
 
 glm::vec3 tmt::render::Camera::GetUp()
@@ -1265,6 +1551,19 @@ bgfx::VertexLayout tmt::render::Vertex::getVertexLayout()
     .end();
 
     return layout;
+}
+
+void tmt::render::Vertex::SetBoneData(int boneId, float boneWeight)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        if (boneIds[i] < 0)
+        {
+            boneIds[i] = static_cast<s16>(boneId);
+            boneWeights[i] = boneWeight;
+            break;
+        }
+    }
 }
 
 tmt::render::MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
@@ -1483,6 +1782,9 @@ tmt::render::RendererInfo *tmt::render::init()
 
     bgfx::loadRenderDoc();
 
+    if (renderer->useImgui)
+        imguiCreate();
+
     return renderer;
 }
 
@@ -1516,6 +1818,27 @@ void tmt::render::update()
     }
 
     bgfx::setDebug(BGFX_DEBUG_TEXT);
+
+    u8 btn = ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_LEFT) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
+        ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_RIGHT) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |
+        ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE) == input::Mouse::Hold) ? IMGUI_MBUT_MIDDLE : 0);
+    glfwGetWindowSize(renderer->window, &renderer->windowWidth, &renderer->windowHeight);
+
+    if (renderer->useImgui)
+    {
+
+        imguiBeginFrame(mousep.x, mousep.y, btn, 0, (u16)renderer->windowWidth, (u16)renderer->windowHeight);
+
+        {
+            for (auto debug_func : debugFuncs)
+            {
+                debug_func();
+            }
+        }
+
+        imguiEndFrame();
+    }
+    
 
     float proj[16];
     float ortho[16];
@@ -1640,6 +1963,7 @@ void tmt::render::update()
     dde.end();
 
     debugCalls.clear();
+    debugFuncs.clear();
 
     frameTime = bgfx::frame();
     glfwPollEvents();

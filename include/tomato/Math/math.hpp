@@ -21,6 +21,15 @@ inline bx::Vec3 convertVec3(glm::vec3 v)
     return bx::Vec3{v.x, v.y, v.z};
 };
 
+    inline float* convertVec3A(glm::vec3 v) {
+        var f = new float[3];
+        f[0] = v[0];
+        f[1] = v[1];
+        f[2] = v[2];
+
+        return f;
+    }
+
     inline glm::vec3 convertVec3(float* arr)
     { return glm::vec3{arr[0], arr[1], arr[2]};
     }
@@ -61,7 +70,28 @@ inline glm::quat convertQuat(aiQuaternion v)
 {
     return glm::quat{v.w,v.x, v.y, v.z};
 };
-
+inline glm::mat4 convertMat4(const aiMatrix4x4 from)
+{
+    glm::mat4 to;
+    // the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1;
+    to[1][0] = from.a2;
+    to[2][0] = from.a3;
+    to[3][0] = from.a4;
+    to[0][1] = from.b1;
+    to[1][1] = from.b2;
+    to[2][1] = from.b3;
+    to[3][1] = from.b4;
+    to[0][2] = from.c1;
+    to[1][2] = from.c2;
+    to[2][2] = from.c3;
+    to[3][2] = from.c4;
+    to[0][3] = from.d1;
+    to[1][3] = from.d2;
+    to[2][3] = from.d3;
+    to[3][3] = from.d4;
+    return to;
+}
 
 glm::vec3 slerp(glm::vec3 start, glm::vec3 end, float t);
 

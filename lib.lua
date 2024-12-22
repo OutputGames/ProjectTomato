@@ -8,6 +8,7 @@ local BGFX_DIR = "vendor/bgfx/"
 local BIMG_DIR = "vendor/bimg/"
 local BX_DIR = "vendor/bx/"
 local GLFW_DIR = "vendor/glfw/"
+local IMGUI_DIR = "vendor/dear-imgui/"
 
 local BULLET_LIBS = {
     "BulletDynamics",
@@ -60,7 +61,8 @@ end
             "vendor/assimp/include/",
             "vendor/bullet3/src/",
             "vendor/bimg/include/",
-            "include/tomato/"
+            "include/tomato/",
+            IMGUI_DIR,
         }
 
         libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
@@ -73,6 +75,7 @@ end
             "source/**",
             "resources/**",
             ".editorconfig",
+            IMGUI_DIR.."**"
         }
 
         removefiles { "include/testproject/**"}
@@ -96,6 +99,7 @@ end
             optimize "Off"
             links { "bgfxDebug", "bimgDebug", "bxDebug", "assimp-vc143-mtd" }
             libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
+            
             for _, lib in ipairs(BULLET_LIBS) do
                 links { lib .. "_Debug" }
             end

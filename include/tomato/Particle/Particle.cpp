@@ -10,35 +10,31 @@ glm::mat4 tmt::particle::Particle::getTransform()
     if (pId == -1)
     {
         p += emitterParent->GetGlobalPosition();
-        p += emitterParent->GetGlobalRotation();
+        r = emitterParent->GetGlobalRotation() * r;
     }
 
-    var rx = rotate(glm::mat4(1.0), glm::radians(r.x), {1, 0, 0});
-    var ry = rotate(glm::mat4(1.0), glm::radians(r.y), {0, 1, 0});
-    var rz = rotate(glm::mat4(1.0), glm::radians(r.z), {0, 0, 1});
-
-    var rt = ry * rx * rz;
+    var rt = glm::toMat4(rotation);
 
     return translate(glm::mat4(1.0), p) * rt * glm::scale(glm::mat4(1.0), s);
 }
 
 glm::vec3 tmt::particle::Particle::GetUp()
 {
-    auto q = glm::quat(radians(rotation + emitterParent->GetGlobalRotation()));
+    auto q = glm::quat(emitterParent->GetGlobalRotation() * rotation);
 
     return q * glm::vec3{0, 1, 0};
 }
 
 glm::vec3 tmt::particle::Particle::GetRight()
 {
-    auto q = glm::quat(radians(rotation + emitterParent->GetGlobalRotation()));
+    auto q = glm::quat(emitterParent->GetGlobalRotation() * rotation);
 
     return q * glm::vec3{1, 0, 0};
 }
 
 glm::vec3 tmt::particle::Particle::GetForward()
 {
-    auto q = glm::quat(radians(rotation + emitterParent->GetGlobalRotation()));
+    auto q = glm::quat((emitterParent->GetGlobalRotation() * rotation));
 
     return q * glm::vec3{0, 0, 1};
 }
@@ -72,7 +68,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
         particle->scale = glm::vec3{system->startSize};
 
         particle->position = {0, 0, 0};
-        particle->rotation = {0, 0, 0};
+        particle->rotation = {1,0, 0, 0};
         particle->emitterParent = this;
         particle->velocity = particle->GetForward();
 
@@ -114,7 +110,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
             btTransform startTransform;
             startTransform.setIdentity();
             startTransform.setOrigin(convertVec3(particle->position + GetGlobalPosition()));
-            startTransform.setRotation(convertQuat(particle->rotation + GetGlobalRotation()));
+            startTransform.setRotation(convertQuat(GetGlobalRotation() * particle->rotation));
 
             auto myMotionState = new btDefaultMotionState(startTransform);
             btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collisionObjs[particle->cPID],

@@ -39,6 +39,10 @@ struct Gizmos
     static void _DrawText(glm::vec2 pos,string text);
 };
 ;
+struct DebugUi
+{
+    static void AddImguiEvent(std::function<void()> func);
+};
 
 }
 

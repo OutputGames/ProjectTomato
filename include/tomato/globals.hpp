@@ -21,6 +21,7 @@ void glfw_errorCallback(int error, const char* description);
 extern tmt::render::RendererInfo* renderer;
 extern std::vector<tmt::render::DrawCall> calls;
 extern std::vector<tmt::debug::DebugCall> debugCalls;
+extern std::vector<std::function<void()>> debugFuncs;
 extern glm::vec2 mousep;
 extern glm::vec2 mousedelta;
 extern tmt::render::Camera* mainCamera;
@@ -53,6 +54,7 @@ glm::vec3 convertVec3(btVector3 v);
 btVector3 convertVec3(glm::vec3 v);
 glm::vec3 convertQuatEuler(btQuaternion q);
 btQuaternion convertQuat(glm::vec3 q);
+btQuaternion convertQuat(glm::quat q);
 void ApplyTransform(tmt::physics::PhysicsBody* body, btTransform transform);
 bool pointInTriangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c,
                      glm::vec3 scale = glm::vec3{1});

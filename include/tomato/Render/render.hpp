@@ -19,6 +19,8 @@ namespace tmt::obj {
 
 
 namespace tmt::render {
+    struct SkeletonObject;
+    struct SceneDescription;
 
     struct RendererInfo;
 struct ShaderInitInfo;
@@ -42,6 +44,7 @@ struct RendererInfo
     GLFWwindow *window;
     bgfx::ViewId clearView;
     int windowWidth, windowHeight;
+    bool useImgui = true;
 };
 
 struct ShaderInitInfo
@@ -225,16 +228,32 @@ struct Mesh
     {
         struct Bone
         {
+            struct VertexWeight
+            {
+                uint vertexId;
+                float weight;
+            };
+
             string name;
-            int id;
-            glm::vec3 position, scale;
-            glm::quat rotation;
+            int id = -1;
+            glm::vec3 position{}, scale{1};
+            glm::quat rotation{1,0,0,0};
+
+            glm::mat4 offsetMatrix{1};
+
+            std::vector<VertexWeight> weights;
+
         };
 
         std::vector<Bone*> bones;
         string rootName;
 
+        Bone* GetBone(string name);
+
+        void CalculateBoneIds();
+
         Skeleton(fs::BinaryReader* reader);
+        Skeleton() = default;
     };
 
     struct Model
@@ -245,10 +264,12 @@ struct Mesh
     std::vector<MaterialDescription*> materials;
     std::vector<Animation*> animations;
     Skeleton* skeleton;
+    string name;
 
     Model(string path);
     Model(const aiScene *scene);
-    Model(fs::BinaryReader* reader);
+    Model(const aiScene* scene, SceneDescription* description);
+    Model(fs::BinaryReader* reader, SceneDescription* description);
 
     tmt::obj::Object* CreateObject(Shader*shader=nullptr);
 
@@ -258,7 +279,7 @@ struct Mesh
     Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
 
     private:
-    void LoadFromAiScene(const aiScene* scene);
+    void LoadFromAiScene(const aiScene* scene, SceneDescription* description=nullptr);
     
 };
 
@@ -268,31 +289,41 @@ struct Mesh
         {
             string name;
 
-            glm::vec3 position;
-            glm::quat rotation;
-            glm::vec3 scale;
+            glm::vec3 position{0};
+            glm::quat rotation{glm::vec3{0}};
+            glm::vec3 scale{1};
 
             std::vector<Node*> children;
             std::vector<int> meshIndices;
 
             Node* parent = nullptr;
-            int id;
-            bool isBone;
-            SceneDescription* scene;
+            int id = -1;
+            bool isBone = false;
+            SceneDescription* scene = nullptr;
+
+            void SetParent(Node* parent);
+            void AddChild(Node* child);
 
             Node() = default;
 
             Node(fs::BinaryReader* reader, SceneDescription* scene);
             Node(aiNode* node, SceneDescription* scene);
 
-            tmt::obj::Object* ToObject();
+            Node* GetNode(string name);
+            Node* GetNode(aiNode* node);
+
+            tmt::obj::Object* ToObject(int modelIndex = -1);
         };
 
         string name;
         std::vector<Model*> models;
         Node* rootNode;
 
+        Model* GetModel(string name);
         Mesh* GetMesh(int idx);
+
+        Node* GetNode(string name);
+        Node* GetNode(aiNode* node);
 
         SceneDescription(string path);
 
@@ -303,7 +334,15 @@ struct Mesh
     struct BoneObject : tmt::obj::Object
     {
         int id = -1;
+
+        Skeleton::Bone* bone;
+
         int Load(SceneDescription::Node* node, int count);
+
+        glm::mat4 GetGlobalOffsetMatrix();
+        glm::mat4 GetOffsetMatrix();
+
+        void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
     };
 
     struct SkeletonObject : tmt::obj::Object
@@ -312,11 +351,15 @@ struct Mesh
 
         std::vector<glm::mat4> boneMatrices;
 
+        Skeleton* skeleton;
+
         void Update() override;
 
         void Load(SceneDescription::Node* node);
 
         BoneObject* GetBone(string name);
+
+        bool IsSkeletonBone(BoneObject* bone);
     };
 
     struct Animator : tmt::obj::Object
@@ -328,7 +371,7 @@ struct Mesh
             Animation* animation = nullptr;
             Animation::NodeChannel* channel = nullptr;
 
-            std::tuple<glm::vec3, glm::quat, glm::vec3> Update(float animationTime);
+            glm::mat4 Update(float animationTime);
 
             int GetPositionIndex(float animationTime);
             int GetRotationIndex(float animationTime);
@@ -382,7 +425,8 @@ struct RenderTexture
 
 struct Camera
 {
-    glm::vec3 position, rotation;
+    glm::vec3 position;
+    glm::quat rotation;
     float FOV = 90.0f;
 
     float *GetView();

@@ -21,3 +21,6 @@ void tmt::debug::Gizmos::_DrawText(glm::vec2 pos, string text)
 
     debugCalls.push_back(DebugCall{Text, glm::vec3(pos,0), glm::vec3{0}, 0, clr, text});
 }
+
+void tmt::debug::DebugUi::AddImguiEvent(std::function<void()> func)
+{ debugFuncs.push_back(func); }
