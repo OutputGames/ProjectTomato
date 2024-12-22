@@ -90,6 +90,14 @@ inline void CombineVectors(std::vector<glm::vec3>& v1, std::vector<glm::vec3>& v
 
 using string = std::string;
 
+namespace std
+{
+    inline string to_string(glm::vec3 v)
+    {
+        return "(" + std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + ")";
+    }
+}
+
 #include <stdio.h>
 #include <bx/bx.h>
 #include <bgfx/bgfx.h>

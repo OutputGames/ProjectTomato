@@ -114,7 +114,15 @@ struct BinaryReader : std::ifstream
         return s == sig;
     }
 
-    glm::vec3 ReadVec3() { return glm::vec3(ReadSingle(), ReadSingle(), ReadSingle()); }
+    glm::vec3 ReadVec3()
+    {
+        
+        var vec = glm::vec3(ReadSingle(), ReadSingle(), ReadSingle());
+
+        std::cout << "reading vec3: " << tellg() << " " << std::to_string(vec) << std::endl;
+
+        return vec;
+    }
     glm::vec4 ReadVec4() { return glm::vec4(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle()); }
     glm::vec2 ReadVec2() { return glm::vec2(ReadSingle(), ReadSingle()); }
     glm::quat ReadQuat()

@@ -388,6 +388,13 @@ tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescrip
 
     position = reader->ReadVec3();
 
+    var x = position.x;
+    var z = position.z;
+    position.x = z;
+    position.z = x;
+
+    std::cout << name << ": " << std::to_string(position) << std::endl;
+
     rotation = reader->ReadQuat();
 
     scale = reader->ReadVec3();
@@ -397,14 +404,13 @@ tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescrip
 
     if (meshCount > 0)
     {
-        var meshes = reader->ReadArray<int>(meshCount);
         for (int i = 0; i < meshCount; ++i)
         {
-            meshIndices.push_back(meshes[i]);
+            meshIndices.push_back(reader->ReadInt32());
         }
     }
 
-    isBone = reader->ReadInt32();
+    isBone = reader->ReadInt32() == 0 ? true : false;
 
     var childCount = reader->ReadInt32();
 
