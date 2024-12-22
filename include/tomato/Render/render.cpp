@@ -404,7 +404,7 @@ tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescrip
         }
     }
 
-    isBone = reader->Read<bool>();
+    isBone = reader->ReadInt32();
 
     var childCount = reader->ReadInt32();
 
@@ -867,7 +867,9 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm:
         }
     }
 
-    skeleton->boneMatrices[bone->id] = GetTransform() * GetOffsetMatrix();
+    var offset = GetOffsetMatrix();
+    
+    skeleton->boneMatrices[bone->id] = GetTransform() * offset;
 
 }
 

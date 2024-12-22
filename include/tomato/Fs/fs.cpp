@@ -56,6 +56,19 @@ string tmt::fs::StringBinaryReader::ReadString(int size)
 tmt::fs::BinaryReader::BinaryReader(std::string path) : std::ifstream(path, std::ios::binary)
 {
     fileSize = tellg();
+
+    if constexpr (std::endian::native == std::endian::little)
+    {
+        std::cout << "Little-endian\n";
+    }
+    else if constexpr (std::endian::native == std::endian::big)
+    {
+        std::cout << "Big-endian\n";
+    }
+    else
+    {
+        std::cout << "Mixed-endian\n"; // Unlikely
+    }
 }
 
 u64 tmt::fs::BinaryReader::ReadUInt64()
