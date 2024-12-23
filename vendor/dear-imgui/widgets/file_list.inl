@@ -1,12 +1,6 @@
 #include <bx/bx.h>
-#include <string>
-
-#if defined(_WIN32)
-#include <windows.h>
-#else
 #include <dirent.h>
 #include <sys/stat.h>
-#endif
 
 namespace ImGui
 {
@@ -14,50 +8,10 @@ namespace ImGui
 
     ImFileInfo::~ImFileInfo() {}
 
-#if defined(_WIN32)
-    std::string ConvertWideToNarrow(const wchar_t* wideStr)
-    {
-        int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, nullptr, 0, nullptr, nullptr);
-        std::string narrowStr(bufferSize, 0);
-        WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, &narrowStr[0], bufferSize, nullptr, nullptr);
-        return narrowStr;
-    }
-#endif
-
     void ImFileList::ChDir(const char* path)
     {
 #if BX_PLATFORM_PS4
         BX_UNUSED(path);
-#elif defined(_WIN32)
-        WIN32_FIND_DATA findFileData;
-        HANDLE hFind = FindFirstFile((std::wstring(path, path + strlen(path)) + L"\\*").c_str(), &findFileData);
-
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            FileList.clear();
-            do
-            {
-                const bool isDir = (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-                std::string fileName = ConvertWideToNarrow(findFileData.cFileName);
-                if (fileName == "..")
-                {
-                    FileList.push_back(ImFileInfo(fileName.c_str(), -1));
-                }
-                else if (fileName != ".")
-                {
-                    if (isDir)
-                    {
-                        FileList.push_back(ImFileInfo(fileName.c_str(), -1));
-                    }
-                    else
-                    {
-                        FileList.push_back(ImFileInfo(fileName.c_str(), findFileData.nFileSizeLow));
-                    }
-                }
-            }
-            while (FindNextFile(hFind, &findFileData) != 0);
-            FindClose(hFind);
-        }
 #else
         DIR* dir = opendir(path);
         if (NULL != dir)

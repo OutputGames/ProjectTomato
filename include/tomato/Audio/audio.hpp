@@ -1,6 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <miniaudio/extras/miniaudio_split/miniaudio.h>
 
 #include <tomato/utils.hpp>
 
@@ -12,15 +13,14 @@ namespace tmt::audio
 
     struct AudioDevice 
     {
-        static tmt::audio::AudioDevice* mInstance;
+        static tmt::audio::AudioDevice* GetInstance();
 
         AudioDevice();
         ~AudioDevice();
         void Update();
 
         void AddListener(SoundListener* listener);
-
-        void* engine;
+        ma_engine engine;
 
     private:
 
@@ -30,7 +30,6 @@ namespace tmt::audio
 
     struct Sound
     {
-        int pId = -1;
         Sound(string path);
         ~Sound();
 
@@ -38,7 +37,9 @@ namespace tmt::audio
         void Stop();
 
     private:
+        friend struct AudioPlayer;
 
+        ma_sound sound;
 
     };
 
@@ -63,6 +64,7 @@ namespace tmt::audio
         void playOneShot(Sound* sound);
 
         float volume = 1.0f;
+        bool playOnStart = true;
 
     private:
 
@@ -70,7 +72,7 @@ namespace tmt::audio
 
         bool isPlaying = false;
         bool isLooping = false;
-        Sound* sound;
+        Sound* sound = nullptr;
 
     };
 

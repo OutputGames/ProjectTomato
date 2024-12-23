@@ -52,8 +52,6 @@ end
             "/Zc:preprocessor", -- Enable preprocessor conformance mode.
         }
 
-        print(path.join(MINI_DIR,"extras/miniaudio_split/"))
-
         includedirs { 
             path.join(BGFX_DIR, "include"),
             path.join(BX_DIR, "include"),
@@ -94,6 +92,13 @@ end
         filter "system:macosx"
             links { "QuartzCore.framework", "Metal.framework", "Cocoa.framework", "IOKit.framework", "CoreVideo.framework" }
 
+        filter "action:vs*"
+            defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+            dependson {"miniaudio"}
+            links {"miniaudio.lib"}
+            characterset ("MBCS")
+        links {"miniaudio"}
+        libdirs {"./bin/%{cfg.buildcfg}"}
 
         filter "configurations:Debug"
             defines { "DEBUG", "BX_CONFIG_DEBUG=1" }
@@ -178,6 +183,7 @@ end
         kind "StaticLib"
         language "C"
         staticruntime "on"
+        targetdir "bin/%{cfg.buildcfg}"
 
         filter "action:vs*"
             defines "_CRT_SECURE_NO_WARNINGS"

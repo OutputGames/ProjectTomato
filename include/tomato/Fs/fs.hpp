@@ -224,7 +224,8 @@ string ReadString();
         static ResourceManager* pInstance;
         ResourceManager();
 
-        audio::Sound* GetSound(string path);
+        static audio ::Sound* GetSound(string path);
+
     };
 
 }
