@@ -1,6 +1,8 @@
 #include "physics.hpp" 
 #include "globals.hpp" 
 
+std::vector<tmt::physics::OBB*> obbs;
+
 btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
                                                           const btCollisionObjectWrapper *colObj0Wrap, int partId0,
                                                           int index0, const btCollisionObjectWrapper *colObj1Wrap,
@@ -428,6 +430,62 @@ void tmt::physics::PhysicalWorld::Update()
     }
     */
 
+
+    for (auto collider : obbs)
+    {
+        if (collider->isStatic)
+            continue;
+
+        glm::vec3 mtv;
+        for (auto obb : obbs)
+        {
+            if (obb == collider)
+                continue;
+
+            if (obb->Check(collider, mtv))
+            {
+                if (glm::length2(mtv) == 0)
+                {
+                    mtv = {EPSILON, 0, 0};
+                    //mtv = glm::normalize(mtv);
+                }
+
+                if (!obb->isStatic)
+                {
+                    obb->center -= mtv * 0.5f;
+                }
+                collider->center += mtv * 0.5f;
+
+                glm::vec3 relativeVelocity = obb->velocity - collider->velocity;
+                float velo = glm::dot(relativeVelocity, (mtv));
+
+                if (velo == 0.0f || glm::isnan(velo))
+                {
+                    continue;
+                }
+                else
+                {
+                    float restitution = 0.5f;
+
+                    float div = 1.0f;
+
+                    if (!obb->isStatic)
+                        div += 1.0f;
+
+                    float impulseScalar = -(1.0f + restitution) * velo / div;
+
+                    glm::vec3 impulse = impulseScalar * glm::normalize(mtv);
+                    obb->velocity -= impulse;
+                    collider->velocity += impulse;
+                }
+            }
+        }
+    }
+    for (auto value : obbs)
+    {
+        value->center += value->velocity * (1.0f / 60.0f);
+    } 
+
     doneFirstPhysicsUpdate = true;
 }
 
@@ -854,6 +912,99 @@ tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
     return nullptr;
 }
 
+tmt::physics::OBB::OBB()
+{ obbs.push_back(this); }
+
+// Check for overlap on a given axis
+bool overlapOnAxis(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm::mat3& rotA, const glm::vec3& posB,
+                   const glm::vec3& halfSizeB, const glm::mat3& rotB, const glm::vec3& axis, float& depth)
+{
+    // Project OBBs onto the axis
+    float aMin, aMax, bMin, bMax;
+    auto project = [](const glm::vec3& pos, const glm::vec3& halfSize, const glm::mat3& rot, const glm::vec3& axis)
+    {
+        glm::vec3 corners[8] = {pos + rot * glm::vec3(halfSize.x, halfSize.y, halfSize.z),
+                                pos + rot * glm::vec3(-halfSize.x, halfSize.y, halfSize.z),
+                                pos + rot * glm::vec3(halfSize.x, -halfSize.y, halfSize.z),
+                                pos + rot * glm::vec3(-halfSize.x, -halfSize.y, halfSize.z),
+                                pos + rot * glm::vec3(halfSize.x, halfSize.y, -halfSize.z),
+                                pos + rot * glm::vec3(-halfSize.x, halfSize.y, -halfSize.z),
+                                pos + rot * glm::vec3(halfSize.x, -halfSize.y, -halfSize.z),
+                                pos + rot * glm::vec3(-halfSize.x, -halfSize.y, -halfSize.z)};
+        float min = glm::dot(axis, corners[0]);
+        float max = min;
+        for (const glm::vec3& corner : corners)
+        {
+            float projection = glm::dot(axis, corner);
+            if (projection < min)
+                min = projection;
+            if (projection > max)
+                max = projection;
+        }
+        return std::make_pair(min, max);
+    };
+
+    std::tie(aMin, aMax) = project(posA, halfSizeA, rotA, axis);
+    std::tie(bMin, bMax) = project(posB, halfSizeB, rotB, axis);
+
+    if (aMax < bMin || bMax < aMin)
+    {
+        return false; // No overlap
+    }
+
+    float overlap1 = aMax - bMin;
+    float overlap2 = bMax - aMin;
+    depth = std::min(overlap1, overlap2);
+    return true; // Overlap found
+}
+
+// Get the axes to test for separation
+std::vector<glm::vec3> getAxes(const glm::mat3& rotA, const glm::mat3& rotB)
+{
+    std::vector<glm::vec3> axes;
+
+    for (int i = 0; i < 3; ++i)
+    {
+        axes.push_back(rotA[i]);
+        axes.push_back(rotB[i]);
+    }
+
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            axes.push_back(glm::cross(rotA[i], rotB[j]));
+        }
+    }
+
+    return axes;
+}
+
+bool testOBBOBB(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm::mat3& rotA, const glm::vec3& posB,
+                const glm::vec3& halfSizeB, const glm::mat3& rotB, glm::vec3& mtv)
+{
+    std::vector<glm::vec3> axes = getAxes(rotA, rotB);
+    float minOverlap = std::numeric_limits<float>::max();
+    glm::vec3 smallestAxis;
+
+    for (const glm::vec3& axis : axes)
+    {
+        float overlap;
+        if (!overlapOnAxis(posA, halfSizeA, rotA, posB, halfSizeB, rotB, axis, overlap))
+        {
+            return false; // Separating axis found, no collision
+        }
+        if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            smallestAxis = axis;
+        }
+    }
+
+    mtv = smallestAxis * minOverlap;
+    return true; // Collision detected
+}
+
 bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
 {
     // Extract the properties of the OBBs
@@ -864,90 +1015,7 @@ bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
     const glm::mat3& axesA = this->axis;
     const glm::mat3& axesB = other->axis;
 
-    // Compute the rotation matrix expressing B in A's coordinate frame
-    glm::mat3 R;
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            R[i][j] = glm::dot(axesA[i], axesB[j]);
-        }
-    }
-
-    // Compute the translation vector
-    glm::vec3 t = centerB - centerA;
-    // Bring translation into A's coordinate frame
-    t = glm::vec3(glm::dot(t, axesA[0]), glm::dot(t, axesA[1]), glm::dot(t, axesA[2]));
-
-    // Compute common subexpressions
-    glm::mat3 AbsR;
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            AbsR[i][j] = std::abs(R[i][j]) + std::numeric_limits<float>::epsilon();
-        }
-    }
-
-    float minOverlap = std::numeric_limits<float>::max();
-    glm::vec3 minAxis;
-
-    // Test axes L = A0, A1, A2
-    for (int i = 0; i < 3; ++i)
-    {
-        float overlap = halfExtentsA[i] + glm::dot(halfExtentsB, AbsR[i]) - std::abs(t[i]);
-        if (overlap < 0)
-        {
-            return false;
-        }
-        else if (overlap < minOverlap)
-        {
-            minOverlap = overlap;
-            minAxis = axesA[i] * (t[i] < 0 ? -1.0f : 1.0f);
-        }
-    }
-
-    // Test axes L = B0, B1, B2
-    for (int i = 0; i < 3; ++i)
-    {
-        float overlap = glm::dot(halfExtentsA, glm::vec3(AbsR[0][i], AbsR[1][i], AbsR[2][i])) + halfExtentsB[i] -
-            std::abs(glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i])));
-        if (overlap < 0)
-        {
-            return false;
-        }
-        else if (overlap < minOverlap)
-        {
-            minOverlap = overlap;
-            minAxis = axesB[i] * (glm::dot(t, glm::vec3(R[0][i], R[1][i], R[2][i])) < 0 ? -1.0f : 1.0f);
-        }
-    }
-
-    // Test cross products of axes
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            float overlap = halfExtentsA[(i + 1) % 3] * AbsR[(i + 2) % 3][j] +
-                halfExtentsA[(i + 2) % 3] * AbsR[(i + 1) % 3][j] + halfExtentsB[(j + 1) % 3] * AbsR[i][(j + 2) % 3] +
-                halfExtentsB[(j + 2) % 3] * AbsR[i][(j + 1) % 3] -
-                std::abs(t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j]);
-            if (overlap < 0)
-            {
-                return false;
-            }
-            else if (overlap < minOverlap)
-            {
-                minOverlap = overlap;
-                minAxis = glm::cross(axesA[i], axesB[j]) *
-                    (t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j] < 0 ? -1.0f : 1.0f);
-            }
-        }
-    }
-
-    // Return the minimum translation vector
-    mtv = minAxis * minOverlap;
-    return true;
+    return testOBBOBB(centerA, halfExtentsA, axesA, centerB, halfExtentsB, axesB, mtv);
 }
 
 

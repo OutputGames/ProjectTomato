@@ -12,6 +12,21 @@
 #define arrsize(a) sizeof(a) / sizeof(a[0])
 #define randval(min, max) (rand()%(abs(max - min) + 1) + min)
 
+#include <array>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <numeric>
+#include <span>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <typeinfo>
+#include <vector>
 
 
 #ifndef PI
@@ -19,7 +34,7 @@
 #endif
 
 #ifndef EPSILON
-#define EPSILON 0.000001f
+#define EPSILON 1e-5f
 #endif
 
 #ifndef DEG2RAD
@@ -45,22 +60,6 @@ typedef unsigned long long ulong;
 typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char byte;
-
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <vector>
-#include <filesystem>
-#include <numeric>
-#include <map>
-#include <functional>
-#include <memory>
-#include <typeinfo>
-#include <tuple>
-#include <span>
-#include <cstring>
-#include <array>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>

@@ -211,6 +211,9 @@ struct RaycastHit
 
         int layer = 0;
         void* userData = nullptr;
+        bool isStatic = false;
+
+        OBB();
 
         bool Check(OBB* other, glm::vec3& mtv);
 
