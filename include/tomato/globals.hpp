@@ -55,6 +55,7 @@ btVector3 convertVec3(glm::vec3 v);
 glm::vec3 convertQuatEuler(btQuaternion q);
 btQuaternion convertQuat(glm::vec3 q);
 btQuaternion convertQuat(glm::quat q);
+glm::quat convertQuat(btQuaternion q);
 void ApplyTransform(tmt::physics::PhysicsBody* body, btTransform transform);
 bool pointInTriangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c,
                      glm::vec3 scale = glm::vec3{1});

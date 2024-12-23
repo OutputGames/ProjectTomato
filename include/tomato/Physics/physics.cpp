@@ -1,6 +1,8 @@
 #include "physics.hpp" 
 #include "globals.hpp" 
 
+using namespace tmt::physics;
+
 std::vector<tmt::physics::OBB*> obbs;
 
 btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
@@ -664,6 +666,25 @@ tmt::physics::PhysicsBody::PhysicsBody(ColliderObject *collisionObj, float mass)
     bodies.push_back(this);
 }
 
+void PhysicsBody::SetForward(glm::vec3 v)
+{
+    Object::SetForward(v);
+
+    if (pId >= physicalBodies.size())
+        return;
+
+    var body = physicalBodies[pId];
+
+    if (body)
+    {
+        var t = body->getWorldTransform();
+
+        t.setRotation(convertQuat(rotation));
+
+        body->setWorldTransform(t);
+    }
+}
+
 void tmt::physics::PhysicsBody::Update()
 {
     if (!parent)
@@ -721,7 +742,7 @@ void tmt::physics::PhysicsBody::Update()
         var motionState = pBody->getMotionState();
         btTransform transform;
         motionState->getWorldTransform(transform);
-        // transform = pBody->getWorldTransform();
+        transform = pBody->getWorldTransform();
 
         if (transRelation == Self)
         {
@@ -736,16 +757,26 @@ void tmt::physics::PhysicsBody::Update()
             var p = parent->position;
             var r = parent->rotation;
 
-            parent->position = convertVec3(transform.getOrigin());
+            var np = convertVec3(transform.getOrigin());
+            var nr = convertQuat(transform.getRotation());
 
-            parent->rotation = convertQuatEuler(transform.getRotation());
+            parent->position = np;
+            parent->rotation = nr;
 
-            transform.setIdentity();
+            var diff = p - np;
+            var qdiff = r - nr;
+            float tolerance = 1;
 
-            transform.setOrigin(convertVec3(p));
-            transform.setRotation(convertQuat(r));
+            if (glm::length(diff) > tolerance)
+            {
+                transform.setOrigin(convertVec3(p));
+            }
+            if (glm::length(qdiff) > tolerance)
+            {
+                transform.setRotation(convertQuat(r));
+            }
 
-            motionState->setWorldTransform(transform);
+            pBody->setWorldTransform(transform);
         }
     }
 
@@ -770,6 +801,13 @@ glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
     var pBody = physicalBodies[pId];
 
     return convertVec3(pBody->getLinearVelocity());
+}
+
+void tmt::physics::PhysicsBody::SetPushVelocity(glm::vec3 v)
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setPushVelocity(convertVec3(v));
 }
 
 void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
@@ -860,6 +898,14 @@ glm::vec3 tmt::physics::PhysicsBody::GetBasisRow(float v)
     var vector = basis.getRow(v);
 
     return convertVec3(vector);
+}
+
+void tmt::physics::PhysicsBody::Reset()
+{
+    var pBody = physicalBodies[pId];
+
+    pBody->setAngularVelocity({0, 0, 0});
+    pBody->setLinearVelocity({0, 0, 0});
 }
 
 void tmt::physics::PhysicsBody::OnCollision(Collision c)

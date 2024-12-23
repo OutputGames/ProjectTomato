@@ -157,10 +157,13 @@ struct PhysicsBody : obj::Object
     void SetVelocity(glm::vec3 v);
     glm::vec3 GetVelocity();
 
+    void SetPushVelocity(glm::vec3 v);
+
     void SetAngular(glm::vec3 v);
 
     void AddImpulse(glm::vec3 v);
     void AddForce(glm::vec3 v);
+    void SetForward(glm::vec3 v);
 
     void SetLinearFactor(glm::vec3 v);
     void SetAngularFactor(glm::vec3 v);
@@ -189,6 +192,7 @@ private:
     void OnCollision(Collision c);
     void OnParticleCollision(ParticleCollision c);
 };
+
 
 struct Ray
 {

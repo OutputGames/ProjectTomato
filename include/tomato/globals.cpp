@@ -188,7 +188,7 @@ glm::vec3 convertQuatEuler(btQuaternion q)
 
 	q.getEulerZYX(x, y, z);
 
-	return degrees(glm::vec3{x, y, z});
+	return (glm::vec3{x, y, z});
 };
 btQuaternion convertQuat(glm::vec3 q)
 {
@@ -202,6 +202,8 @@ btQuaternion convertQuat(glm::vec3 q)
 
 	return btQuaternion(y, x, z);
 };
+
+glm::quat convertQuat(btQuaternion q) { return glm::quat(q.w(), q.x(), q.y(), q.z()); }
 
 btQuaternion convertQuat(glm::quat q)
 {
