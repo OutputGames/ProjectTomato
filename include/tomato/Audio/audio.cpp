@@ -21,7 +21,7 @@ tmt::audio::AudioDevice::AudioDevice()
         return;
     }
 
-    ma_engine_play_sound(&engine, "resources/sound/test.wav", NULL);
+    ma_engine_play_sound(&engine, "resources/sound/call.wav", NULL);
 
 }
 
