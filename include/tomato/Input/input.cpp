@@ -19,20 +19,13 @@ glm::vec3 unprojectMouseToWorld(int mouseX, int mouseY, int screenWidth, int scr
     float ndcY = 1.0f - (2.0f * flt mouseY) / flt screenHeight; // Invert Y axis for NDC
     float ndcZ = 1.0f;
 
-    glm::vec3 ndc{ndcX, ndcY, ndcZ};
+    glm::vec4 ndc{ndcX, ndcY, ndcZ, 1.0f};
 
-    // Create a point in NDC space
-    glm::vec4 clipCoords = glm::vec4(ndcX, ndcY, -1.0f, 1.0f); // Use -1.0 for near clipping plane
+    glm::mat4 invViewProj = glm::inverse(projMatrix * viewMatrix);
 
-    glm::vec4 ray_eye = glm::inverse(projMatrix) * clipCoords;
+    glm::vec4 worldPos = invViewProj * ndc;
 
-    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1, 0.0);
-
-    glm::vec3 ray_wor = (glm::inverse(viewMatrix) * ray_eye);
-
-    ray_wor = glm::normalize(ray_wor);
-
-    return ray_wor;
+    return glm::vec3(worldPos) / worldPos.w;
 }
 
 glm::vec3 tmt::input::Mouse::GetWorldMousePosition(render::Camera* camera)
