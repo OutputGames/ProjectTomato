@@ -1,6 +1,7 @@
 #ifndef TM_H
 #define TM_H
 
+#include ".//Audio/audio.hpp"
 #include "utils.hpp" 
 #include ".//Render/render.hpp"
 #include ".//Prim/prim.hpp"
@@ -14,6 +15,5 @@
 #include ".//Input/input.hpp"
 #include ".//Fs/fs.hpp"
 #include ".//Debug/debug.hpp"
-#include ".//Audio/audio.hpp"
 
 #endif

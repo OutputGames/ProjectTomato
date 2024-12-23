@@ -1,6 +1,4 @@
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio.h"
 
 #include "audio.hpp"
 
@@ -16,7 +14,6 @@ using namespace tmt::audio;
 
 tmt::audio::AudioDevice* AudioDevice::mInstance;
 
-ma_engine engine;
 ma_resource_manager resource_manager;
 
 ma_sound_group defaultGroup;
@@ -30,44 +27,44 @@ void log_callback(void* pUserData, ma_uint32 level, const char* pMessage)
     std ::cout << "Level: " << level << " " << pMessage;
 }
 
+ma_engine* GetEngine() { return (ma_engine*)AudioDevice::mInstance->engine; }
+
 tmt::audio::AudioDevice::AudioDevice()
 {
     mInstance = this;
     ma_result result;
 
-    result = ma_engine_init(nullptr, &engine);
+    ma_engine e;
+
+    result = ma_engine_init(nullptr, &e);
     if (result != MA_SUCCESS)
     {
+        std::cout << "Unable to initialize audio engine." << std::endl;
         return;
     }
-    ma_sound sound;
-    result = ma_sound_init_from_file(&engine, "resources/sound/call.wav", 0, nullptr, nullptr, &sound);
-    if (result != MA_SUCCESS)
-    {
-        //printf("WARNING: Failed to load sound \"%s\"", path.c_str());
-        return;
-    }
-    ma_sound_start(&sound);
+
+    engine = &e;
 }
 
 AudioDevice::~AudioDevice()
 {
-    ma_engine_uninit(&engine);
+    ma_engine_uninit(static_cast<ma_engine*>(engine));
     //ma_resource_manager_uninit(&resource_manager);
 }
 
 void AudioDevice::Update()
 {
+    var eng = GetEngine();
     for (SoundListener* listener : listeners)
     {
-        ma_engine_listener_set_position(&engine, listener->pId, TO_ARGS(listener->GetGlobalPosition()));
-        ma_engine_listener_set_velocity(&engine, listener->pId, TO_ARGS(listener->velocity));
+        ma_engine_listener_set_position(eng, listener->pId, TO_ARGS(listener->GetGlobalPosition()));
+        ma_engine_listener_set_velocity(eng, listener->pId, TO_ARGS(listener->velocity));
 
         var up = listener->GetUp();
         var fwd = listener->GetForward();
 
-        ma_engine_listener_set_world_up(&engine, listener->pId, TO_ARGS(up));
-        ma_engine_listener_set_direction(&engine, listener->pId, TO_ARGS(fwd));
+        ma_engine_listener_set_world_up(eng, listener->pId, TO_ARGS(up));
+        ma_engine_listener_set_direction(eng, listener->pId, TO_ARGS(fwd));
     }
 
 }
@@ -81,7 +78,7 @@ void AudioDevice::AddListener(SoundListener* listener)
 tmt::audio::Sound::Sound(string path)
 {
     ma_sound sound;
-    var result = ma_sound_init_from_file(&engine, path.c_str(), 0,
+    var result = ma_sound_init_from_file(GetEngine(), path.c_str(), 0,
         nullptr, nullptr, &sound);
     if (result != MA_SUCCESS)
     {
@@ -90,7 +87,7 @@ tmt::audio::Sound::Sound(string path)
     }
     ma_sound_start(&sound);
 
-    //ma_sound_set_spatialization_enabled(&sound, true);
+    ma_sound_set_spatialization_enabled(&sound, true);
 
     pId = sounds.size();
     sounds.push_back(sound);
@@ -162,11 +159,7 @@ void AudioPlayer::playOneShot(Sound* sound)
 }
 
 void tmt::audio::init()
-{
-    //var audioDevice = new AudioDevice();
-}
+{ var audioDevice = new AudioDevice(); }
 
 void tmt::audio::update()
-{
-    //AudioDevice::mInstance->Update();
-}
+{ AudioDevice::mInstance->Update(); }

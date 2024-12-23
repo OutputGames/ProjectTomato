@@ -1,6 +1,11 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#undef var
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio/miniaudio.h" 
+#define var auto
+
 #include <tomato/utils.hpp>
 
 #include <tomato/Obj/obj.hpp>
@@ -18,6 +23,8 @@ namespace tmt::audio
         void Update();
 
         void AddListener(SoundListener* listener);
+
+        void* engine;
 
     private:
 
