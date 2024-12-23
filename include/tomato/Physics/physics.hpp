@@ -172,8 +172,9 @@ struct PhysicsBody : obj::Object
 
     glm::vec3 GetBasisColumn(float v);
     glm::vec3 GetBasisRow(float v);
+    void Reset();
 
-  private:
+private:
     friend PhysicalWorld;
     friend CollisionCallback;
 
@@ -216,6 +217,8 @@ struct RaycastHit
         OBB();
 
         bool Check(OBB* other, glm::vec3& mtv);
+
+
 
         static OBB* FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation);
     }

@@ -183,6 +183,41 @@ tmt::physics::PhysicalWorld::PhysicalWorld()
     AddLayer(0);
 }
 
+void ResolveCollision(tmt::physics::OBB* a, tmt::physics::OBB* b, const glm::vec3& mtv)
+{
+    if (a->isStatic && b->isStatic)
+        return; // Both objects are static
+
+    glm::vec3 mtvDir = glm::normalize(mtv);
+    float mtvMagnitude = glm::length(mtv);
+
+    if (mtvMagnitude <= 0)
+        return;
+
+    // Separate objects based on their static status
+    if (a->isStatic)
+    {
+        b->center += mtvDir * mtvMagnitude;
+    }
+    else if (b->isStatic)
+    {
+        a->center -= mtvDir * mtvMagnitude;
+    }
+    else
+    {
+        // Both are dynamic: split the translation
+        a->center -= mtvDir * (mtvMagnitude / 2.0f);
+        b->center += mtvDir * (mtvMagnitude / 2.0f);
+    }
+
+    // Reflect velocities for dynamic objects (optional for more realistic physics)
+    if (!a->isStatic)
+        a->velocity -= 2.0f * glm::dot(a->velocity, mtvDir) * mtvDir;
+    if (!b->isStatic)
+        b->velocity -= 2.0f * glm::dot(b->velocity, mtvDir) * mtvDir;
+}
+
+
 void tmt::physics::PhysicalWorld::Update()
 {
     dynamicsWorld->stepSimulation(1.0 / 6.0f, 1);
@@ -442,42 +477,9 @@ void tmt::physics::PhysicalWorld::Update()
             if (obb == collider)
                 continue;
 
-            if (obb->Check(collider, mtv))
+            if (collider->Check(obb, mtv))
             {
-                if (glm::length2(mtv) == 0)
-                {
-                    mtv = {EPSILON, 0, 0};
-                    //mtv = glm::normalize(mtv);
-                }
-
-                if (!obb->isStatic)
-                {
-                    obb->center -= mtv * 0.5f;
-                }
-                collider->center += mtv * 0.5f;
-
-                glm::vec3 relativeVelocity = obb->velocity - collider->velocity;
-                float velo = glm::dot(relativeVelocity, (mtv));
-
-                if (velo == 0.0f || glm::isnan(velo))
-                {
-                    continue;
-                }
-                else
-                {
-                    float restitution = 0.5f;
-
-                    float div = 1.0f;
-
-                    if (!obb->isStatic)
-                        div += 1.0f;
-
-                    float impulseScalar = -(1.0f + restitution) * velo / div;
-
-                    glm::vec3 impulse = impulseScalar * glm::normalize(mtv);
-                    obb->velocity -= impulse;
-                    collider->velocity += impulse;
-                }
+                ResolveCollision(collider, obb, mtv);
             }
         }
     }
@@ -1007,15 +1009,89 @@ bool testOBBOBB(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm::ma
 
 bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
 {
-    // Extract the properties of the OBBs
-    const glm::vec3& centerA = this->center;
-    const glm::vec3& centerB = other->center;
-    const glm::vec3& halfExtentsA = this->halfSize;
-    const glm::vec3& halfExtentsB = other->halfSize;
-    const glm::mat3& axesA = this->axis;
-    const glm::mat3& axesB = other->axis;
+    // Axes of this and other OBB
+    glm::vec3 axesA[3] = {axis[0], axis[1], axis[2]};
+    glm::vec3 axesB[3] = {other->axis[0], other->axis[1], other->axis[2]};
 
-    return testOBBOBB(centerA, halfExtentsA, axesA, centerB, halfExtentsB, axesB, mtv);
+    // Compute the rotation matrix expressing other in this OBB's local space
+    glm::mat3 R, AbsR;
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            R[i][j] = glm::dot(axesA[i], axesB[j]);
+            AbsR[i][j] = std::abs(R[i][j]) + EPSILON; // Add a small epsilon to counter floating-point errors
+        }
+    }
+
+    // Compute the translation vector
+    glm::vec3 t = other->center - center;
+    // Bring translation into this OBB's local space
+    t = glm::vec3(glm::dot(t, axesA[0]), glm::dot(t, axesA[1]), glm::dot(t, axesA[2]));
+
+    // Variables to track minimum overlap and axis
+    float minOverlap = FLT_MAX;
+    glm::vec3 collisionAxis;
+
+    // Test the three axes of this OBB
+    for (int i = 0; i < 3; i++)
+    {
+        float ra = halfSize[i];
+        float rb = other->halfSize[0] * AbsR[i][0] + other->halfSize[1] * AbsR[i][1] + other->halfSize[2] * AbsR[i][2];
+        float overlap = ra + rb - std::abs(t[i]);
+        if (overlap < 0)
+            return false; // Separating axis found
+        if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            collisionAxis = axesA[i] * glm::sign(t[i]);
+        }
+    }
+
+    // Test the three axes of the other OBB
+    for (int i = 0; i < 3; i++)
+    {
+        float ra = halfSize[0] * AbsR[0][i] + halfSize[1] * AbsR[1][i] + halfSize[2] * AbsR[2][i];
+        float rb = other->halfSize[i];
+        float overlap = ra + rb - std::abs(glm::dot(t, axesB[i]));
+        if (overlap < 0)
+            return false; // Separating axis found
+        if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            collisionAxis = axesB[i] * glm::sign(glm::dot(t, axesB[i]));
+        }
+    }
+
+    // Test cross products of axes
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            glm::vec3 axis = glm::cross(axesA[i], axesB[j]);
+            if (glm::length(axis) < EPSILON)
+                continue; // Skip near-zero axes
+
+            float ra = halfSize[(i + 1) % 3] * AbsR[(i + 2) % 3][j] + halfSize[(i + 2) % 3] * AbsR[(i + 1) % 3][j];
+            float rb = other->halfSize[(j + 1) % 3] * AbsR[i][(j + 2) % 3] +
+                other->halfSize[(j + 2) % 3] * AbsR[i][(j + 1) % 3];
+            float dist = std::abs(glm::dot(t, axis));
+            float overlap = ra + rb - dist;
+
+            if (overlap < 0)
+                return false; // Separating axis found
+            if (overlap < minOverlap)
+            {
+                minOverlap = overlap;
+                collisionAxis = glm::normalize(axis) * glm::sign(glm::dot(t, axis));
+            }
+        }
+    }
+
+    // Store the Minimum Translation Vector (MTV)
+    mtv = collisionAxis * minOverlap;
+    return true; // Collision detected
 }
 
 
