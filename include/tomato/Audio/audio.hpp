@@ -1,10 +1,6 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#undef var
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio/miniaudio.h" 
-#define var auto
 
 #include <tomato/utils.hpp>
 

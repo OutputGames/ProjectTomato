@@ -2,6 +2,9 @@
 
 #include "audio.hpp"
 
+
+#include "miniaudio.h"
+
 using namespace tmt::audio;
 
 #define CHECK_RESULT(result)                                                                                           \

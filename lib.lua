@@ -9,6 +9,7 @@ local BIMG_DIR = "vendor/bimg/"
 local BX_DIR = "vendor/bx/"
 local GLFW_DIR = "vendor/glfw/"
 local IMGUI_DIR = "vendor/dear-imgui/"
+local MINI_DIR = "vendor/miniaudio/"
 
 local BULLET_LIBS = {
     "BulletDynamics",
@@ -51,10 +52,13 @@ end
             "/Zc:preprocessor", -- Enable preprocessor conformance mode.
         }
 
+        print(path.join(MINI_DIR,"extras/miniaudio_split/"))
+
         includedirs { 
             path.join(BGFX_DIR, "include"),
             path.join(BX_DIR, "include"),
             path.join(GLFW_DIR, "include"),
+            path.join(MINI_DIR,"extras/miniaudio_split/"),
             "include/",
             "vendor/glm/",
             "vendor/",
@@ -62,7 +66,6 @@ end
             "vendor/bullet3/src/",
             "vendor/bimg/include/",
             "include/tomato/",
-            "vendor/miniaudio/",
             IMGUI_DIR,
         }
 
@@ -171,3 +174,15 @@ end
 
         filter "action:vs*"
             defines "_CRT_SECURE_NO_WARNINGS"
+    project "miniaudio"
+        kind "StaticLib"
+        language "C"
+        staticruntime "on"
+
+        filter "action:vs*"
+            defines "_CRT_SECURE_NO_WARNINGS"
+
+        files {
+            path.join(MINI_DIR, "extras/miniaudio_split/miniaudio.h"),
+            path.join(MINI_DIR, "extras/miniaudio_split/miniaudio.c"),
+        }
