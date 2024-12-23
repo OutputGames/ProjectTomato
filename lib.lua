@@ -62,6 +62,7 @@ end
             "vendor/bullet3/src/",
             "vendor/bimg/include/",
             "include/tomato/",
+            "vendor/miniaudio/",
             IMGUI_DIR,
         }
 

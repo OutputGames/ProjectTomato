@@ -1,6 +1,6 @@
 
 #define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio/miniaudio.h"
+#include "miniaudio.h"
 
 #include "audio.hpp"
 
@@ -25,19 +25,6 @@ std::vector<ma_sound> sounds;
 
 ma_sound* GetSound(Sound* sound) { return &sounds[sound->pId]; }
 
-void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
-{
-    (void)pInput;
-
-    /*
-    Since we're managing the underlying device ourselves, we need to read from the engine directly.
-    To do this we need access to the ma_engine object which we passed in to the user data. One
-    advantage of this is that you could do your own audio processing in addition to the engine's
-    standard processing.
-    */
-    ma_engine_read_pcm_frames((ma_engine*)pDevice->pUserData, pOutput, frameCount, NULL);
-}
-
 void log_callback(void* pUserData, ma_uint32 level, const char* pMessage)
 {
     std ::cout << "Level: " << level << " " << pMessage;
@@ -48,11 +35,7 @@ tmt::audio::AudioDevice::AudioDevice()
     mInstance = this;
     ma_result result;
 
-    ma_engine_config pConfig;
-    pConfig.channels = 2;
-    pConfig.sampleRate = 48000;
-
-    result = ma_engine_init(NULL, &engine);
+    result = ma_engine_init(nullptr, &engine);
     if (result != MA_SUCCESS)
     {
         return;
@@ -179,7 +162,11 @@ void AudioPlayer::playOneShot(Sound* sound)
 }
 
 void tmt::audio::init()
-{ var audioDevice = new AudioDevice(); }
+{
+    //var audioDevice = new AudioDevice();
+}
 
 void tmt::audio::update()
-{ AudioDevice::mInstance->Update(); }
+{
+    //AudioDevice::mInstance->Update();
+}
