@@ -4,8 +4,10 @@
 #include "utils.hpp" 
 
 
-
-
+namespace tmt::audio
+{
+    struct Sound;
+}
 
 namespace tmt::fs {
 
@@ -217,6 +219,13 @@ string ReadString();
     }
 };
 ;
+    struct ResourceManager
+    {
+        static ResourceManager* pInstance;
+        ResourceManager();
+
+        audio::Sound* GetSound(string path);
+    };
 
 }
 

@@ -14,5 +14,6 @@
 #include ".//Input/input.hpp"
 #include ".//Fs/fs.hpp"
 #include ".//Debug/debug.hpp"
+#include ".//Audio/audio.hpp"
 
 #endif

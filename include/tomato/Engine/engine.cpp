@@ -1,5 +1,6 @@
 #include "engine.hpp" 
 #include "globals.hpp" 
+#include <Audio/audio.hpp>
 
 tmt::engine::EngineInfo *tmt::engine::init()
 {
@@ -9,6 +10,7 @@ tmt::engine::EngineInfo *tmt::engine::init()
     engineInfo->renderer = rendererInfo;
 
     obj::init();
+    audio::init();
 
     return engineInfo;
 }
@@ -17,6 +19,7 @@ void tmt::engine::update()
 {
     obj::update();
     render::update();
+    audio::update();
 
     double xpos = 0;
     double ypos = 0;

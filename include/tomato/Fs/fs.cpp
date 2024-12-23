@@ -1,6 +1,10 @@
 #include "fs.hpp" 
 #include "globals.hpp" 
 
+#include "Audio/audio.hpp"
+
+using namespace tmt::fs;
+
 tmt::fs::StringBinaryReader::StringBinaryReader(string data) : std::stringstream(data)
 {
 }
@@ -136,4 +140,24 @@ string tmt::fs::BinaryReader::ReadString()
 {
     var size = ReadInt32();
     return ReadString(size);
+}
+
+std::map<string, tmt::audio::Sound*> loaded_sounds;
+ResourceManager* ResourceManager::pInstance;
+
+tmt::fs::ResourceManager::ResourceManager()
+{ pInstance = new ResourceManager; }
+
+tmt::audio::Sound* tmt::fs::ResourceManager::GetSound(string path)
+{
+    if (loaded_sounds.find(path) != loaded_sounds.end())
+{
+        return loaded_sounds[path];
+}
+else
+{
+    var sound = new tmt::audio::Sound(path);
+    loaded_sounds[path] = sound;
+    return sound;
+}
 }
