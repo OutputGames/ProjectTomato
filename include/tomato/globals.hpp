@@ -36,6 +36,7 @@ extern bgfx::UniformHandle orthoHandle;
 extern bgfx::UniformHandle timeHandle;
 extern bgfx::UniformHandle vposHandle;
 extern bgfx::UniformHandle animHandle;
+extern tmt::light::LightUniforms* lightUniforms;
 extern bool subHandlesLoaded;
 extern std::map<tmt::prim::PrimitiveType, tmt::render::Mesh*> primitives;
 std::tuple<tmt::render::Vertex*, u16*, u16, u16> convertMesh(par_shapes_mesh* mesh);

@@ -558,8 +558,13 @@ RendererInfo *init();
 void update();
 
 void shutdown();
-;
 
 }
+
+namespace bgfx
+{
+    void setUniform(bgfx::UniformHandle handle, glm::vec4 v);
+    void setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v);
+} // namespace bgfx
 
 #endif

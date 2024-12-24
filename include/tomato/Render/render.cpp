@@ -1930,8 +1930,6 @@ tmt::render::RendererInfo *tmt::render::init()
 
 void tmt::render::update()
 {
-    static tmt::light::LightUniforms* lightUniforms;
-
     // Set view 0 default viewport.
     bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(renderer->windowWidth),
                       static_cast<uint16_t>(renderer->windowHeight));
@@ -2005,18 +2003,20 @@ void tmt::render::update()
 
     if (!subHandlesLoaded)
     {
+
+        lightUniforms = new light::LightUniforms;
+
         orthoHandle = createUniform("iu_ortho", bgfx::UniformType::Mat4);
         timeHandle = createUniform("iu_time", bgfx::UniformType::Vec4);
         vposHandle = createUniform("iu_viewPos", bgfx::UniformType::Vec4);
         animHandle = createUniform("iu_boneMatrices", bgfx::UniformType::Mat4, MAX_BONE_MATRICES);
-
-        lightUniforms = new light::LightUniforms;
 
         subHandlesLoaded = true;
     }
 
     float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
                   static_cast<float>(glm::cos(counterTime)), 0};
+    float d[4] = {(float)lights.size(), 0, 0, 0};
     for (auto call : calls)
     {
         //bgfx::setTransform(call.transformMatrix);
@@ -2124,4 +2124,25 @@ void tmt::render::shutdown()
 {
     bgfx::shutdown();
     glfwTerminate();
+}
+
+void bgfx::setUniform(bgfx::UniformHandle handle, glm::vec4 v)
+{
+    float arr[4] = {v.x, v.y, v.z, v.w};
+    bgfx::setUniform(handle, arr);
+}
+
+void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v)
+{
+    float* arr = new float[v.size() * 4];
+    for (int i = 0; i < v.size()*4; i+=4)
+    {
+        var vec = v[i/4];
+        for (int j = 0; j < 4; ++j)
+        {
+            arr[i + j] = vec[j];
+        }
+    }
+
+    bgfx::setUniform(handle, arr, v.size());
 }
