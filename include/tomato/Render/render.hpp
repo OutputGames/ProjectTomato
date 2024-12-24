@@ -444,7 +444,7 @@ struct Mesh
 
     int width, height;
 
-    Texture(string path);
+    Texture(string path, bool isCubemap = false);
     Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
             string name = "");
     ~Texture();
@@ -455,6 +455,7 @@ struct RenderTexture
     bgfx::FrameBufferHandle handle;
     bgfx::ViewId vid = 1;
     Texture *realTexture;
+    Texture* depthTexture;
 
     bgfx::TextureFormat::Enum format;
 

@@ -36,6 +36,8 @@ namespace tmt::light
         render::Color color = render::Color::White;
 
     };
+
+
 }
 
 #endif // LIGHT_HPP

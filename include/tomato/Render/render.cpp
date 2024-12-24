@@ -1552,25 +1552,81 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
     return mdlObj;
 }
 
-tmt::render::Texture::Texture(string path)
+tmt::render::Texture::Texture(string path, bool isCubemap)
 {
     int nrChannels;
     unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
-    uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_POINT; // Adjust as needed
-    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+    uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP; // Adjust as needed
+    if (!isCubemap)
+    {
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
 
-    // Create the texture in bgfx, passing the image data directly
-    handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
-                             false, // no mip-maps
-                             1,     // single layer
-                             textureFormat, textureFlags,
-                             bgfx::copy(data, width * height * nrChannels) // copies the image data
-    );
+        // Create the texture in bgfx, passing the image data directly
+        handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
+                                 false, // no mip-maps
+                                 1, // single layer
+                                 textureFormat, textureFlags,
+                                 bgfx::copy(data, width * height * nrChannels) // copies the image data
+        );
+        format = textureFormat;
+    }
+    else
+    {
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGB8;
+        
+
+        // Create the texture in bgfx, passing the image data directly
+        var temp_handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
+                                 false, // no mip-maps
+                                 1, // single layer
+                                 textureFormat, textureFlags,
+                                 bgfx::copy(data, width * height * nrChannels) // copies the image data
+        );
+
+        var readBackShader = Shader::CreateShader(tmt::render::ShaderInitInfo{
+            SubShader::CreateSubShader("equi/vert", tmt::render::SubShader::Vertex),
+            SubShader::CreateSubShader("equi/frag", tmt::render::SubShader::Fragment),
+        });
+
+        var size = 512;
+
+        var cubeMapRenderTexture =
+            new RenderTexture(size, size, bgfx::TextureFormat::RGBA16F, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+
+        var vid = cubeMapRenderTexture->vid;
+
+        bgfx::setViewClear(vid, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
+        bgfx::setViewRect(vid, 0, 0, size, size);
+        bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
+
+            glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+        glm::mat4 captureViews[] = {
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+        var cubemapHandle = bgfx::createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
+                                                    BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
+
+        for (uint8_t i = 0; i < 6; ++i)
+        {
+            bgfx::setViewTransform(vid, &captureViews[i][0][0], &captureProjection[0][0]);
+
+            bgfx::setTexture(vid, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
+            bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z);
+            bgfx::submit(vid, readBackShader->program);
+
+            bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0);
+        }
+
+        handle = cubemapHandle;
+    }
 
     stbi_image_free(data);
-
-    format = textureFormat;
 }
 
 tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory *mem, string name)
@@ -1597,18 +1653,17 @@ tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFo
         // mem = bgfx::copy(pixels.data(), width * height* 4);
     }
 
-    realTexture = new Texture(width, height, format,
-                              BGFX_TEXTURE_COMPUTE_WRITE | BGFX_TEXTURE_RT | BGFX_SAMPLER_MIN_POINT |
-                                  BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP,
-                              mem);
+    realTexture = new Texture(width, height, format,BGFX_TEXTURE_RT,mem);
 
-    handle = createFrameBuffer(1, &realTexture->handle, false);
+    handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;
 
     bgfx::setViewName(vid, "RenderTexture");
     bgfx::setViewClear(vid, cf);
     bgfx::setViewRect(vid, 0, 0, width, height);
     setViewFrameBuffer(vid, handle);
+
+    
 }
 
 tmt::render::RenderTexture::~RenderTexture()
