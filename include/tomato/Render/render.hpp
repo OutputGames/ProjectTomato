@@ -222,6 +222,8 @@ struct Mesh
 
     ~Mesh();
 
+    void use();
+
     void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
 };
 

@@ -12,7 +12,7 @@ namespace tmt::math {
 
 float *vec4toArray(glm::vec4 v);
 
-float *mat4ToArray(glm::mat4 m);
+float* mat4ToArray(glm::mat4 m);
 
 float **mat3ToArray(glm::mat3 m);
 

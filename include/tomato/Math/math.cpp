@@ -7,18 +7,20 @@ float *tmt::math::vec4toArray(glm::vec4 v)
     return f;
 }
 
-float *tmt::math::mat4ToArray(glm::mat4 m)
+float* tmt::math::mat4ToArray(glm::mat4 m)
 {
-    float t[4][4];
+    float t[16];
+    int i = 0;
     for (int x = 0; x < 4; ++x)
     {
         for (int y = 0; y < 4; ++y)
         {
-            t[x][y] = m[x][y];
+            t[i] = m[x][y];
+            i++;
         }
     }
 
-    return reinterpret_cast<float *>(t);
+    return t;
 }
 
 float **tmt::math::mat3ToArray(glm::mat3 m)

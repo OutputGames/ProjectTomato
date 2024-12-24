@@ -372,6 +372,12 @@ tmt::render::Mesh::~Mesh()
     delete[] indices;
 }
 
+void tmt::render::Mesh::use()
+{
+    setVertexBuffer(0, vbh, 0, vertexCount);
+    bgfx::setIndexBuffer(ibh, 0, indexCount);
+}
+
 void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
@@ -1555,12 +1561,12 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
 tmt::render::Texture::Texture(string path, bool isCubemap)
 {
     int nrChannels;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
 
     uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP; // Adjust as needed
     if (!isCubemap)
     {
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA16;
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
@@ -1580,9 +1586,10 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         var temp_handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
                                  false, // no mip-maps
                                  1, // single layer
-                                 textureFormat, textureFlags,
+                                 textureFormat, BGFX_TEXTURE_NONE,
                                  bgfx::copy(data, width * height * nrChannels) // copies the image data
         );
+        bgfx::setName(temp_handle, "basecbtex");
 
         var readBackShader = Shader::CreateShader(tmt::render::ShaderInitInfo{
             SubShader::CreateSubShader("equi/vert", tmt::render::SubShader::Vertex),
@@ -1590,6 +1597,11 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         });
 
         var size = 512;
+
+        
+        var cubemapHandle = bgfx::createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
+                                                    BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
+        bgfx::setName(cubemapHandle, "realcbtex");
 
         var cubeMapRenderTexture =
             new RenderTexture(size, size, bgfx::TextureFormat::RGBA16F, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
@@ -1599,6 +1611,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         bgfx::setViewClear(vid, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
         bgfx::setViewRect(vid, 0, 0, size, size);
         bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
+        bgfx::touch(vid);
 
             glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
         glm::mat4 captureViews[] = {
@@ -1609,19 +1622,21 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
-        var cubemapHandle = bgfx::createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
-                                                    BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
-
         for (uint8_t i = 0; i < 6; ++i)
         {
-            bgfx::setViewTransform(vid, &captureViews[i][0][0], &captureProjection[0][0]);
+            bgfx::setViewTransform(vid, tmt::math::mat4ToArray(captureViews[i]), math::mat4ToArray(captureProjection));
 
-            bgfx::setTexture(vid, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
+            prim::GetPrimitive(prim::Cube)->use();
+
+            bgfx::setTexture(0, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
             bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z);
             bgfx::submit(vid, readBackShader->program);
 
             bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0);
+
+            bgfx::touch(vid);
         }
+
 
         handle = cubemapHandle;
     }
@@ -2114,8 +2129,7 @@ void tmt::render::update()
 
         lightUniforms->Apply(lights);
 
-        setVertexBuffer(0, call.mesh->vbh, 0, call.mesh->vertexCount);
-        setIndexBuffer(call.mesh->ibh, 0, call.mesh->indexCount);
+        call.mesh->use();
 
         bgfx::setState(call.state);
 

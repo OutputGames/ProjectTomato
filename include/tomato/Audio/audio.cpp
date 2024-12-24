@@ -89,6 +89,7 @@ tmt::audio::Sound::Sound(string path, SoundInitInfo info)
     {
     }
     //ma_sound_set_rolloff(&sound, 10.0f);
+    ma_sound_set_volume(&sound, 0);
 
 }
 
