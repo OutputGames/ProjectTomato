@@ -4,7 +4,7 @@
 
 void tmt::light::LightUniforms::Apply(std::vector<Light*> lights)
 {
-    glm::vec4* pos = new glm::vec4[maxLights];
+    std::vector<glm::vec4> pos(maxLights);
     glm::vec4* col = new glm::vec4[maxLights];
     for (int i = 0; i < lights.size(); ++i)
     {
@@ -19,7 +19,7 @@ void tmt::light::LightUniforms::Apply(std::vector<Light*> lights)
         col[i] = (glm::vec4(0));
     }
 
-    bgfx::setUniform(position, pos, maxLights);
+    bgfx::setUniform(position, pos.data(), pos.size());
     bgfx::setUniform(color, col, maxLights);
 
     glm::vec4 lightData(lights.size(), 0, 0, 0);
