@@ -1,7 +1,6 @@
 #include "render.hpp" 
 #include "globals.hpp"
 #include "vertex.h"
-#include "common/bgfx_utils.h"
 #include "common/imgui/imgui.h"
 
 #define ResMgr tmt::fs::ResourceManager::pInstance
@@ -1563,21 +1562,47 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
 tmt::render::Texture::Texture(string path, bool isCubemap)
 {
 
-    uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP; // Adjust as needed
+    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
     if (!isCubemap)
     {
         int nrChannels;
-        unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+        u8* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA16;
+        var dataSize = width * height * nrChannels;
+        unsigned char* rgbaData = new unsigned char[dataSize];
+
+        if (nrChannels == 3)
+        {
+            delete[] rgbaData;
+            dataSize = width * height * 4;
+            rgbaData = new unsigned char[dataSize];
+            for (int i = 0; i < width * height; ++i)
+            {
+                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+                rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+                rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
+            }
+            nrChannels = 4;
+        }
+        else if (nrChannels == 4)
+        {
+            for (int i = 0; i < width * height; ++i)
+            {
+                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+                rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+                rgbaData[i * 4 + 3] = data[i * nrChannels + 3]; // Add alpha channel with value 1.0
+            }
+        }
+        
+        
+
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
 
         // Create the texture in bgfx, passing the image data directly
-        handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
-                                 false, // no mip-maps
-                                 1, // single layer
-                                 textureFormat, textureFlags,
-                                 bgfx::copy(data, width * height * nrChannels) // copies the image data
-        );
+        handle = bgfx::createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
+                                       textureFlags, bgfx::copy(data, dataSize));
         format = textureFormat;
 
         
@@ -1585,14 +1610,13 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
     }
     else
     {
-        var test_bx = loadTexture(path.c_str());
 
         int nrChannels;
         float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 4);
 
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA16F;
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA32F;
 
-        var dataSize = width * height * 4;
+        u32 dataSize = width * height * 4;
         float* rgbaData = new float[dataSize];
         for (int i = 0; i < width * height; ++i)
         {
@@ -1602,14 +1626,17 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
             rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
         }
 
+        u16 uwidth = (width);
+        u16 uheight = (height);
+
 
         var size = 512;
         // Create the texture in bgfx, passing the image data directly
-        var temp_handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
+        var temp_handle = createTexture2D(uwidth, uheight,
                                           false, // no mip-maps
                                           1, // single layer
-                                          textureFormat, BGFX_TEXTURE_NONE,
-                                          bgfx::copy(rgbaData, static_cast<u16>(dataSize * sizeof(float))) // copies the image data
+                                          textureFormat, BGFX_SAMPLER_UVW_CLAMP,
+                                          bgfx::copy(rgbaData, dataSize * sizeof(float)) // copies the image data
         );
         bgfx::setName(temp_handle, "basecbtex");
 
