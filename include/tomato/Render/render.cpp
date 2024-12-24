@@ -1612,7 +1612,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
     {
 
         int nrChannels;
-        float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 4);
+        float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0);
 
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA32F;
 
@@ -1626,8 +1626,8 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
             rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
         }
 
-        u16 uwidth = (width);
-        u16 uheight = (height);
+        u16 uwidth = width;
+        u16 uheight = height;
 
 
         var size = 512;
@@ -1658,41 +1658,37 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
         var vid = cubeMapRenderTexture->vid;
 
-        bgfx::setViewClear(vid, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
+        bgfx::setViewClear(vid, BGFX_CLEAR_DEPTH);
         bgfx::setViewRect(vid, 0, 0, size, size);
         bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
         bgfx::touch(vid);
-        float view[16];
-        float proj[16];
-        bx::mtxProj(proj, 90.0f, 1.0f, 0.1f, 10.0f, bgfx::getCaps()->homogeneousDepth);
 
-        static const bx::Vec3 s_faceDirs[6] = {
-            {1.0f, 0.0f, 0.0f},  {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
-            {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f},
-        };
-
-        static const bx::Vec3 s_up[6] = {
-            {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f},
-        };
+        glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+        glm::mat4 captureViews[] = {
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
         for (uint8_t i = 0; i < 6; ++i)
         {
-            bx::mtxLookAt(view,  {0,0,0}, s_faceDirs[i], s_up[i]);
-            bgfx::setViewTransform(vid, view, proj);
-
+            var view = captureViews[i];
+            var proj = captureProjection;
+            bgfx::setViewTransform(vid, math::mat4ToArray(view), math::mat4ToArray(proj));
 
             prim::GetPrimitive(prim::Cube)->use();
 
             bgfx::setTexture(0, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
-            bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z);
+            bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+            //bgfx::setTransform(math::mat4ToArray(glm::scale(glm::vec3{2})));
 
             readBackShader->Push(vid);
 
-            bgfx::setViewClear(vid, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
             bgfx::touch(vid);
-
-            bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0);
+            
+            bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0, size, size);
 
             //break;
         }

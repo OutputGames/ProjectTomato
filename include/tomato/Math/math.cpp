@@ -9,7 +9,7 @@ float *tmt::math::vec4toArray(glm::vec4 v)
 
 float* tmt::math::mat4ToArray(glm::mat4 m)
 {
-    float t[16];
+    float* t = new float[16];
     int i = 0;
     for (int x = 0; x < 4; ++x)
     {
