@@ -1614,19 +1614,25 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         bgfx::setViewRect(vid, 0, 0, size, size);
         bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
         bgfx::touch(vid);
+        float view[16];
+        float proj[16];
+        bx::mtxProj(proj, 90.0f, 1.0f, 0.1f, 10.0f, bgfx::getCaps()->homogeneousDepth);
 
-        glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-        glm::mat4 captureViews[] = {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
+        static const bx::Vec3 s_faceDirs[6] = {
+            {1.0f, 0.0f, 0.0f},  {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+            {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f},
         };
+
+        static const bx::Vec3 s_up[6] = {
+            {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f},
+        };
+
         for (uint8_t i = 0; i < 6; ++i)
         {
-            bgfx::setViewTransform(vid, math::mat4ToArray(captureViews[i]), math::mat4ToArray(captureProjection));
+            bx::mtxLookAt(view, s_faceDirs[i], s_up[i]);
+            bgfx::setViewTransform(vid, view, proj);
+
 
             prim::GetPrimitive(prim::Cube)->use();
 
@@ -1640,7 +1646,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
             bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0);
 
-            break;
+            //break;
         }
 
 
@@ -1996,7 +2002,7 @@ tmt::render::RendererInfo *tmt::render::init()
 
     defaultShader = Shader::CreateShader(info);
 
-    bgfx::loadRenderDoc();
+    var rdoc = bgfx::loadRenderDoc();
 
     if (renderer->useImgui)
         imguiCreate();
@@ -2220,4 +2226,6 @@ void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v)
     }
 
     bgfx::setUniform(handle, arr, v.size());
+
+    delete[] arr;
 }

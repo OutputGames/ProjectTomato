@@ -25,6 +25,8 @@ void tmt::light::LightUniforms::Apply(std::vector<Light*> lights)
     glm::vec4 lightData(lights.size(), 1, 1, 1);
 
     bgfx::setUniform(data, lightData);
+
+    
 }
 
 tmt::light::LightUniforms::LightUniforms()
