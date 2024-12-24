@@ -3,6 +3,8 @@
 #include "vertex.h"
 #include "common/imgui/imgui.h"
 
+#define ResMgr tmt::fs::ResourceManager::pInstance
+
 void tmt::render::ShaderUniform::Use()
 {
     switch (type)
@@ -46,6 +48,8 @@ tmt::render::ShaderUniform::~ShaderUniform()
 
 tmt::render::SubShader::SubShader(string name, ShaderType type)
 {
+
+
     string shaderPath = "";
 
     switch (bgfx::getRendererType())
@@ -139,6 +143,11 @@ tmt::render::SubShader::SubShader(string name, ShaderType type)
             uniNames.push_back(info.name);
         }
     }
+
+    bgfx::setName(handle, name.c_str());
+    this->name = name;
+
+    fs::ResourceManager::pInstance->loaded_sub_shaders[name] = this;
 }
 
 tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
@@ -161,12 +170,24 @@ tmt::render::SubShader::~SubShader()
     }
 }
 
+tmt::render::SubShader* tmt::render::SubShader::CreateSubShader(string name, ShaderType type)
+{
+    if (IN_VECTOR(fs::ResourceManager::pInstance->loaded_sub_shaders, name))
+    {
+        return ResMgr->loaded_sub_shaders[name];
+    }
+
+    return new SubShader(name, type);
+}
+
 tmt::render::Shader::Shader(ShaderInitInfo info)
 {
     program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, true);
 
     subShaders.push_back(info.vertexProgram);
     subShaders.push_back(info.fragmentProgram);
+
+    ResMgr->loaded_shaders[info.name] = this;
 }
 
 void tmt::render::Shader::Push(int viewId, MaterialOverride **overrides, size_t oc)
@@ -216,10 +237,27 @@ tmt::render::Shader::~Shader()
     }
 }
 
+tmt::render::Shader* tmt::render::Shader::CreateShader(ShaderInitInfo info)
+{
+    if (info.name == "UNDEFINED")
+    {
+
+    }
+
+    if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
+    {
+       return ResMgr->loaded_shaders[info.name];
+    }
+
+    return new Shader(info);
+}
+
 tmt::render::ComputeShader::ComputeShader(SubShader *shader)
 {
     program = createProgram(shader->handle, true);
     internalShader = shader;
+
+    ResMgr->loaded_compute_shaders[shader->name + "_CMP"] = this;
 }
 
 void tmt::render::ComputeShader::SetUniform(string name, bgfx::UniformType::Enum type, const void *data)
@@ -254,6 +292,16 @@ tmt::render::ComputeShader::~ComputeShader()
 {
     bgfx::destroy(program);
     delete internalShader;
+}
+
+tmt::render::ComputeShader* tmt::render::ComputeShader::CreateComputeShader(SubShader* shader)
+{
+    if (IN_VECTOR(ResMgr->loaded_compute_shaders, shader->name+"_CMP"))
+    {
+        return ResMgr->loaded_compute_shaders[shader->name + "_CMP"];
+    }
+
+    return new ComputeShader(shader);
 }
 
 tmt::render::MaterialOverride *tmt::render::Material::GetUniform(string name, bool force)
@@ -1800,6 +1848,9 @@ void tmt::render::pushDrawCall(DrawCall d)
     calls.push_back(d);
 }
 
+void tmt::render::pushLight(light::Light* light)
+{ lights.push_back(light); }
+
 tmt::render::RendererInfo *tmt::render::init()
 {
     glfwSetErrorCallback(glfw_errorCallback);
@@ -1863,11 +1914,11 @@ tmt::render::RendererInfo *tmt::render::init()
     renderer->windowHeight = height;
 
     ShaderInitInfo info = {
-        new SubShader("test/vert", SubShader::Vertex),
-        new SubShader("test/frag", SubShader::Fragment),
+        SubShader::CreateSubShader("test/vert", SubShader::Vertex),
+        SubShader::CreateSubShader("test/frag", SubShader::Fragment),
     };
 
-    defaultShader = new Shader(info);
+    defaultShader = Shader::CreateShader(info);
 
     bgfx::loadRenderDoc();
 
@@ -1879,6 +1930,8 @@ tmt::render::RendererInfo *tmt::render::init()
 
 void tmt::render::update()
 {
+    static tmt::light::LightUniforms* lightUniforms;
+
     // Set view 0 default viewport.
     bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(renderer->windowWidth),
                       static_cast<uint16_t>(renderer->windowHeight));
@@ -1957,6 +2010,8 @@ void tmt::render::update()
         vposHandle = createUniform("iu_viewPos", bgfx::UniformType::Vec4);
         animHandle = createUniform("iu_boneMatrices", bgfx::UniformType::Mat4, MAX_BONE_MATRICES);
 
+        lightUniforms = new light::LightUniforms;
+
         subHandlesLoaded = true;
     }
 
@@ -2001,6 +2056,8 @@ void tmt::render::update()
 
         bgfx::setTransform(call.transformMatrix);
         bgfx::setUniform(animHandle, call.animationMatrices.data(), static_cast<u16>(call.animationMatrices.size()));
+
+        lightUniforms->Apply(lights);
 
         setVertexBuffer(0, call.mesh->vbh, 0, call.mesh->vertexCount);
         setIndexBuffer(call.mesh->ibh, 0, call.mesh->indexCount);
@@ -2053,6 +2110,7 @@ void tmt::render::update()
 
     debugCalls.clear();
     debugFuncs.clear();
+    lights.clear();
 
     frameTime = bgfx::frame();
     glfwPollEvents();

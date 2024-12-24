@@ -131,5 +131,6 @@ namespace std
 #define READ_FUNC(type,name) type Read##name() { return Read<##type>(); };
 #define MAX_BONE_MATRICES 250
 #define TO_ARGS(v) v.x, v.y, v.z
+#define IN_VECTOR(vec, val) vec.find(val) != vec.end()
 
 #endif // TM_UTILS

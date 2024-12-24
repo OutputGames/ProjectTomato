@@ -4,12 +4,13 @@
 
 tmt::engine::EngineInfo *tmt::engine::init()
 {
+
+    var resourceManager = new fs::ResourceManager();
+
     var rendererInfo = render::init();
 
     var engineInfo = new EngineInfo();
     engineInfo->renderer = rendererInfo;
-
-    var resourceManager = new fs::ResourceManager();
 
     obj::init();
     audio::init();

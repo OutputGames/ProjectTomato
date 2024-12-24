@@ -5,6 +5,13 @@
 #include "Audio/audio.hpp"
 
 
+namespace tmt::render
+{
+    struct ComputeShader;
+    struct Shader;
+    struct SubShader;
+}
+
 namespace tmt::audio
 {
     struct Sound;
@@ -237,6 +244,9 @@ string ReadString();
         RESFUNC(GetSound, (string path, audio::Sound::SoundInitInfo info = {}), (path, info), audio::Sound*);
 
         std::map<string, tmt::audio::Sound*> loaded_sounds;
+        std::map<string, render::SubShader*> loaded_sub_shaders;
+        std::map<string, render::Shader*> loaded_shaders;
+        std::map<string, render::ComputeShader*> loaded_compute_shaders;
 
     };
 

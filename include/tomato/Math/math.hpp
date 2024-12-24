@@ -30,6 +30,17 @@ inline bx::Vec3 convertVec3(glm::vec3 v)
         return f;
     }
 
+    inline float* convertVec4A(glm::vec4 v)
+    {
+        var f = new float[4];
+        f[0] = v[0];
+        f[1] = v[1];
+        f[2] = v[2];
+        f[3] = v[3];
+ 
+        return f;
+    }
+
     inline glm::vec3 convertVec3(float* arr)
     { return glm::vec3{arr[0], arr[1], arr[2]};
     }

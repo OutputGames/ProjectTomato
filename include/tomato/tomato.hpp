@@ -15,5 +15,6 @@
 #include ".//Input/input.hpp"
 #include ".//Fs/fs.hpp"
 #include ".//Debug/debug.hpp"
+#include ".//Light/light.hpp"
 
 #endif

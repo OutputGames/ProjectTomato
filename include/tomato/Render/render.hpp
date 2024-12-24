@@ -17,6 +17,10 @@ namespace tmt::obj {
  struct CameraObject;
  }
 
+namespace tmt::light
+ {
+    struct Light;
+ }
 
 namespace tmt::render {
     struct SkeletonObject;
@@ -50,6 +54,7 @@ struct RendererInfo
 struct ShaderInitInfo
 {
     SubShader *vertexProgram, *fragmentProgram;
+    string name = "UNDEFINED";
 };
 
 struct ShaderUniform
@@ -79,12 +84,17 @@ struct SubShader
 
     bgfx::ShaderHandle handle;
     std::vector<ShaderUniform *> uniforms;
-
-    SubShader(string name, ShaderType type);
+    string name;
 
     ShaderUniform *GetUniform(string name);
 
     ~SubShader();
+
+    static SubShader* CreateSubShader(string name, ShaderType type);
+
+private:
+    friend fs::ResourceManager;
+    SubShader(string name, ShaderType type);
 };
 
 struct Shader
@@ -92,19 +102,22 @@ struct Shader
     bgfx::ProgramHandle program;
     std::vector<SubShader *> subShaders;
 
-    Shader(ShaderInitInfo info);
-
     void Push(int viewId = 0, MaterialOverride **overrides = nullptr, size_t overrideCount = 0);
 
     ~Shader();
+
+    static Shader* CreateShader(ShaderInitInfo info);
+
+private:
+    friend fs::ResourceManager;
+
+    Shader(ShaderInitInfo info);
 };
 
 struct ComputeShader
 {
     bgfx::ProgramHandle program;
     SubShader *internalShader;
-
-    ComputeShader(SubShader *shader);
 
     void SetUniform(string name, bgfx::UniformType::Enum type, const void *data);
 
@@ -113,6 +126,12 @@ struct ComputeShader
     void Run(int viewId, glm::vec3 groups = {1, 1, 1});
 
     ~ComputeShader();
+
+    static ComputeShader* CreateComputeShader(SubShader* shader);
+
+private:
+    friend fs::ResourceManager;
+    ComputeShader(SubShader* shader);
 };
 
 struct MaterialOverride
@@ -531,6 +550,8 @@ struct DrawCall
 Mesh *createMesh(Vertex *data, u16 *indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl, Model* model=nullptr);
 
 void pushDrawCall(DrawCall d);
+
+    void pushLight(light::Light* light);
 
 RendererInfo *init();
 
