@@ -1016,7 +1016,7 @@ tmt::render::Model::Model(string path)
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
                                                aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
-                                                   aiProcess_FindInvalidData | aiProcess_PreTransformVertices | aiProcess_PopulateArmatureData );
+                                                   aiProcess_FindInvalidData | aiProcess_PreTransformVertices | aiProcess_PopulateArmatureData | aiProcess_GenUVCoords );
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
