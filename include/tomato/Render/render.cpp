@@ -1,6 +1,7 @@
 #include "render.hpp" 
 #include "globals.hpp"
 #include "vertex.h"
+#include "common/bgfx_utils.h"
 #include "common/imgui/imgui.h"
 
 #define ResMgr tmt::fs::ResourceManager::pInstance
@@ -1561,12 +1562,13 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
 
 tmt::render::Texture::Texture(string path, bool isCubemap)
 {
-    int nrChannels;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
 
     uint64_t textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP; // Adjust as needed
     if (!isCubemap)
     {
+        int nrChannels;
+        unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA16;
 
         // Create the texture in bgfx, passing the image data directly
@@ -1577,10 +1579,29 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
                                  bgfx::copy(data, width * height * nrChannels) // copies the image data
         );
         format = textureFormat;
+
+        
+        stbi_image_free(data);
     }
     else
     {
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGB8;
+        var test_bx = loadTexture(path.c_str());
+
+        int nrChannels;
+        float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 4);
+
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA16F;
+
+        var dataSize = width * height * 4;
+        float* rgbaData = new float[dataSize];
+        for (int i = 0; i < width * height; ++i)
+        {
+            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+            rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+            rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
+        }
+
 
         var size = 512;
         // Create the texture in bgfx, passing the image data directly
@@ -1588,7 +1609,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
                                           false, // no mip-maps
                                           1, // single layer
                                           textureFormat, BGFX_TEXTURE_NONE,
-                                          bgfx::copy(data, width * height * nrChannels) // copies the image data
+                                          bgfx::copy(rgbaData, static_cast<u16>(dataSize * sizeof(float))) // copies the image data
         );
         bgfx::setName(temp_handle, "basecbtex");
 
@@ -1630,7 +1651,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
         for (uint8_t i = 0; i < 6; ++i)
         {
-            bx::mtxLookAt(view, s_faceDirs[i], s_up[i]);
+            bx::mtxLookAt(view,  {0,0,0}, s_faceDirs[i], s_up[i]);
             bgfx::setViewTransform(vid, view, proj);
 
 
@@ -1651,9 +1672,11 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
 
         handle = cubemapHandle;
+
+        
+        stbi_image_free(data);
     }
 
-    stbi_image_free(data);
 }
 
 tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory *mem, string name)
