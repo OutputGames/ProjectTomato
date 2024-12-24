@@ -30,7 +30,12 @@ namespace tmt::audio
 
     struct Sound
     {
-        Sound(string path);
+        struct SoundInitInfo
+        {
+            bool useSpatialization = true;
+        };
+
+        Sound(string path, SoundInitInfo info = {});
         ~Sound();
 
         void Play();
@@ -64,14 +69,15 @@ namespace tmt::audio
         void playOneShot(Sound* sound);
 
         float volume = 1.0f;
+        bool isLooping = false;
         bool playOnStart = true;
+        bool use3dAudio = true;
 
     private:
 
         void formatSound(Sound* sound);
 
         bool isPlaying = false;
-        bool isLooping = false;
         Sound* sound = nullptr;
 
     };

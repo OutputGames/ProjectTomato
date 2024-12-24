@@ -41,6 +41,9 @@ void tmt::render::ShaderUniform::Use()
     }
 }
 
+tmt::render::ShaderUniform::~ShaderUniform()
+{ bgfx::destroy(handle); }
+
 tmt::render::SubShader::SubShader(string name, ShaderType type)
 {
     string shaderPath = "";
@@ -149,6 +152,15 @@ tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
     return {};
 }
 
+tmt::render::SubShader::~SubShader()
+{
+    bgfx::destroy(handle);
+    for (auto uniform : uniforms)
+    {
+        delete uniform;
+    }
+}
+
 tmt::render::Shader::Shader(ShaderInitInfo info)
 {
     program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, true);
@@ -195,6 +207,15 @@ void tmt::render::Shader::Push(int viewId, MaterialOverride **overrides, size_t 
     submit(viewId, program);
 }
 
+tmt::render::Shader::~Shader()
+{
+    bgfx::destroy(program);
+    for (var shader : subShaders)
+    {
+        delete shader;
+    }
+}
+
 tmt::render::ComputeShader::ComputeShader(SubShader *shader)
 {
     program = createProgram(shader->handle, true);
@@ -227,6 +248,12 @@ void tmt::render::ComputeShader::Run(int vid, glm::vec3 groups)
     }
 
     dispatch(vid, program, groups.x, groups.y, groups.z);
+}
+
+tmt::render::ComputeShader::~ComputeShader()
+{
+    bgfx::destroy(program);
+    delete internalShader;
 }
 
 tmt::render::MaterialOverride *tmt::render::Material::GetUniform(string name, bool force)
@@ -278,6 +305,23 @@ void tmt::render::Material::Reload(Shader *shader)
             }
         }
     }
+}
+
+tmt::render::Material::~Material()
+{ delete[] overrides.data(); }
+
+tmt::render::Mesh::~Mesh()
+{
+    bgfx::destroy(ibh);
+    bgfx::destroy(vbh);
+    for (auto vertex_buffer : vertexBuffers)
+    {
+        bgfx::destroy(vertex_buffer);
+    }
+    bgfx::destroy(indexBuffer);
+
+    delete[] vertices;
+    delete[] indices;
 }
 
 void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vector<glm::mat4> anims)
@@ -637,6 +681,11 @@ tmt::obj::Object* tmt::render::SceneDescription::ToObject()
 {
 
     return rootNode->ToObject();
+}
+
+tmt::render::SceneDescription::~SceneDescription()
+{
+    delete[] models.data();
 }
 
 int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
@@ -1167,6 +1216,16 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
 }
 
+tmt::render::Model::~Model()
+{
+    delete[] meshes.data();
+    delete[] textures.data();
+    delete[] materials.data();
+    delete[] animations.data();
+
+    delete skeleton;
+}
+
 tmt::render::Model::Model(fs::BinaryReader* reader, SceneDescription* description)
 {
     var tmdlSig = reader->ReadString(4);
@@ -1478,6 +1537,9 @@ tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum t
     this->name = name;
 }
 
+tmt::render::Texture::~Texture()
+{ bgfx::destroy(handle); }
+
 tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 cf)
 {
     const bgfx::Memory *mem = nullptr;
@@ -1499,6 +1561,13 @@ tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFo
     bgfx::setViewClear(vid, cf);
     bgfx::setViewRect(vid, 0, 0, width, height);
     setViewFrameBuffer(vid, handle);
+}
+
+tmt::render::RenderTexture::~RenderTexture()
+{
+    bgfx::destroy(handle);
+    delete realTexture;
+    bgfx::resetView(vid);
 }
 
 float *tmt::render::Camera::GetView()

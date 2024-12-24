@@ -22,6 +22,8 @@ struct EngineInfo
 EngineInfo *init();
 
 void update();
+
+    void shutdown();
 ;
 
 }

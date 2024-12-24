@@ -140,13 +140,11 @@ string tmt::fs::BinaryReader::ReadString()
     return ReadString(size);
 }
 
-std::map<string, tmt::audio::Sound*> loaded_sounds;
 ResourceManager* ResourceManager::pInstance;
 
-tmt::fs::ResourceManager::ResourceManager()
-{ pInstance = new ResourceManager; }
+tmt::fs::ResourceManager::ResourceManager() { pInstance = this; }
 
-tmt::audio::Sound* tmt::fs::ResourceManager::GetSound(string path)
+tmt::audio::Sound* tmt::fs::ResourceManager::_GetSound(string path, audio::Sound::SoundInitInfo info)
 {
     if (loaded_sounds.find(path) != loaded_sounds.end())
 {
@@ -154,7 +152,8 @@ tmt::audio::Sound* tmt::fs::ResourceManager::GetSound(string path)
 }
 else
 {
-    var sound = new tmt::audio::Sound(path);
+
+    var sound = new tmt::audio::Sound(path, info);
     loaded_sounds[path] = sound;
     return sound;
 }

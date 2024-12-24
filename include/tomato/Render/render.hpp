@@ -64,6 +64,8 @@ struct ShaderUniform
     Texture *tex = nullptr;
 
     void Use();
+
+    ~ShaderUniform();
 };
 
 struct SubShader
@@ -81,6 +83,8 @@ struct SubShader
     SubShader(string name, ShaderType type);
 
     ShaderUniform *GetUniform(string name);
+
+    ~SubShader();
 };
 
 struct Shader
@@ -91,6 +95,8 @@ struct Shader
     Shader(ShaderInitInfo info);
 
     void Push(int viewId = 0, MaterialOverride **overrides = nullptr, size_t overrideCount = 0);
+
+    ~Shader();
 };
 
 struct ComputeShader
@@ -105,6 +111,8 @@ struct ComputeShader
     void SetMat4(string name, glm::mat4 m);
 
     void Run(int viewId, glm::vec3 groups = {1, 1, 1});
+
+    ~ComputeShader();
 };
 
 struct MaterialOverride
@@ -171,6 +179,8 @@ struct Material
     Material(Shader *shader = nullptr);
 
     void Reload(Shader *shader);
+
+        ~Material();
 };
 
     struct MaterialDescription
@@ -190,6 +200,8 @@ struct Mesh
     u16 *indices;
     Model* model = nullptr;
     int idx = -1;
+
+    ~Mesh();
 
     void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
 };
@@ -222,6 +234,8 @@ struct Mesh
 
         Animation(fs::BinaryReader* reader);
         Animation() = default;
+
+        ~Animation();
     };
 
     struct Skeleton
@@ -254,6 +268,7 @@ struct Mesh
 
         Skeleton(fs::BinaryReader* reader);
         Skeleton() = default;
+
     };
 
     struct Model
@@ -280,7 +295,8 @@ struct Mesh
 
     private:
     void LoadFromAiScene(const aiScene* scene, SceneDescription* description=nullptr);
-    
+
+        ~Model();
 };
 
     struct SceneDescription
@@ -328,6 +344,8 @@ struct Mesh
         SceneDescription(string path);
 
         obj::Object* ToObject();
+
+        ~SceneDescription();
     };
 
     
@@ -410,6 +428,7 @@ struct Mesh
     Texture(string path);
     Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
             string name = "");
+    ~Texture();
 };
 
 struct RenderTexture
@@ -421,6 +440,8 @@ struct RenderTexture
     bgfx::TextureFormat::Enum format;
 
     RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 clearFlags);
+
+    ~RenderTexture();
 };
 
 struct Camera

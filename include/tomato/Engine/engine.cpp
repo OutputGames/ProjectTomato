@@ -9,6 +9,8 @@ tmt::engine::EngineInfo *tmt::engine::init()
     var engineInfo = new EngineInfo();
     engineInfo->renderer = rendererInfo;
 
+    var resourceManager = new fs::ResourceManager();
+
     obj::init();
     audio::init();
 
@@ -34,3 +36,6 @@ void tmt::engine::update()
     deltaTime = glfwGetTime() - lastTime;
     lastTime = glfwGetTime();
 }
+
+void tmt::engine::shutdown()
+{ render::shutdown(); }

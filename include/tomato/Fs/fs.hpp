@@ -2,6 +2,7 @@
 #define FS_H
 
 #include "utils.hpp" 
+#include "Audio/audio.hpp"
 
 
 namespace tmt::audio
@@ -219,12 +220,23 @@ string ReadString();
     }
 };
 ;
+#define RESFUNC(name, p1, p2, ret) private: \
+        ret _##name##p1; \
+    public: \
+    inline static ret name##p1 \
+    { \
+        return pInstance->_##name##p2; \
+    } \
+
     struct ResourceManager
     {
+    public:
         static ResourceManager* pInstance;
         ResourceManager();
 
-        static audio ::Sound* GetSound(string path);
+        RESFUNC(GetSound, (string path, audio::Sound::SoundInitInfo info = {}), (path, info), audio::Sound*);
+
+        std::map<string, tmt::audio::Sound*> loaded_sounds;
 
     };
 

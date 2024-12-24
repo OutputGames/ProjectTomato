@@ -63,7 +63,7 @@ void AudioDevice::Update()
         var fwd = listener->GetForward();
 
         ma_engine_listener_set_world_up(&mInstance->engine, listener->pId, TO_ARGS(up));
-        ma_engine_listener_set_direction(&mInstance->engine, listener->pId, TO_ARGS(fwd));
+        ma_engine_listener_set_direction(&mInstance->engine, listener->pId, TO_ARGS(-fwd));
         ma_engine_listener_set_enabled(&mInstance->engine, listener->pId, true);
     }
 
@@ -75,9 +75,9 @@ void AudioDevice::AddListener(SoundListener* listener)
     listeners.push_back(listener);
 }
 
-tmt::audio::Sound::Sound(string path)
+tmt::audio::Sound::Sound(string path, SoundInitInfo info)
 {
-    var result = ma_sound_init_from_file(&mInstance->engine, path.c_str(), 0,
+    var result = ma_sound_init_from_file(&mInstance->engine, path.c_str(), info.useSpatialization ? 0 : MA_SOUND_FLAG_NO_SPATIALIZATION,
         nullptr, nullptr, &sound);
     if (result != MA_SUCCESS)
     {
@@ -85,9 +85,9 @@ tmt::audio::Sound::Sound(string path)
         return;
     }
 
-    ma_sound_set_spatialization_enabled(&sound, true);
-    ma_sound_set_pinned_listener_index(&sound, 0);
-    ma_sound_set_attenuation_model(&sound, ma_attenuation_model_inverse);
+    if (info.useSpatialization)
+    {
+    }
     //ma_sound_set_rolloff(&sound, 10.0f);
 
 }
@@ -135,20 +135,36 @@ void AudioPlayer::stop()
 
 void AudioPlayer::formatSound(Sound* s)
 {
+    if (!s)
+        return;
     var sound = s->sound;
     var fwd = GetForward();
     var pos = GetGlobalPosition();
 
-    ma_sound_set_position(&sound, TO_ARGS(pos));
-    ma_sound_set_direction(&sound, TO_ARGS(fwd));
     ma_sound_set_volume(&sound, volume);
-    ma_sound_set_positioning(&sound, ma_positioning_absolute);
-    //ma_sound_set_looping(&sound, true);
+    ma_sound_set_looping(&sound, isLooping);
+    ma_sound_set_spatialization_enabled(&sound, use3dAudio);
+
+    if (!use3dAudio)
+    {
+        ma_sound_set_attenuation_model(&sound, ma_attenuation_model_none);
+    }
+    else
+    {
+        ma_sound_set_spatialization_enabled(&sound, true);
+        ma_sound_set_pinned_listener_index(&sound, 0);
+        ma_sound_set_attenuation_model(&sound, ma_attenuation_model_linear);
+        ma_sound_set_position(&sound, TO_ARGS(pos));
+        ma_sound_set_direction(&sound, TO_ARGS(fwd));
+        ma_sound_set_positioning(&sound, ma_positioning_absolute);
+        ma_sound_set_volume(&sound, volume * 10);
+    }
 }
 
 void AudioPlayer::Update()
 {
     var t = tmt::time::getTime();
+    //formatSound(sound);
 
     if (t == 0)
     {
