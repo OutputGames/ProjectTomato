@@ -241,7 +241,8 @@ tmt::render::Shader* tmt::render::Shader::CreateShader(ShaderInitInfo info)
 {
     if (info.name == "UNDEFINED")
     {
-
+        std::hash<string> hsh;
+        info.name = hsh(info.fragmentProgram->name + "_"+info.vertexProgram->name);
     }
 
     if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
@@ -1580,25 +1581,26 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
     else
     {
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGB8;
-        
 
+        var size = 512;
         // Create the texture in bgfx, passing the image data directly
         var temp_handle = createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
-                                 false, // no mip-maps
-                                 1, // single layer
-                                 textureFormat, BGFX_TEXTURE_NONE,
-                                 bgfx::copy(data, width * height * nrChannels) // copies the image data
+                                          false, // no mip-maps
+                                          1, // single layer
+                                          textureFormat, BGFX_TEXTURE_NONE,
+                                          bgfx::copy(data, width * height * nrChannels) // copies the image data
         );
         bgfx::setName(temp_handle, "basecbtex");
+
+        //var colorBuffer = new tmt::render::Texture(size, size, bgfx::TextureFormat::RGBA32F,BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_POINT);
 
         var readBackShader = Shader::CreateShader(tmt::render::ShaderInitInfo{
             SubShader::CreateSubShader("equi/vert", tmt::render::SubShader::Vertex),
             SubShader::CreateSubShader("equi/frag", tmt::render::SubShader::Fragment),
         });
 
-        var size = 512;
 
-        
+
         var cubemapHandle = bgfx::createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
                                                     BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
         bgfx::setName(cubemapHandle, "realcbtex");
@@ -1613,28 +1615,32 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
         bgfx::touch(vid);
 
-            glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+        glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
         glm::mat4 captureViews[] = {
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
+        };
         for (uint8_t i = 0; i < 6; ++i)
         {
-            bgfx::setViewTransform(vid, tmt::math::mat4ToArray(captureViews[i]), math::mat4ToArray(captureProjection));
+            bgfx::setViewTransform(vid, math::mat4ToArray(captureViews[i]), math::mat4ToArray(captureProjection));
 
             prim::GetPrimitive(prim::Cube)->use();
 
             bgfx::setTexture(0, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
             bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z);
-            bgfx::submit(vid, readBackShader->program);
+
+            readBackShader->Push(vid);
+
+            bgfx::setViewClear(vid, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+            bgfx::touch(vid);
 
             bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0);
 
-            bgfx::touch(vid);
+            break;
         }
 
 
