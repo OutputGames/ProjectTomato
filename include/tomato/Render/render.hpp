@@ -282,6 +282,7 @@ struct Mesh
 
         std::vector<Bone*> bones;
         string rootName;
+        glm::mat4 inverseTransform;
 
         Bone* GetBone(string name);
 
@@ -352,6 +353,8 @@ struct Mesh
             Node* GetNode(aiNode* node);
 
             tmt::obj::Object* ToObject(int modelIndex = -1);
+
+            std::vector<Node*> GetAllChildren();
         };
 
         string name;
@@ -363,6 +366,8 @@ struct Mesh
 
         Node* GetNode(string name);
         Node* GetNode(aiNode* node);
+
+        std::vector<Node*> GetAllChildren();
 
         SceneDescription(string path);
 
@@ -421,9 +426,9 @@ struct Mesh
             float GetScaleFactor(float lasttime, float nexttime, float animationTime);
 
 
-            glm::vec3 InterpolatePosition(float animationTime);
-            glm::quat InterpolateRotation(float animationTime);
-            glm::vec3 InterpolateScaling(float animationTime);
+            glm::mat4 InterpolatePosition(float animationTime);
+            glm::mat4 InterpolateRotation(float animationTime);
+            glm::mat4 InterpolateScaling(float animationTime);
         };
 
         SkeletonObject* skeleton = nullptr;

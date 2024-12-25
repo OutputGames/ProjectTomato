@@ -628,6 +628,11 @@ tmt::render::SceneDescription::Node* tmt::render::SceneDescription::GetNode(aiNo
     return rootNode->GetNode(node);
 }
 
+std::vector<tmt::render::SceneDescription::Node*> tmt::render::SceneDescription::GetAllChildren()
+{
+    return rootNode->GetAllChildren();
+}
+
 tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
 {
     var obj = new tmt::obj::Object();
@@ -685,6 +690,20 @@ tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
     }
 
     return obj;
+}
+
+std::vector<tmt::render::SceneDescription::Node*> tmt::render::SceneDescription::Node::GetAllChildren()
+{
+    var c = std::vector<Node*>(children);
+
+    for (auto child : children)
+    {
+        var c2 = child->GetAllChildren();
+        c.insert(c.end(), c2.begin(), c2.end());
+    }
+
+    return c;
+
 }
 
 tmt::render::SceneDescription::SceneDescription(string path)
@@ -844,7 +863,7 @@ glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    return glm::mat4(1.0);
+    return translation * rotation * scale;
 }
 
 int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
@@ -886,10 +905,13 @@ float tmt::render::Animator::AnimationBone::GetScaleFactor(float lasttime, float
     return scaleFactor;
 }
 
-glm::vec3 tmt::render::Animator::AnimationBone::InterpolatePosition(float animationTime)
+glm::mat4 tmt::render::Animator::AnimationBone::InterpolatePosition(float animationTime)
 {
     if (1 == channel->positions.size())
-        return channel->positions[0].value;
+    {
+        var finalPosition = channel->positions[0].value;
+        return glm::translate(glm::mat4(1.0f), finalPosition);
+    }
 
     int p0Index = GetPositionIndex(animationTime);
     int p1Index = p0Index + 1;
@@ -897,15 +919,15 @@ glm::vec3 tmt::render::Animator::AnimationBone::InterpolatePosition(float animat
         GetScaleFactor(channel->positions[p0Index].time, channel->positions[p1Index].time, animationTime);
     glm::vec3 finalPosition =
         glm::mix(channel->positions[p0Index].value, channel->positions[p1Index].value, scaleFactor);
-    return finalPosition;
+    return glm::translate(glm::mat4(1.0f), finalPosition);
 }
 
-glm::quat tmt::render::Animator::AnimationBone::InterpolateRotation(float animationTime)
+glm::mat4 tmt::render::Animator::AnimationBone::InterpolateRotation(float animationTime)
 {
     if (1 == channel->rotations.size())
     {
-        auto rotation = glm::normalize(channel->rotations[0].value);
-        return rotation;
+        auto finalRotation = glm::normalize(channel->rotations[0].value);
+        return glm::toMat4(finalRotation);
     }
 
     int p0Index = GetRotationIndex(animationTime);
@@ -915,20 +937,23 @@ glm::quat tmt::render::Animator::AnimationBone::InterpolateRotation(float animat
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index].value, channel->rotations[p1Index].value, scaleFactor);
     finalRotation = glm::normalize(finalRotation);
-    return (finalRotation);
+    return glm::toMat4(finalRotation);
 }
 
-glm::vec3 tmt::render::Animator::AnimationBone::InterpolateScaling(float animationTime)
+glm::mat4 tmt::render::Animator::AnimationBone::InterpolateScaling(float animationTime)
 {
     if (1 == channel->scales.size())
-        return channel->scales[0].value;
+    {
+        var finalScale = channel->scales[0].value;
+        return glm::scale(glm::mat4(1.0f), finalScale);
+    }
 
     int p0Index = GetScaleIndex(animationTime);
     int p1Index = p0Index + 1;
     float scaleFactor =
         GetScaleFactor(channel->scales[p0Index].time, channel->scales[p1Index].time, animationTime);
     glm::vec3 finalScale = glm::mix(channel->scales[p0Index].value, channel->scales[p1Index].value, scaleFactor);
-    return finalScale;
+    return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
 void tmt::render::Animator::Update()
@@ -950,14 +975,11 @@ void tmt::render::Animator::Update()
         {
             var bone = skeleton->GetBone(animation_bone->channel->name);
 
+
             //debug::Gizmos::DrawSphere(pos, 0.1f);
 
             //glm::decompose(m, scl, rot, pos, sk,prs);
-
-            bone->position = animation_bone->InterpolatePosition(time);
-            bone->rotation = animation_bone->InterpolateRotation(time);
-            bone->scale = animation_bone->InterpolateScaling(time);
-            //bone->SetTransform(m);
+            bone->SetTransform(animation_bone->Update(time));
         }
     }
 
@@ -989,7 +1011,7 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm:
 
     var offset = GetOffsetMatrix();
     
-    skeleton->boneMatrices[bone->id] = GetTransform() * offset;
+    skeleton->boneMatrices[bone->id] =  GetTransform() *offset;
 
 }
 
@@ -1059,6 +1081,9 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 {
     name = "TMDL_"+std::string(scene->mName.C_Str());
     skeleton = new Skeleton();
+
+    skeleton->inverseTransform = tmt::math::convertMat4(scene->mRootNode->mTransformation.Inverse());
+
 
     SceneDescription::Node* modelNode;
     if (description)
@@ -1133,10 +1158,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
                 }
             }
 
-            aiVector3D p, s;
-            aiQuaternion q;
-            b->mOffsetMatrix.Decompose(s, q, p);
-
+            
             bone->offsetMatrix = math::convertMat4(b->mOffsetMatrix);
 
 
@@ -1274,6 +1296,21 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
         
 
         break;
+    }
+
+    var children = description->GetAllChildren();
+    int boneCount = 0;
+    for (auto child : children)
+    {
+        if (child->isBone)
+        {
+            var bone = skeleton->GetBone(child->name);
+            if (bone)
+            {
+                bone->id = boneCount;
+                boneCount++;
+            }
+        }
     }
 
     if (description)

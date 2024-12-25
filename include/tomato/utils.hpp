@@ -98,6 +98,11 @@ namespace std
     {
         return "(" + std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + ")";
     }
+
+    inline string to_string(glm::quat v)
+    {
+        return "(" + std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w) + ")";
+    }
 }
 
 #include <stdio.h>
