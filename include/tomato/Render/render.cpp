@@ -832,26 +832,6 @@ glm::mat4 tmt::render::BoneObject::GetGlobalOffsetMatrix()
     return offset;
 }
 
-Skeleton::Bone::OffsetMatrix::OffsetMatrix(aiMatrix4x4 m)
-{
-    aiVector3D p,s;
-    aiQuaternion q;
-    
-    m.Decompose(s, q, p);
-
-    position = math::convertVec3(p);
-    rotation = math::convertQuat(q);
-    scale = math::convertVec3(s);
-    realOffset = math::convertMat4(m);
-}
-
-glm::mat4 Skeleton::Bone::OffsetMatrix::Calculate()
-{
-    //return realOffset;
-
-    return glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
-}
-
 glm::mat4 Skeleton::Bone::GetTransformation()
 {
     if (transformation == glm::mat4(-1))
@@ -1332,10 +1312,6 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
                 vertices[weight.mVertexId].SetBoneData(boneId, weight.mWeight);
             }
 
-            
-            bone->offsetMatrix = b->mOffsetMatrix;
-
-
             if (description)
             {
 
@@ -1747,18 +1723,25 @@ tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
         bone->rotation = rot;
         bone->scale = scl;
 
-        assert(true);
+        glm::mat4 offsetMatrix;
 
+        for (int x = 0; x < 4; ++x)
+        {
+            for (int y = 0; y < 4; ++y)
+            {
+                offsetMatrix[x][y] = reader->ReadSingle();
+            }
+        }
 
-        // for (int j = 0; j < 4; ++j)
-        // {
-        //     for (int k = 0; k < 4; ++k)
-        //     {
-        //         bone->offsetMatrix[j][k] = reader->ReadSingle();
-        //     }
-        // }
+        int childCount = reader->ReadInt32();
+        for (int i = 0; i < childCount; ++i)
+        {
+            var cname = reader->ReadString();
+            bone->children.push_back(cname);
+        }
 
         bones.push_back(bone);
+        boneInfoMap[name] = {id, offsetMatrix};
     }
 
     rootName = reader->ReadString();

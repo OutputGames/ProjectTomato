@@ -129,7 +129,7 @@ struct BinaryReader : std::ifstream
         
         var vec = glm::vec3(ReadSingle(), ReadSingle(), ReadSingle());
 
-        std::cout << "reading vec3: " << tellg() << " " << std::to_string(vec) << std::endl;
+        //std::cout << "reading vec3: " << tellg() << " " << std::to_string(vec) << std::endl;
 
         return vec;
     }

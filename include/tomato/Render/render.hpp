@@ -286,20 +286,6 @@ struct Mesh
                 float weight;
             };
 
-            struct OffsetMatrix
-            {
-                glm::vec3 position;
-                glm::quat rotation;
-                glm::vec3 scale;
-                glm::mat4 realOffset;
-
-                OffsetMatrix(aiMatrix4x4 m);
-                OffsetMatrix() = default;
-
-                glm::mat4 Calculate();
-
-            } offsetMatrix;
-
             string name;
             glm::vec3 position{}, scale{1};
             glm::quat rotation{1,0,0,0};
