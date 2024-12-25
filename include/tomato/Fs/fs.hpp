@@ -248,6 +248,12 @@ string ReadString();
         std::map<string, render::Shader*> loaded_shaders;
         std::map<string, render::ComputeShader*> loaded_compute_shaders;
 
+        void ReloadShaders();
+
+        inline void ReloadAssets()
+        { ReloadShaders();   
+        }
+
     };
 
 }

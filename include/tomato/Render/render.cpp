@@ -7,6 +7,9 @@
 
 using namespace tmt::render;
 
+RendererInfo* RendererInfo::GetRendererInfo()
+{ return renderer; }
+
 void tmt::render::ShaderUniform::Use()
 {
     switch (type)
@@ -51,52 +54,78 @@ tmt::render::ShaderUniform::~ShaderUniform()
 tmt::render::SubShader::SubShader(string name, ShaderType type)
 {
 
+    this->name = name;
+    this->type = type;
+    Reload();
+
+    fs::ResourceManager::pInstance->loaded_sub_shaders[name] = this;
+}
+
+tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
+{
+    for (var uni : uniforms)
+    {
+        if (uni->name == name)
+            return uni;
+    }
+
+    return {};
+}
+
+void SubShader::Reload()
+{
+    if (isLoaded)
+    {
+        bgfx::destroy(handle);
+        uniforms.clear();
+    }
+    isLoaded = true;
 
     string shaderPath = "";
 
     switch (bgfx::getRendererType())
     {
-    case bgfx::RendererType::Noop:
-    case bgfx::RendererType::Direct3D11:
-    case bgfx::RendererType::Direct3D12:
-        shaderPath = "runtime/shaders/dx/";
-        break;
-    case bgfx::RendererType::Gnm:
-        shaderPath = "shaders/pssl/";
-        break;
-    case bgfx::RendererType::Metal:
-        shaderPath = "shaders/metal/";
-        break;
-    case bgfx::RendererType::OpenGL:
-        shaderPath = "runtime/shaders/gl/";
-        break;
-    case bgfx::RendererType::OpenGLES:
-        shaderPath = "shaders/essl/";
-        break;
-    case bgfx::RendererType::Vulkan:
-        shaderPath = "runtime/shaders/spirv/";
-        break;
-    // case bgfx::RendererType::Nvn:
-    // case bgfx::RendererType::WebGPU:
-    case bgfx::RendererType::Count:
-        handle = BGFX_INVALID_HANDLE;
-        return; // count included to keep compiler warnings happy
+        case bgfx::RendererType::Noop:
+        case bgfx::RendererType::Direct3D11:
+        case bgfx::RendererType::Direct3D12:
+            shaderPath = "runtime/shaders/dx/";
+            break;
+        case bgfx::RendererType::Gnm:
+            shaderPath = "shaders/pssl/";
+            break;
+        case bgfx::RendererType::Metal:
+            shaderPath = "shaders/metal/";
+            break;
+        case bgfx::RendererType::OpenGL:
+            shaderPath = "runtime/shaders/gl/";
+            break;
+        case bgfx::RendererType::OpenGLES:
+            shaderPath = "shaders/essl/";
+            break;
+        case bgfx::RendererType::Vulkan:
+            shaderPath = "runtime/shaders/spirv/";
+            break;
+        // case bgfx::RendererType::Nvn:
+        // case bgfx::RendererType::WebGPU:
+        case bgfx::RendererType::Count:
+            handle = BGFX_INVALID_HANDLE;
+            return; // count included to keep compiler warnings happy
     }
 
     shaderPath += name;
 
     switch (type)
     {
-    case Vertex:
-        shaderPath += ".cvbsh";
-        break;
-    case Fragment:
-        shaderPath += ".cfbsh";
-        break;
-    case Compute:
-        shaderPath += ".ccbsh";
-        break;
-        // default: shaderPath += ".cbsh"; break;
+        case Vertex:
+            shaderPath += ".cvbsh";
+            break;
+        case Fragment:
+            shaderPath += ".cfbsh";
+            break;
+        case Compute:
+            shaderPath += ".ccbsh";
+            break;
+            // default: shaderPath += ".cbsh"; break;
     }
 
     std::ifstream in(shaderPath, std::ifstream::ate | std::ifstream::binary);
@@ -105,8 +134,8 @@ tmt::render::SubShader::SubShader(string name, ShaderType type)
     std::streamsize size = in.tellg();
     in.seekg(0, std::ios::beg);
 
-    const bgfx::Memory *mem = bgfx::alloc(size);
-    in.read(reinterpret_cast<char *>(mem->data), size);
+    const bgfx::Memory* mem = bgfx::alloc(size);
+    in.read(reinterpret_cast<char*>(mem->data), size);
 
     in.close();
 
@@ -147,20 +176,6 @@ tmt::render::SubShader::SubShader(string name, ShaderType type)
     }
 
     bgfx::setName(handle, name.c_str());
-    this->name = name;
-
-    fs::ResourceManager::pInstance->loaded_sub_shaders[name] = this;
-}
-
-tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
-{
-    for (var uni : uniforms)
-    {
-        if (uni->name == name)
-            return uni;
-    }
-
-    return {};
 }
 
 tmt::render::SubShader::~SubShader()
@@ -237,6 +252,21 @@ tmt::render::Shader::~Shader()
     {
         delete shader;
     }
+}
+
+void Shader::Reload()
+{
+    if (bgfx::isValid(program))
+    {
+            bgfx::destroy(program);
+    }
+
+    for (auto sub_shader : subShaders)
+    {
+        sub_shader->Reload();
+    }
+
+    program = bgfx::createProgram(subShaders[0]->handle, subShaders[1]->handle, true);
 }
 
 tmt::render::Shader* tmt::render::Shader::CreateShader(ShaderInitInfo info)
@@ -823,6 +853,16 @@ glm::mat4 Skeleton::Bone::OffsetMatrix::Calculate()
     return glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
 }
 
+glm::mat4 Skeleton::Bone::GetTransformation()
+{
+    if (transformation == glm::mat4(-1))
+{
+        transformation =
+        glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
+    }
+return transformation;
+}
+
 glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     glm::mat4 offset(1.0);
     if (bone != nullptr)
@@ -971,6 +1011,17 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolateScaling(float animati
     return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
+Animator::AnimationBone* Animator::GetBone(string name)
+{
+    for (auto animation_bone : animationBones)
+    {
+        if (animation_bone->channel->name == name)
+            return animation_bone;
+    }
+
+    return nullptr;
+}
+
 void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentTransform)
 {
     if (bone == nullptr)
@@ -984,6 +1035,7 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, cons
     var offset = GetOffsetMatrix();
     var ltr = GetLocalTransform();
     var tr = GetTransform();
+    var nodeTransform = bone->GetTransformation();
 
     var btx = parentTransform * ltr;
 
@@ -1017,23 +1069,14 @@ void tmt::render::Animator::Update()
         if (animationBones.size() <= currentAnimation->nodeChannels.size())
             LoadAnimationBones();
 
-        skeleton->pushBoneMatrices.clear();
-        skeleton->pushBoneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
+        pushBoneMatrices.clear();
+        pushBoneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
-        for (auto animation_bone : animationBones)
-        {
-            var bone = skeleton->GetBone(animation_bone->channel->name);
+        CalculateBoneTransform(skeleton->skeleton->GetBone(skeleton->skeleton->rootName), glm::mat4(1.0));
 
-            var m = animation_bone->Update(time);
-
-            //debug::Gizmos::DrawSphere(pos, 0.1f);
-
-            //glm::decompose(m, scl, rot, pos, sk,prs);
-            bone->SetTransform(m);
-
-            skeleton->pushBoneMatrices[bone->id] = m;
-        }
+        skeleton->boneMatrices = pushBoneMatrices;
     }
+
 
     Object::Update();
 }
@@ -1051,11 +1094,35 @@ void tmt::render::Animator::LoadAnimationBones()
     }
 }
 
+void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform)
+{
+    string nodeName = skeleBone->name;
+    glm::mat4 nodeTransform = skeleBone->transformation;
+
+    AnimationBone* animBone = GetBone(nodeName);
+
+    if (animBone)
+    {
+        animBone->Update(time);
+        nodeTransform = animBone->localTransform;
+    }
+
+    glm::mat4 globalTransform = parentTransform * nodeTransform;
+
+    glm::mat4 offset = skeleBone->offsetMatrix.realOffset;
+    pushBoneMatrices[skeleBone->id] = globalTransform * offset;
+
+    for (int child : skeleBone->children)
+    {
+        var cbone = skeleton->skeleton->bones[child];
+        CalculateBoneTransform(cbone, globalTransform);
+    }
+}
 
 
 void tmt::render::SkeletonObject::Update()
 {
-
+    /*
     if (pushBoneMatrices.size() > 0)
     {
         boneMatrices.clear();
@@ -1068,6 +1135,7 @@ void tmt::render::SkeletonObject::Update()
             bone->CalculateBoneMatrix(this, glm::mat4(1.0));
         }
     }
+    */
 
     
 
@@ -1209,7 +1277,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
                 if (j == 0)
                 {
-                    var anode = description->GetNode(b->mArmature);
+                    var anode = description->GetNode(b->mArmature->mName.C_Str());
 
                     skeleton->rootName = b->mName.C_Str();
                     if (anode != description->rootNode)
@@ -1338,7 +1406,24 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
     }
 
     var children = description->GetAllChildren();
-    int boneCount = 0;
+    std::vector<Skeleton::Bone*> n_bones;
+    int nodeCount = 0;
+    for (auto child : children)
+    {
+        child->id = nodeCount;
+        if (child->isBone)
+        {
+            var bone = skeleton->GetBone(child->name);
+            if (bone)
+            {
+                bone->id = n_bones.size();
+                n_bones.push_back(bone);
+            }
+        }
+        nodeCount++;
+    }
+    skeleton->bones = n_bones;
+
     for (auto child : children)
     {
         if (child->isBone)
@@ -1346,8 +1431,12 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             var bone = skeleton->GetBone(child->name);
             if (bone)
             {
-                bone->id = boneCount;
-                boneCount++;
+                var parentBone = skeleton->GetBone(child->parent->name);
+                if (parentBone)
+                {
+                    parentBone->children.push_back(bone->id);
+                    bone->parentId = parentBone->id;
+                }
             }
         }
     }
@@ -2232,7 +2321,7 @@ void tmt::render::update()
     }
 
     float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
-                  static_cast<float>(glm::cos(counterTime)), 0};
+                  static_cast<float>(glm::cos(counterTime)), flt renderer->usePosAnim};
     float d[4] = {(float)lights.size(), 0, 0, 0};
     for (auto call : calls)
     {
@@ -2336,7 +2425,7 @@ void tmt::render::update()
 
             // dde.moveTo(math::convertVec3(d.origin));
             dde.setWireframe(false);
-            dde.setTransform(math::mat4ToArray(d.matrix));
+            dde.setTransform(glm::value_ptr(d.matrix));
             dde.drawOrb(d.origin.x, d.origin.y, d.origin.z, d.radius);
 
             dde.pop();

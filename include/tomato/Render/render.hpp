@@ -23,6 +23,7 @@ namespace tmt::light
  }
 
 namespace tmt::render {
+    struct Animator;
     struct SkeletonObject;
     struct SceneDescription;
 
@@ -49,6 +50,9 @@ struct RendererInfo
     bgfx::ViewId clearView;
     int windowWidth, windowHeight;
     bool useImgui = true;
+    bool usePosAnim = true;
+
+   static RendererInfo* GetRendererInfo();
 };
 
 struct ShaderInitInfo
@@ -80,7 +84,7 @@ struct SubShader
         Vertex = 0,
         Fragment,
         Compute
-    };
+    } type;
 
     bgfx::ShaderHandle handle;
     std::vector<ShaderUniform *> uniforms;
@@ -88,11 +92,15 @@ struct SubShader
 
     ShaderUniform *GetUniform(string name);
 
+    void Reload();
+
     ~SubShader();
 
     static SubShader* CreateSubShader(string name, ShaderType type);
 
 private:
+    bool isLoaded = false;
+
     friend fs::ResourceManager;
     SubShader(string name, ShaderType type);
 };
@@ -105,6 +113,8 @@ struct Shader
     void Push(int viewId = 0, MaterialOverride **overrides = nullptr, size_t overrideCount = 0);
 
     ~Shader();
+
+    void Reload();
 
     static Shader* CreateShader(ShaderInitInfo info);
 
@@ -288,6 +298,13 @@ struct Mesh
             glm::vec3 position{}, scale{1};
             glm::quat rotation{1,0,0,0};
 
+            glm::mat4 transformation = glm::mat4(-1);
+            glm::mat4 GetTransformation();
+
+            int parentId = -1;
+            std::vector<int> children;
+
+
             std::vector<VertexWeight> weights;
 
         };
@@ -408,7 +425,7 @@ struct Mesh
         std::vector<BoneObject*> bones;
 
         std::vector<glm::mat4> boneMatrices;
-        std::vector<glm::mat4> pushBoneMatrices;
+        Animator* animator;
 
         Skeleton* skeleton;
 
@@ -423,7 +440,7 @@ struct Mesh
 
     struct Animator : tmt::obj::Object
     {
-
+        std::vector<glm::mat4> pushBoneMatrices;
         struct AnimationBone
         {
             Animation::NodeChannel* channel = nullptr;
@@ -448,12 +465,16 @@ struct Mesh
 
         std::vector<AnimationBone*> animationBones;
 
+        AnimationBone* GetBone(string name);
+
         Animation* currentAnimation = nullptr;
         float time = 0;
 
         void Update() override;
 
         void LoadAnimationBones();
+
+        void CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform);;
 
     };
  

@@ -1,4 +1,7 @@
 #include "fs.hpp" 
+
+#include <ranges>
+
 #include "globals.hpp" 
 
 using namespace tmt::fs;
@@ -157,4 +160,12 @@ else
     loaded_sounds[path] = sound;
     return sound;
 }
+}
+
+void ResourceManager::ReloadShaders()
+{
+    for (auto shader : loaded_shaders | std::views::values)
+    {
+        shader->Reload();
+    }
 }
