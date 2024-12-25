@@ -1112,6 +1112,9 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
     glm::mat4 offset = skeleBone->offsetMatrix.realOffset;
     pushBoneMatrices[skeleBone->id] = globalTransform * offset;
 
+    debug::Gizmos::matrix = globalTransform;
+    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+
     for (int child : skeleBone->children)
     {
         var cbone = skeleton->skeleton->bones[child];
