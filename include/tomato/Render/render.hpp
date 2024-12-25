@@ -301,16 +301,15 @@ struct Mesh
             } offsetMatrix;
 
             string name;
-            int id = -1;
             glm::vec3 position{}, scale{1};
             glm::quat rotation{1,0,0,0};
 
             glm::mat4 transformation = glm::mat4(-1);
             glm::mat4 GetTransformation();
 
-            int parentId = -1;
-            std::vector<int> children;
+            std::vector<string> children;
 
+            Skeleton* skeleton;
 
             std::vector<VertexWeight> weights;
 
@@ -416,8 +415,6 @@ struct Mesh
     
     struct BoneObject : tmt::obj::Object
     {
-        int id = -1;
-
         Skeleton::Bone* bone;
 
         int Load(SceneDescription::Node* node, int count);
@@ -444,6 +441,8 @@ struct Mesh
         BoneObject* GetBone(string name);
 
         bool IsSkeletonBone(BoneObject* bone);
+
+        void CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform);
     };
 
     struct Animator : tmt::obj::Object

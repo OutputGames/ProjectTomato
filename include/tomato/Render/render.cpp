@@ -807,7 +807,6 @@ int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
             bone->rotation = (child->rotation);
             bone->scale = child->scale;
             count++;
-            bone->id = count;
             count = bone->Load(child, count);
             bone->SetParent(this);
         }
@@ -867,7 +866,7 @@ glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     glm::mat4 offset(1.0);
     if (bone != nullptr)
     {
-        offset = bone->offsetMatrix.Calculate();
+        offset = bone->skeleton->boneInfoMap[name].offset;
     }
     return offset;
 }
@@ -886,7 +885,6 @@ void tmt::render::SkeletonObject::Load(SceneDescription::Node* node)
             bone->rotation = (child->rotation);
             bone->scale = child->scale;
             ct++;
-            bone->id = ct;
             ct = bone->Load(child, ct);
             bone->SetParent(this);
         }
@@ -910,6 +908,7 @@ bool tmt::render::SkeletonObject::IsSkeletonBone(BoneObject* bone)
 {
     return std::find(bones.begin(), bones.end(), bone) != bones.end();
 }
+
 
 Animator::Animator()
 {
@@ -1037,23 +1036,28 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, cons
         }
     }
 
-    var offset = GetOffsetMatrix();
-    var ltr = GetLocalTransform();
-    var tr = GetTransform();
-    var nodeTransform = bone->GetTransformation();
+    string nodeName = bone->name;
+    glm::mat4 nodeTransform = bone->transformation;
 
-    var btx = parentTransform * ltr;
+    nodeTransform = GetLocalTransform();
 
-    debug::Gizmos::matrix = btx;
+    glm::mat4 globalTransformation = parentTransform * nodeTransform;
+
+    auto boneInfoMap = skeleton->skeleton->boneInfoMap;
+    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    {
+        int index = boneInfoMap[nodeName].id;
+        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        skeleton->boneMatrices[index] = globalTransformation * offset;
+    }
+
+    debug::Gizmos::matrix = globalTransformation;
     debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
-
-
-    skeleton->boneMatrices[bone->id] = btx * offset;
 
     for (Object* child : children)
     {
         var boneChild = child->Cast<BoneObject>();
-        boneChild->CalculateBoneMatrix(skeleton, btx);
+        boneChild->CalculateBoneMatrix(skeleton, globalTransformation);
     }
 }
 
@@ -1077,9 +1081,16 @@ void tmt::render::Animator::Update()
         pushBoneMatrices.clear();
         pushBoneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
-        CalculateBoneTransform(skeleton->skeleton->GetBone(skeleton->skeleton->rootName), glm::mat4(1.0));
+        for (auto animation_bone : animationBones)
+        {
+            animation_bone->Update(time);
 
-        skeleton->boneMatrices = pushBoneMatrices;
+            skeleton->bones[animation_bone->boneId]->SetTransform(animation_bone->localTransform);
+        }
+
+        //CalculateBoneTransform(skeleton->skeleton->GetBone(skeleton->skeleton->rootName), glm::mat4(1.0));
+
+        //skeleton->boneMatrices = pushBoneMatrices;
     }
 
 
@@ -1100,6 +1111,57 @@ void tmt::render::Animator::LoadAnimationBones()
     }
 }
 
+void tmt::render::SkeletonObject::Update()
+{
+
+    boneMatrices.clear();
+    boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
+
+    //GetBone(skeleton->rootName)->CalculateBoneMatrix(this, glm::mat4(1.0));
+    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), glm::mat4(1.0));
+
+    Object::Update();
+}
+
+void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform)
+{
+    string nodeName = skeleBone->name;
+    glm::mat4 nodeTransform = skeleBone->transformation;
+    int idx = 0;
+
+    var boneInfoMap = skeleton->boneInfoMap;
+    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    {
+        idx = boneInfoMap[nodeName].id;
+    }
+
+    BoneObject* animBone = bones[idx];
+
+    if (animBone)
+    {
+        // animBone->Update(time);
+        nodeTransform = bones[idx]->GetLocalTransform();
+    }
+
+    glm::mat4 globalTransform = parentTransform * nodeTransform;
+
+    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    {
+        var index = boneInfoMap[nodeName].id;
+        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        boneMatrices[index] = globalTransform * offset;
+    }
+
+    debug::Gizmos::matrix = globalTransform;
+    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+
+    for (string child : skeleBone->children)
+    {
+        var cbone = skeleton->GetBone(child);
+        CalculateBoneTransform(cbone, globalTransform);
+    }
+}
+
 void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform)
 {
     string nodeName = skeleBone->name;
@@ -1109,8 +1171,8 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
 
     if (animBone)
     {
-        animBone->Update(time);
-        nodeTransform = animBone->localTransform;
+        //animBone->Update(time);
+        nodeTransform = skeleton->bones[animBone->boneId]->GetLocalTransform();
     }
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -1126,35 +1188,13 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
     debug::Gizmos::matrix = globalTransform;
     debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
-    for (int child : skeleBone->children)
+    for (string child : skeleBone->children)
     {
-        var cbone = skeleton->skeleton->bones[child];
+        var cbone = skeleton->skeleton->GetBone(child);
         CalculateBoneTransform(cbone, globalTransform);
     }
 }
 
-
-void tmt::render::SkeletonObject::Update()
-{
-    /*
-    if (pushBoneMatrices.size() > 0)
-    {
-        boneMatrices.clear();
-        boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
-        for (auto bone : bones)
-        {
-            if (bone->parent != this)
-                continue;
-
-            bone->CalculateBoneMatrix(this, glm::mat4(1.0));
-        }
-    }
-    */
-
-    
-
-    Object::Update();
-}
 
 tmt::render::Model::Model(string path)
 {
@@ -1276,7 +1316,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
                 bone = new Skeleton::Bone;
                 bone->name = boneName;
-                bone->id = boneId;
+                bone->skeleton = skeleton;
 
                 skeleton->bones.push_back(bone);
             }
@@ -1289,7 +1329,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             {
                 var weight = b->mWeights[k];
                 bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
-                vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
+                vertices[weight.mVertexId].SetBoneData(boneId, weight.mWeight);
             }
 
             
@@ -1438,9 +1478,8 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
         if (child->isBone)
         {
             var bone = skeleton->GetBone(child->name);
-            if (bone)
+            if (skeleton->boneInfoMap.contains(bone->name))
             {
-                bone->id = n_bones.size();
                 n_bones.push_back(bone);
             }
         }
@@ -1458,8 +1497,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
                 var parentBone = skeleton->GetBone(child->parent->name);
                 if (parentBone)
                 {
-                    parentBone->children.push_back(bone->id);
-                    bone->parentId = parentBone->id;
+                    parentBone->children.push_back(bone->name);
                 }
             }
         }
@@ -1705,7 +1743,6 @@ tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
 
         var bone = new Bone();
         bone->name = name;
-        bone->id = id;
         bone->position = pos;
         bone->rotation = rot;
         bone->scale = scl;
