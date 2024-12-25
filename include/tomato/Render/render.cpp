@@ -2292,6 +2292,7 @@ void tmt::render::update()
                 matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
             }
 
+
             //bgfx::setTransform(glm::value_ptr(fullVec[0]));
             bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
 
