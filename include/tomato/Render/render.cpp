@@ -390,16 +390,7 @@ void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vecto
     drawCall.matrixMode = material->state.matrixMode;
 
     //drawCall.transformMatrices = std::vector<MatrixArray>(MAX_BONE_MATRICES + 1);
-
-    {
-        for (int x = 0; x < 4; ++x)
-        {
-            for (int y = 0; y < 4; ++y)
-            {
-                drawCall.transformMatrix[x][y] = transform[x][y];
-            }
-        }
-    }
+    drawCall.transformMatrix = transform;
 
     drawCall.animationMatrices = anims;
     /*
@@ -827,7 +818,7 @@ Skeleton::Bone::OffsetMatrix::OffsetMatrix(aiMatrix4x4 m)
 
 glm::mat4 Skeleton::Bone::OffsetMatrix::Calculate()
 {
-    return realOffset;
+    //return realOffset;
 
     return glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
 }
@@ -2280,31 +2271,29 @@ void tmt::render::update()
             setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
         }
 
-        bgfx::setTransform(call.transformMatrix);
+        bgfx::setTransform(glm::value_ptr(call.transformMatrix));
         if (call.animationMatrices.size() > 0)
         {
             //bgfx::setUniform(animHandle, call.animationMatrices);
 
-            std::vector<glm::mat4> fullVec;
-
-            fullVec.push_back(math::convertMat4(call.transformMatrix));
-
-            for (auto animation_matrix : call.animationMatrices)
-            {
-                fullVec.push_back(animation_matrix);
-            }
+            var matrixCount = call.animationMatrices.size() + 1;
 
             std::vector<float> matrixData;
-            matrixData.reserve(fullVec.size() * 16);
+            matrixData.reserve(matrixCount * 16);
 
-            for (const auto& full_vec : fullVec)
+            {
+                const float* transformPtr = glm::value_ptr(call.transformMatrix);
+                matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
+            }
+
+            for (const auto& full_vec : call.animationMatrices)
             {
                 const float* matPtr = glm::value_ptr(full_vec);
                 matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
             }
 
             //bgfx::setTransform(glm::value_ptr(fullVec[0]));
-            bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(fullVec.size()));
+            bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
 
         }
 

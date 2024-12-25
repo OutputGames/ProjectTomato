@@ -31,14 +31,7 @@ void tmt::ui::SpriteObject::Update()
     drawCall.matrixMode = render::MaterialState::OrthoProj;
 
     var transform = GetTransform();
-
-    for (int x = 0; x < 4; ++x)
-    {
-        for (int y = 0; y < 4; ++y)
-        {
-            drawCall.transformMatrix[x][y] = transform[x][y];
-        }
-    }
+    drawCall.transformMatrix = transform;
 
     drawCall.program = material->shader;
     if (material->overrides.size() > 0)

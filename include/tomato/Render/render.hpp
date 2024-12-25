@@ -560,7 +560,7 @@ struct DrawCall
     size_t overrideCt = 0;
 
     Mesh *mesh;
-    float transformMatrix[4][4];
+    glm::mat4 transformMatrix;
     std::vector<glm::mat4> animationMatrices;
     //float animationMatrices[4][4][MAX_BONE_MATRICES];
     int matrixCount = 0;
