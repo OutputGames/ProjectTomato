@@ -16,7 +16,7 @@ float* mat4ToArray(glm::mat4 m);
 
 float **mat3ToArray(glm::mat3 m);
 
-    float* mat4ArrayToArray(std::vector<glm::mat4> m);
+    float** mat4ArrayToArray(std::vector<glm::mat4> m);
 
 inline bx::Vec3 convertVec3(glm::vec3 v)
 {

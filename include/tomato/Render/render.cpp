@@ -996,11 +996,11 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, cons
 
     var btx = parentTransform * ltr;
 
-    debug::Gizmos::matrix = tr;
+    debug::Gizmos::matrix = btx;
     debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
 
-    skeleton->boneMatrices[bone->id] = btx;
+    skeleton->boneMatrices[bone->id] = btx * offset;
 
     for (Object* child : children)
     {
@@ -2294,11 +2294,18 @@ void tmt::render::update()
                 fullVec.push_back(animation_matrix);
             }
 
-            var arr = math::mat4ArrayToArray(fullVec);
+            std::vector<float> matrixData;
+            matrixData.reserve(fullVec.size() * 16);
 
-            bgfx::setTransform(arr, fullVec.size());
+            for (const auto& full_vec : fullVec)
+            {
+                const float* matPtr = glm::value_ptr(full_vec);
+                matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
+            }
 
-            delete[] arr;
+            //bgfx::setTransform(glm::value_ptr(fullVec[0]));
+            bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(fullVec.size()));
+
         }
 
         lightUniforms->Apply(lights);
