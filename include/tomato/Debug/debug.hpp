@@ -27,12 +27,14 @@ struct DebugCall
     float radius;
     render::Color color;
     string text = "";
+    glm::mat4 matrix;
 };
 
 struct Gizmos
 {
 
     inline static render::Color color = render::Color::White;
+    inline static glm::mat4 matrix = glm::mat4(1.0);
 
     static void DrawLine(glm::vec3 start, glm::vec3 end);
     static void DrawSphere(glm::vec3 position, float radius);

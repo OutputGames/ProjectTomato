@@ -5,6 +5,8 @@
 
 #define ResMgr tmt::fs::ResourceManager::pInstance
 
+using namespace tmt::render;
+
 void tmt::render::ShaderUniform::Use()
 {
     switch (type)
@@ -810,11 +812,28 @@ glm::mat4 tmt::render::BoneObject::GetGlobalOffsetMatrix()
     return offset;
 }
 
+Skeleton::Bone::OffsetMatrix::OffsetMatrix(aiMatrix4x4 m)
+{
+    aiVector3D p,s;
+    aiQuaternion q;
+    
+    m.Decompose(s, q, p);
+
+    position = math::convertVec3(p);
+    rotation = math::convertQuat(q);
+    scale = math::convertVec3(s);
+}
+
+glm::mat4 Skeleton::Bone::OffsetMatrix::Calculate()
+{
+    return glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
+}
+
 glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     glm::mat4 offset(1.0);
     if (bone != nullptr)
     {
-        offset = bone->offsetMatrix;
+        offset = bone->offsetMatrix.Calculate();
     }
     return offset;
 }
@@ -971,15 +990,20 @@ void tmt::render::Animator::Update()
         if (animationBones.size() <= currentAnimation->nodeChannels.size())
             LoadAnimationBones();
 
+        skeleton->boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
+
         for (auto animation_bone : animationBones)
         {
             var bone = skeleton->GetBone(animation_bone->channel->name);
 
+            var m = animation_bone->Update(time);
 
             //debug::Gizmos::DrawSphere(pos, 0.1f);
 
             //glm::decompose(m, scl, rot, pos, sk,prs);
-            bone->SetTransform(animation_bone->Update(time));
+            bone->SetTransform(m);
+
+            skeleton->boneMatrices[bone->id] = m;
         }
     }
 
@@ -1010,8 +1034,17 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm:
     }
 
     var offset = GetOffsetMatrix();
-    
-    skeleton->boneMatrices[bone->id] =  GetTransform() *offset;
+    var tr = GetTransform();
+
+    var btx = parentTransform * skeleton->boneMatrices[bone->id];
+
+    skeleton->boneMatrices[bone->id] = btx * offset;
+
+    for (Object* child : children)
+    {
+        var boneChild = child->Cast<BoneObject>();
+        boneChild->CalculateBoneMatrix(skeleton, btx);
+    }
 
 }
 
@@ -1019,12 +1052,15 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm:
 void tmt::render::SkeletonObject::Update()
 {
 
-    boneMatrices.clear();
-    boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
-
-    for (auto bone : bones)
+    if (boneMatrices.size() > 0)
     {
-        bone->CalculateBoneMatrix(this, glm::mat4(1.0));
+        for (auto bone : bones)
+        {
+            if (bone->parent != this)
+                continue;
+
+            bone->CalculateBoneMatrix(this, glm::mat4(1.0));
+        }
     }
 
     
@@ -1159,7 +1195,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             }
 
             
-            bone->offsetMatrix = math::convertMat4(b->mOffsetMatrix);
+            bone->offsetMatrix = b->mOffsetMatrix;
 
 
             if (description)
@@ -1558,13 +1594,16 @@ tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
         bone->rotation = rot;
         bone->scale = scl;
 
-        for (int j = 0; j < 4; ++j)
-        {
-            for (int k = 0; k < 4; ++k)
-            {
-                bone->offsetMatrix[j][k] = reader->ReadSingle();
-            }
-        }
+        assert(true);
+
+
+        // for (int j = 0; j < 4; ++j)
+        // {
+        //     for (int k = 0; k < 4; ++k)
+        //     {
+        //         bone->offsetMatrix[j][k] = reader->ReadSingle();
+        //     }
+        // }
 
         bones.push_back(bone);
     }
