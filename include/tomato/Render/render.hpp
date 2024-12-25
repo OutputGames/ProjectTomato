@@ -237,6 +237,13 @@ struct Mesh
     void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
 };
 
+    struct BoneInfo
+    {
+        int id;
+
+        glm::mat4 offset;
+    };
+
     struct Animation
     {
         string name;
@@ -310,6 +317,7 @@ struct Mesh
         };
 
         std::vector<Bone*> bones;
+        std::map<string, BoneInfo> boneInfoMap;
         string rootName;
         glm::mat4 inverseTransform;
 
@@ -441,11 +449,15 @@ struct Mesh
     struct Animator : tmt::obj::Object
     {
         std::vector<glm::mat4> pushBoneMatrices;
+
+        Animator();
+
         struct AnimationBone
         {
             Animation::NodeChannel* channel = nullptr;
             Animation* animation = nullptr;
             glm::mat4 localTransform;
+            int boneId;
 
             glm::mat4 Update(float animationTime);
 

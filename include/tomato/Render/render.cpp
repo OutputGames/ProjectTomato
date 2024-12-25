@@ -911,6 +911,11 @@ bool tmt::render::SkeletonObject::IsSkeletonBone(BoneObject* bone)
     return std::find(bones.begin(), bones.end(), bone) != bones.end();
 }
 
+Animator::Animator()
+{
+
+}
+
 glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
 {
     var translation = InterpolatePosition(animationTime);
@@ -1089,6 +1094,7 @@ void tmt::render::Animator::LoadAnimationBones()
 
         animBone->channel = node_channel;
         animBone->animation = currentAnimation;
+        animBone->boneId = skeleton->skeleton->boneInfoMap[node_channel->name].id;
 
         animationBones.push_back(animBone);
     }
@@ -1109,8 +1115,13 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
-    glm::mat4 offset = skeleBone->offsetMatrix.realOffset;
-    pushBoneMatrices[skeleBone->id] = globalTransform * offset;
+    var boneInfoMap = skeleton->skeleton->boneInfoMap;
+    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    {
+        var index = boneInfoMap[nodeName].id;
+        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        pushBoneMatrices[index] = globalTransform * offset;
+    }
 
     debug::Gizmos::matrix = globalTransform;
     debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
@@ -1243,32 +1254,42 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
             Skeleton::Bone* bone = nullptr;
 
+            int boneId = -1;
+            string boneName = b->mName.C_Str();
+
+            if (skeleton->boneInfoMap.find(boneName) == skeleton->boneInfoMap.end())
+            {
+                BoneInfo boneInfo;
+                boneInfo.id = skeleton->boneInfoMap.size();
+                boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
+
+                skeleton->boneInfoMap[boneName] = boneInfo;
+                boneId = boneInfo.id;
+            }
+            else
+            {
+                boneId = skeleton->boneInfoMap[boneName].id;
+            }
+
             if (skeleton->GetBone(b->mName.C_Str()) == nullptr)
             {
 
                 bone = new Skeleton::Bone;
-                bone->name = b->mName.C_Str();
-                bone->id = skeleton->bones.size();
-
-                for (int k = 0; k < b->mNumWeights; ++k)
-                {
-                    var weight = b->mWeights[k];
-                    bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
-                    vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
-                }
+                bone->name = boneName;
+                bone->id = boneId;
 
                 skeleton->bones.push_back(bone);
             }
             else
             {
                 bone = skeleton->GetBone(b->mName.C_Str());
+            }
 
-                for (int k = 0; k < b->mNumWeights; ++k)
-                {
-                    var weight = b->mWeights[k];
-                    bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
-                    vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
-                }
+            for (int k = 0; k < b->mNumWeights; ++k)
+            {
+                var weight = b->mWeights[k];
+                bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
+                vertices[weight.mVertexId].SetBoneData(bone->id, weight.mWeight);
             }
 
             
