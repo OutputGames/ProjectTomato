@@ -822,10 +822,13 @@ Skeleton::Bone::OffsetMatrix::OffsetMatrix(aiMatrix4x4 m)
     position = math::convertVec3(p);
     rotation = math::convertQuat(q);
     scale = math::convertVec3(s);
+    realOffset = math::convertMat4(m);
 }
 
 glm::mat4 Skeleton::Bone::OffsetMatrix::Calculate()
 {
+    return realOffset;
+
     return glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
 }
 
@@ -882,14 +885,16 @@ glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    return translation * rotation * scale;
+    localTransform = translation * rotation * scale;
+
+    return localTransform;
 }
 
 int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
 {
     for (int index = 0; index < channel->positions.size() - 1; ++index)
     {
-        if (animationTime <= channel->positions[index + 1].time)
+        if (animationTime <= channel->positions[index + 1]->time)
             return index;
     }
     assert(0);
@@ -899,7 +904,7 @@ int tmt::render::Animator::AnimationBone::GetRotationIndex(float animationTime)
 {
     for (int index = 0; index < channel->rotations.size() - 1; ++index)
     {
-        if (animationTime <= channel->rotations[index + 1].time)
+        if (animationTime <= channel->rotations[index + 1]->time)
             return index;
     }
     assert(0);
@@ -909,7 +914,7 @@ int tmt::render::Animator::AnimationBone::GetScaleIndex(float animationTime)
 {
     for (int index = 0; index < channel->scales.size() - 1; ++index)
     {
-        if (animationTime <= channel->scales[index + 1].time)
+        if (animationTime <= channel->scales[index + 1]->time)
             return index;
     }
     assert(0);
@@ -928,16 +933,16 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolatePosition(float animat
 {
     if (1 == channel->positions.size())
     {
-        var finalPosition = channel->positions[0].value;
+        var finalPosition = channel->positions[0]->value;
         return glm::translate(glm::mat4(1.0f), finalPosition);
     }
 
     int p0Index = GetPositionIndex(animationTime);
     int p1Index = p0Index + 1;
     float scaleFactor =
-        GetScaleFactor(channel->positions[p0Index].time, channel->positions[p1Index].time, animationTime);
+        GetScaleFactor(channel->positions[p0Index]->time, channel->positions[p1Index]->time, animationTime);
     glm::vec3 finalPosition =
-        glm::mix(channel->positions[p0Index].value, channel->positions[p1Index].value, scaleFactor);
+        glm::mix(channel->positions[p0Index]->value, channel->positions[p1Index]->value, scaleFactor);
     return glm::translate(glm::mat4(1.0f), finalPosition);
 }
 
@@ -945,16 +950,16 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolateRotation(float animat
 {
     if (1 == channel->rotations.size())
     {
-        auto finalRotation = glm::normalize(channel->rotations[0].value);
+        auto finalRotation = glm::normalize(channel->rotations[0]->value);
         return glm::toMat4(finalRotation);
     }
 
     int p0Index = GetRotationIndex(animationTime);
     int p1Index = p0Index + 1;
     float scaleFactor =
-        GetScaleFactor(channel->rotations[p0Index].time, channel->rotations[p1Index].time, animationTime);
+        GetScaleFactor(channel->rotations[p0Index]->time, channel->rotations[p1Index]->time, animationTime);
     glm::quat finalRotation =
-        glm::slerp(channel->rotations[p0Index].value, channel->rotations[p1Index].value, scaleFactor);
+        glm::slerp(channel->rotations[p0Index]->value, channel->rotations[p1Index]->value, scaleFactor);
     finalRotation = glm::normalize(finalRotation);
     return glm::toMat4(finalRotation);
 }
@@ -963,16 +968,45 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolateScaling(float animati
 {
     if (1 == channel->scales.size())
     {
-        var finalScale = channel->scales[0].value;
+        var finalScale = channel->scales[0]->value;
         return glm::scale(glm::mat4(1.0f), finalScale);
     }
 
     int p0Index = GetScaleIndex(animationTime);
     int p1Index = p0Index + 1;
     float scaleFactor =
-        GetScaleFactor(channel->scales[p0Index].time, channel->scales[p1Index].time, animationTime);
-    glm::vec3 finalScale = glm::mix(channel->scales[p0Index].value, channel->scales[p1Index].value, scaleFactor);
+        GetScaleFactor(channel->scales[p0Index]->time, channel->scales[p1Index]->time, animationTime);
+    glm::vec3 finalScale = glm::mix(channel->scales[p0Index]->value, channel->scales[p1Index]->value, scaleFactor);
     return glm::scale(glm::mat4(1.0f), finalScale);
+}
+
+void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentTransform)
+{
+    if (bone == nullptr)
+    {
+        if (skeleton->skeleton != nullptr)
+        {
+            bone = skeleton->skeleton->GetBone(name);
+        }
+    }
+
+    var offset = GetOffsetMatrix();
+    var ltr = GetLocalTransform();
+    var tr = GetTransform();
+
+    var btx = parentTransform * ltr;
+
+    debug::Gizmos::matrix = tr;
+    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+
+
+    skeleton->boneMatrices[bone->id] = btx;
+
+    for (Object* child : children)
+    {
+        var boneChild = child->Cast<BoneObject>();
+        boneChild->CalculateBoneMatrix(skeleton, btx);
+    }
 }
 
 void tmt::render::Animator::Update()
@@ -986,11 +1020,14 @@ void tmt::render::Animator::Update()
     {
         time += (flt currentAnimation->ticksPerSecond) * (deltaTime);
         time = fmod(time, currentAnimation->duration);
+        if (currentAnimation->duration <= 0)
+            time = 0;
 
         if (animationBones.size() <= currentAnimation->nodeChannels.size())
             LoadAnimationBones();
 
-        skeleton->boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
+        skeleton->pushBoneMatrices.clear();
+        skeleton->pushBoneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
         for (auto animation_bone : animationBones)
         {
@@ -1003,7 +1040,7 @@ void tmt::render::Animator::Update()
             //glm::decompose(m, scl, rot, pos, sk,prs);
             bone->SetTransform(m);
 
-            skeleton->boneMatrices[bone->id] = m;
+            skeleton->pushBoneMatrices[bone->id] = m;
         }
     }
 
@@ -1023,37 +1060,15 @@ void tmt::render::Animator::LoadAnimationBones()
     }
 }
 
-void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentTransform)
-{
-    if (bone == nullptr)
-    {
-        if (skeleton->skeleton != nullptr)
-        {
-            bone = skeleton->skeleton->GetBone(name);
-        }
-    }
-
-    var offset = GetOffsetMatrix();
-    var tr = GetTransform();
-
-    var btx = parentTransform * skeleton->boneMatrices[bone->id];
-
-    skeleton->boneMatrices[bone->id] = btx * offset;
-
-    for (Object* child : children)
-    {
-        var boneChild = child->Cast<BoneObject>();
-        boneChild->CalculateBoneMatrix(skeleton, btx);
-    }
-
-}
 
 
 void tmt::render::SkeletonObject::Update()
 {
 
-    if (boneMatrices.size() > 0)
+    if (pushBoneMatrices.size() > 0)
     {
+        boneMatrices.clear();
+        boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
         for (auto bone : bones)
         {
             if (bone->parent != this)
@@ -1302,22 +1317,19 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             for (int i = 0; i < channel->mNumPositionKeys; ++i)
             {
                 var posKey = channel->mPositionKeys[i];
-                nodeChannel->positions.push_back(
-                    Animation::NodeChannel::NodeKey<glm::vec3>(posKey.mTime, math::convertVec3(posKey.mValue)));
+                nodeChannel->positions.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumScalingKeys; ++i)
             {
                 var posKey = channel->mScalingKeys[i];
-                nodeChannel->scales.push_back(
-                    Animation::NodeChannel::NodeKey<glm::vec3>(posKey.mTime, math::convertVec3(posKey.mValue)));
+                nodeChannel->scales.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumRotationKeys; ++i)
             {
                 var posKey = channel->mRotationKeys[i];
-                nodeChannel->rotations.push_back(
-                    Animation::NodeChannel::NodeKey<glm::quat>(posKey.mTime, math::convertQuat(posKey.mValue)));
+                nodeChannel->rotations.push_back(new Animation::NodeChannel::NodeKey<glm::quat>(static_cast<float>(posKey.mTime), math::convertQuat(posKey.mValue)));
             }
 
             animation->nodeChannels.push_back(nodeChannel);
@@ -1544,27 +1556,27 @@ tmt::render::Animation::Animation(fs::BinaryReader* reader)
         var pct = reader->ReadInt32();
         for (int j = 0; j < pct; ++j)
         {
-            var key = NodeChannel::NodeKey<glm::vec3>();
-            key.time = reader->ReadSingle();
-            key.value = reader->ReadVec3();
+            var key = new NodeChannel::NodeKey<glm::vec3>();
+            key->time = reader->ReadSingle();
+            key->value = reader->ReadVec3();
             nodeChannel->positions.push_back(key);
         }
 
         var rct = reader->ReadInt32();
         for (int j = 0; j < rct; ++j)
         {
-            var key = NodeChannel::NodeKey<glm::quat>();
-            key.time = reader->ReadSingle();
-            key.value = reader->ReadQuat();
+            var key = new NodeChannel::NodeKey<glm::quat>();
+            key->time = reader->ReadSingle();
+            key->value = reader->ReadQuat();
             nodeChannel->rotations.push_back(key);
         }
 
         var sct = reader->ReadInt32();
         for (int j = 0; j < sct; ++j)
         {
-            var key = NodeChannel::NodeKey<glm::vec3>();
-            key.time = reader->ReadSingle();
-            key.value = reader->ReadVec3();
+            var key = new NodeChannel::NodeKey<glm::vec3>();
+            key->time = reader->ReadSingle();
+            key->value = reader->ReadVec3();
             nodeChannel->scales.push_back(key);
         }
 
@@ -2327,6 +2339,7 @@ void tmt::render::update()
 
             // dde.moveTo(math::convertVec3(d.origin));
             dde.setWireframe(false);
+            dde.setTransform(math::mat4ToArray(d.matrix));
             dde.drawOrb(d.origin.x, d.origin.y, d.origin.z, d.radius);
 
             dde.pop();

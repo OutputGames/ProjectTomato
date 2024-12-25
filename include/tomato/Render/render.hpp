@@ -246,9 +246,9 @@ struct Mesh
                 T value;
             };
 
-            std::vector<NodeKey<glm::vec3>> positions;
-            std::vector<NodeKey<glm::quat>> rotations;
-            std::vector<NodeKey<glm::vec3>> scales;
+            std::vector<NodeKey<glm::vec3>*> positions;
+            std::vector<NodeKey<glm::quat>*> rotations;
+            std::vector<NodeKey<glm::vec3>*> scales;
 
         };
         std::vector<NodeChannel*> nodeChannels;
@@ -274,6 +274,8 @@ struct Mesh
                 glm::vec3 position;
                 glm::quat rotation;
                 glm::vec3 scale;
+                glm::mat4 realOffset;
+
                 OffsetMatrix(aiMatrix4x4 m);
                 OffsetMatrix() = default;
 
@@ -398,7 +400,7 @@ struct Mesh
         glm::mat4 GetGlobalOffsetMatrix();
         glm::mat4 GetOffsetMatrix();
 
-        void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
+        void CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentMatrix);
     };
 
     struct SkeletonObject : tmt::obj::Object
@@ -406,6 +408,7 @@ struct Mesh
         std::vector<BoneObject*> bones;
 
         std::vector<glm::mat4> boneMatrices;
+        std::vector<glm::mat4> pushBoneMatrices;
 
         Skeleton* skeleton;
 
@@ -423,9 +426,9 @@ struct Mesh
 
         struct AnimationBone
         {
-
-            Animation* animation = nullptr;
             Animation::NodeChannel* channel = nullptr;
+            Animation* animation = nullptr;
+            glm::mat4 localTransform;
 
             glm::mat4 Update(float animationTime);
 
