@@ -314,6 +314,8 @@ struct Mesh
         Material* CreateMaterial(int index, Shader* shader);
     Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
 
+        Animation* GetAnimation(string name);
+
     private:
     void LoadFromAiScene(const aiScene* scene, SceneDescription* description=nullptr);
 
@@ -568,6 +570,7 @@ namespace bgfx
 {
     void setUniform(bgfx::UniformHandle handle, glm::vec4 v);
     void setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v);
+    void setUniform(bgfx::UniformHandle handle, std::vector<glm::mat4> v);
 } // namespace bgfx
 
 #endif

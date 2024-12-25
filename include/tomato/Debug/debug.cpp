@@ -1,5 +1,7 @@
 #include "debug.hpp" 
-#include "globals.hpp" 
+#include "globals.hpp"
+
+std::vector<std::function<void()>> recurringDbgs;
 
 void tmt::debug::Gizmos::DrawLine(glm::vec3 start, glm::vec3 end)
 {
@@ -24,3 +26,14 @@ void tmt::debug::Gizmos::_DrawText(glm::vec2 pos, string text)
 
 void tmt::debug::DebugUi::AddImguiEvent(std::function<void()> func)
 { debugFuncs.push_back(func); }
+
+void tmt::debug::DebugUi::AddRecurringDbgEvent(std::function<void()> func)
+{ recurringDbgs.push_back(func); }
+
+void tmt::debug::DebugUi::Update()
+{
+    for (auto recurring_dbg : recurringDbgs)
+    {
+        debugFuncs.push_back(recurring_dbg); 
+    }
+}

@@ -461,6 +461,16 @@ tmt::render::Material* tmt::render::Model::CreateMaterial(MaterialDescription* m
     return material;
 }
 
+tmt::render::Animation* tmt::render::Model::GetAnimation(string name)
+{
+    for (auto animation : animations)
+    {
+        if (animation->name == name)
+            return animation;
+    }
+    return nullptr;
+}
+
 void tmt::render::SceneDescription::Node::SetParent(Node* parent)
 {
     if (this->parent)
@@ -785,7 +795,7 @@ glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     glm::mat4 offset(1.0);
     if (bone != nullptr)
     {
-        //offset = bone->offsetMatrix;
+        offset = bone->offsetMatrix;
     }
     return offset;
 }
@@ -2183,7 +2193,25 @@ void tmt::render::update()
         }
 
         bgfx::setTransform(call.transformMatrix);
-        bgfx::setUniform(animHandle, call.animationMatrices.data(), static_cast<u16>(call.animationMatrices.size()));
+        if (call.animationMatrices.size() > 0)
+        {
+            //bgfx::setUniform(animHandle, call.animationMatrices);
+
+            std::vector<glm::mat4> fullVec;
+
+            fullVec.push_back(math::convertMat4(call.transformMatrix));
+
+            for (auto animation_matrix : call.animationMatrices)
+            {
+                fullVec.push_back(animation_matrix);
+            }
+
+            var arr = math::mat4ArrayToArray(fullVec);
+
+            bgfx::setTransform(arr, fullVec.size());
+
+            delete[] arr;
+        }
 
         lightUniforms->Apply(lights);
 
@@ -2255,8 +2283,7 @@ void tmt::render::shutdown()
 
 void bgfx::setUniform(bgfx::UniformHandle handle, glm::vec4 v)
 {
-    float arr[4] = {v.x, v.y, v.z, v.w};
-    bgfx::setUniform(handle, arr);
+    bgfx::setUniform(handle, tmt::math::vec4toArray(v));
 }
 
 void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v)
@@ -2271,6 +2298,14 @@ void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v)
         }
     }
 
+    bgfx::setUniform(handle, arr, v.size());
+
+    delete[] arr;
+}
+
+void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::mat4> v)
+{
+    var arr = tmt::math::mat4ArrayToArray(v);
     bgfx::setUniform(handle, arr, v.size());
 
     delete[] arr;

@@ -129,7 +129,7 @@ namespace std
 #include "vertex.h"
 
 #define READ_FUNC(type,name) type Read##name() { return Read<##type>(); };
-#define MAX_BONE_MATRICES 250
+#define MAX_BONE_MATRICES 32
 #define TO_ARGS(v) v.x, v.y, v.z
 #define IN_VECTOR(vec, val) vec.find(val) != vec.end()
 

@@ -28,6 +28,25 @@ float **tmt::math::mat3ToArray(glm::mat3 m)
     return nullptr;
 }
 
+float* tmt::math::mat4ArrayToArray(std::vector<glm::mat4> v)
+{
+    float* arr = new float[v.size() * 16];
+    int j = 0;
+    for (int i = 0; i < v.size(); ++i)
+    {
+        for (int x = 0; x < 4; ++x)
+        {
+            for (int y = 0; y < 4; ++y)
+            {
+                arr[j] = v[i][x][y];
+                j++;
+            }
+        }
+    }
+
+    return arr;
+}
+
 glm::vec3 tmt::math::slerp(glm::vec3 start, glm::vec3 end, float t)
 {
     // Normalize the input vectors

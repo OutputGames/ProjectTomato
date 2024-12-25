@@ -16,6 +16,8 @@ float* mat4ToArray(glm::mat4 m);
 
 float **mat3ToArray(glm::mat3 m);
 
+    float* mat4ArrayToArray(std::vector<glm::mat4> m);
+
 inline bx::Vec3 convertVec3(glm::vec3 v)
 {
     return bx::Vec3{v.x, v.y, v.z};
@@ -102,6 +104,21 @@ inline glm::mat4 convertMat4(const aiMatrix4x4 from)
     to[2][3] = from.d3;
     to[3][3] = from.d4;
     return to;
+}
+
+    inline glm::mat4 convertMat4(float from[4][4])
+{
+    glm::mat4 m;
+
+    for (int x = 0; x < 4; ++x)
+    {
+        for (int y = 0; y < 4; ++y)
+        {
+            m[x][y] = from[x][y];
+        }
+    }
+
+    return m;
 }
 
 glm::vec3 slerp(glm::vec3 start, glm::vec3 end, float t);

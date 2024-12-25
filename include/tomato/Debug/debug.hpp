@@ -42,6 +42,9 @@ struct Gizmos
 struct DebugUi
 {
     static void AddImguiEvent(std::function<void()> func);
+    static void AddRecurringDbgEvent(std::function<void()> func);
+
+    static void Update();
 };
 
 }

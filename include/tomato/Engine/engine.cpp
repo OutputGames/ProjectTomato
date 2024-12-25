@@ -20,6 +20,11 @@ tmt::engine::EngineInfo *tmt::engine::init()
 
 void tmt::engine::update()
 {
+#ifdef DEBUG
+    debug::DebugUi::Update();
+#endif
+
+
     obj::update();
     render::update();
     audio::update();
