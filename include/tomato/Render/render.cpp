@@ -2033,7 +2033,7 @@ bgfx::VertexLayout tmt::render::Vertex::getVertexLayout()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16)
+        .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
         .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
     .end();
 
