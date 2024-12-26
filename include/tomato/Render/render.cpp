@@ -254,7 +254,7 @@ void Shader::Reload()
 {
     if (bgfx::isValid(program))
     {
-        destroy(program);
+        //destroy(program);
     }
 
     for (auto sub_shader : subShaders)
@@ -733,6 +733,13 @@ std::vector<SceneDescription::Node*> SceneDescription::Node::GetAllChildren()
 
 SceneDescription::SceneDescription(string path)
 {
+
+    if (!std::filesystem::exists(path))
+    {
+        std::cout << "Scene does not exist! " << path << std::endl;
+        return;
+    }
+
     if (path.ends_with(".tmdl"))
     {
         var reader = new fs::BinaryReader(path);
@@ -760,7 +767,7 @@ SceneDescription::SceneDescription(string path)
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
                                                aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
-                                               aiProcess_PopulateArmatureData | aiProcess_ValidateDataStructure);
+                                               aiProcess_PopulateArmatureData);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -789,6 +796,10 @@ SceneDescription::SceneDescription(string path)
 
 tmt::obj::Object* SceneDescription::ToObject()
 {
+    if (!rootNode)
+    {
+        return new obj::Object();
+    }
 
     return rootNode->ToObject();
 }
@@ -1035,8 +1046,8 @@ void BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 p
         skeleton->boneMatrices[index] = globalTransformation * offset;
     }
 
-    debug::Gizmos::matrix = globalTransformation;
-    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+    //debug::Gizmos::matrix = globalTransformation;
+    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
     for (Object* child : children)
     {
@@ -1156,8 +1167,8 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         boneMatrices[index] = globalTransform * offset;
     }
 
-    debug::Gizmos::matrix = globalTransform;
-    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+    //debug::Gizmos::matrix = globalTransform;
+    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
     for (string child : skeleBone->children)
     {
@@ -1189,8 +1200,8 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
         pushBoneMatrices[index] = globalTransform * offset;
     }
 
-    debug::Gizmos::matrix = globalTransform;
-    debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
+    //debug::Gizmos::matrix = globalTransform;
+    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
     for (string child : skeleBone->children)
     {
@@ -1432,39 +1443,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         var anim = scene->mAnimations[i];
 
         var animation = new Animation();
-        animation->name = anim->mName.C_Str();
-        animation->duration = static_cast<float>(anim->mDuration);
-        animation->ticksPerSecond = static_cast<int>(anim->mTicksPerSecond);
-
-        for (int i = 0; i < anim->mNumChannels; ++i)
-        {
-            var channel = anim->mChannels[i];
-            var nodeChannel = new Animation::NodeChannel;
-            nodeChannel->name = channel->mNodeName.C_Str();
-
-            for (int i = 0; i < channel->mNumPositionKeys; ++i)
-            {
-                var posKey = channel->mPositionKeys[i];
-                nodeChannel->positions.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(
-                    static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
-            }
-
-            for (int i = 0; i < channel->mNumScalingKeys; ++i)
-            {
-                var posKey = channel->mScalingKeys[i];
-                nodeChannel->scales.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(
-                    static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
-            }
-
-            for (int i = 0; i < channel->mNumRotationKeys; ++i)
-            {
-                var posKey = channel->mRotationKeys[i];
-                nodeChannel->rotations.push_back(new Animation::NodeChannel::NodeKey<glm::quat>(
-                    static_cast<float>(posKey.mTime), math::convertQuat(posKey.mValue)));
-            }
-
-            animation->nodeChannels.push_back(nodeChannel);
-        }
+        animation->LoadFromAiAnimation(anim);
 
         animations.push_back(animation);
     }
@@ -1739,6 +1718,74 @@ Animation::Animation(fs::BinaryReader* reader)
     }
 }
 
+std::vector<Animation*> Animation::LoadAnimations(string path)
+{
+    std::vector<Animation*> anims;
+
+    Assimp::Importer import;
+    const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate);
+
+    if (!scene || !scene->mRootNode)
+    {
+        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        return anims;
+    }
+
+    if (scene->HasAnimations())
+    {
+        for (int i = 0; i < scene->mNumAnimations; ++i)
+        {
+            var a = scene->mAnimations[i];
+
+            var animation = new Animation();
+
+            animation->LoadFromAiAnimation(a);
+
+            anims.push_back(animation);
+        }
+    }
+
+    return anims;
+}
+
+
+void Animation::LoadFromAiAnimation(aiAnimation* anim)
+{
+    name = anim->mName.C_Str();
+    duration = static_cast<float>(anim->mDuration);
+    ticksPerSecond = static_cast<int>(anim->mTicksPerSecond);
+
+    for (int i = 0; i < anim->mNumChannels; ++i)
+    {
+        var channel = anim->mChannels[i];
+        var nodeChannel = new NodeChannel;
+        nodeChannel->name = channel->mNodeName.C_Str();
+
+        for (int i = 0; i < channel->mNumPositionKeys; ++i)
+        {
+            var posKey = channel->mPositionKeys[i];
+            nodeChannel->positions.push_back(new NodeChannel::NodeKey<glm::vec3>(
+                static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
+        }
+
+        for (int i = 0; i < channel->mNumScalingKeys; ++i)
+        {
+            var posKey = channel->mScalingKeys[i];
+            nodeChannel->scales.push_back(new NodeChannel::NodeKey<glm::vec3>(
+                static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
+        }
+
+        for (int i = 0; i < channel->mNumRotationKeys; ++i)
+        {
+            var posKey = channel->mRotationKeys[i];
+            nodeChannel->rotations.push_back(new NodeChannel::NodeKey<glm::quat>(
+                static_cast<float>(posKey.mTime), math::convertQuat(posKey.mValue)));
+        }
+
+        nodeChannels.push_back(nodeChannel);
+    }
+}
+
 Skeleton::Skeleton(fs::BinaryReader* reader)
 {
     reader->Skip(4);
@@ -1984,7 +2031,10 @@ RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum fo
         // mem = bgfx::copy(pixels.data(), width * height* 4);
     }
 
-    realTexture = new Texture(width, height, format,BGFX_TEXTURE_RT, mem);
+    realTexture = new Texture(width, height, format,
+                              BGFX_TEXTURE_COMPUTE_WRITE | BGFX_TEXTURE_RT | BGFX_SAMPLER_MIN_POINT |
+                              BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP
+                              , mem);
 
     handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;

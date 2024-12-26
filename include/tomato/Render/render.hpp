@@ -6,6 +6,7 @@
 #include "Obj/obj.hpp"
 
 
+struct aiAnimation;
 struct aiNode;
 
 namespace tmt::obj
@@ -278,7 +279,11 @@ namespace tmt::render
         Animation(fs::BinaryReader* reader);
         Animation() = default;
 
+        static std::vector<Animation*> LoadAnimations(string path);
+
         ~Animation();
+
+        void LoadFromAiAnimation(aiAnimation* animation);
     };
 
     struct Skeleton
@@ -386,7 +391,7 @@ namespace tmt::render
 
         string name;
         std::vector<Model*> models;
-        Node* rootNode;
+        Node* rootNode = nullptr;
 
         Model* GetModel(string name);
         Mesh* GetMesh(int idx);
