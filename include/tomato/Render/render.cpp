@@ -379,6 +379,7 @@ void Material::Reload(Shader* shader)
 {
     if (shader)
     {
+        overrides.clear();
         this->shader = shader;
         for (auto sub_shader : shader->subShaders)
         {

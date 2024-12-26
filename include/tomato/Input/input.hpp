@@ -23,7 +23,7 @@ namespace tmt::input
 
         enum MouseButton
         {
-            Left   = GLFW_MOUSE_BUTTON_LAST,
+            Left   = GLFW_MOUSE_BUTTON_LEFT,
             Middle = GLFW_MOUSE_BUTTON_MIDDLE,
             Right  = GLFW_MOUSE_BUTTON_RIGHT
         };
