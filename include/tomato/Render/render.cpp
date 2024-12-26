@@ -32,16 +32,7 @@ void ShaderUniform::Use()
             break;
         case bgfx::UniformType::Mat4:
         {
-            float m[4][4];
-            for (int x = 0; x < 4; ++x)
-            {
-                for (int y = 0; y < 4; ++y)
-                {
-                    m[x][y] = m4[x][y];
-                }
-            }
-
-            setUniform(handle, m);
+            setUniform(handle, value_ptr(m4));
         }
         break;
         case bgfx::UniformType::Count:
@@ -1427,7 +1418,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
                 if (result == aiReturn_SUCCESS)
                 {
-                    //desc->Textures.insert(std::make_pair(type, path.C_Str()));
+                    // desc->Textures.insert(std::make_pair(type, path.C_Str()));
                 }
             }
         }
@@ -1454,25 +1445,22 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             for (int i = 0; i < channel->mNumPositionKeys; ++i)
             {
                 var posKey = channel->mPositionKeys[i];
-                nodeChannel->positions.push_back(
-                    new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime),
-                                                                   math::convertVec3(posKey.mValue)));
+                nodeChannel->positions.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(
+                    static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumScalingKeys; ++i)
             {
                 var posKey = channel->mScalingKeys[i];
-                nodeChannel->scales.push_back(
-                    new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime),
-                                                                   math::convertVec3(posKey.mValue)));
+                nodeChannel->scales.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(
+                    static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumRotationKeys; ++i)
             {
                 var posKey = channel->mRotationKeys[i];
-                nodeChannel->rotations.push_back(
-                    new Animation::NodeChannel::NodeKey<glm::quat>(static_cast<float>(posKey.mTime),
-                                                                   math::convertQuat(posKey.mValue)));
+                nodeChannel->rotations.push_back(new Animation::NodeChannel::NodeKey<glm::quat>(
+                    static_cast<float>(posKey.mTime), math::convertQuat(posKey.mValue)));
             }
 
             animation->nodeChannels.push_back(nodeChannel);
@@ -1489,42 +1477,45 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         break;
     }
 
-    var children = description->GetAllChildren();
-    std::vector<Skeleton::Bone*> n_bones;
-    int nodeCount = 0;
-    for (auto child : children)
-    {
-        child->id = nodeCount;
-        if (child->isBone)
-        {
-            var bone = skeleton->GetBone(child->name);
-            if (skeleton->boneInfoMap.contains(bone->name))
-            {
-                n_bones.push_back(bone);
-            }
-        }
-        nodeCount++;
-    }
-    skeleton->bones = n_bones;
 
-    for (auto child : children)
+    if (description)
     {
-        if (child->isBone)
+        var children = description->GetAllChildren();
+        std::vector<Skeleton::Bone*> n_bones;
+        int nodeCount = 0;
+        for (auto child : children)
         {
-            var bone = skeleton->GetBone(child->name);
-            if (bone)
+            child->id = nodeCount;
+            if (child->isBone)
             {
-                var parentBone = skeleton->GetBone(child->parent->name);
-                if (parentBone)
+                var bone = skeleton->GetBone(child->name);
+                if (skeleton->boneInfoMap.contains(bone->name))
                 {
-                    parentBone->children.push_back(bone->name);
+                    n_bones.push_back(bone);
+                }
+            }
+            nodeCount++;
+        }
+        skeleton->bones = n_bones;
+
+        for (auto child : children)
+        {
+            if (child->isBone)
+            {
+                var bone = skeleton->GetBone(child->name);
+                if (bone)
+                {
+                    var parentBone = skeleton->GetBone(child->parent->name);
+                    if (parentBone)
+                    {
+                        parentBone->children.push_back(bone->name);
+                    }
                 }
             }
         }
-    }
 
-    if (description)
         modelNode->SetParent(description->rootNode);
+    }
 
 }
 

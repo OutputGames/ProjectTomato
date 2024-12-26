@@ -144,7 +144,13 @@ float Gamepad::GetAxis(int axis)
     GLFWgamepadstate s;
     glfwGetGamepadState(GLFW_JOYSTICK_1, &s);
 
-    return s.axes[axis];
+    float a = s.axes[axis];
+
+    if (glm::abs(a) <= 0.1)
+    {
+        a = 0;
+    }
+    return a;
 }
 
 InputState tmt::input::GetInputState()
