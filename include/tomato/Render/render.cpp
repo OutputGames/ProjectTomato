@@ -1079,16 +1079,36 @@ void tmt::render::Animator::Update()
 
 void tmt::render::Animator::LoadAnimationBones()
 {
-    for (auto node_channel : currentAnimation->nodeChannels)
+
+        if (!skeleton)
     {
-        var animBone = new AnimationBone;
-
-        animBone->channel = node_channel;
-        animBone->animation = currentAnimation;
-        animBone->boneId = skeleton->skeleton->boneInfoMap[node_channel->name].id;
-
-        animationBones.push_back(animBone);
+        skeleton = parent->GetObjectFromType<SkeletonObject>();
     }
+
+    if (skeleton)
+    {
+
+        for (auto node_channel : currentAnimation->nodeChannels)
+        {
+            var animBone = new AnimationBone;
+
+            animBone->channel = node_channel;
+            animBone->animation = currentAnimation;
+            animBone->boneId = skeleton->skeleton->boneInfoMap[node_channel->name].id;
+
+            animationBones.push_back(animBone);
+        }
+    }
+}
+
+void Animator::SetAnimation(Animation* animation)
+{
+
+    currentAnimation = animation;
+    time = 0;
+    animationBones.clear();
+
+    LoadAnimationBones();
 }
 
 void tmt::render::SkeletonObject::Update()

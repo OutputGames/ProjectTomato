@@ -464,15 +464,19 @@ struct Mesh
 
         AnimationBone* GetBone(string name);
 
-        Animation* currentAnimation = nullptr;
         float time = 0;
 
         void Update() override;
 
         void LoadAnimationBones();
 
+        void SetAnimation(Animation* animation);
+
         void CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform);;
 
+        Animation* currentAnimation = nullptr;
+
+    private:
     };
  
 
