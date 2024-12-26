@@ -43,6 +43,7 @@ std::tuple<tmt::render::Vertex*, u16*, u16, u16> convertMesh(par_shapes_mesh* me
 extern tmt::obj::CameraObject* mainCameraObject;
 tmt::obj::Object* LoadObject(aiNode* node, tmt::obj::ObjectLoader::SceneInfo info);
 extern std::vector<int> mstates;
+extern std::vector<int> gstates;
 extern std::vector<int> kstates;
 extern btDiscreteDynamicsWorld* dynamicsWorld;
 extern std::vector<btRigidBody*> physicalBodies;

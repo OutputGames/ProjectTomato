@@ -60,16 +60,20 @@ namespace tmt::input
         };
 
         static PadState GetButton(int button);
+        static float GetAxis(int axis);
     };
 
-    inline enum InputState
+    enum InputState
     {
         None = 0,
         KeyboardMouse,
         Gamepad
-    } currentInputState = None;
+    };
+
+    InputState GetInputState();
 
     float GetAxis(string axis);
+    glm::vec2 GetAxis2(string axis);
 
     void Update();
     void init();

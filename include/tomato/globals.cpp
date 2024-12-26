@@ -131,6 +131,7 @@ tmt::obj::Object* LoadObject(aiNode* node, tmt::obj::ObjectLoader::SceneInfo inf
 };
 std::vector<int> mstates(8);
 std::vector<int> kstates;
+std::vector<int> gstates;
 btDiscreteDynamicsWorld* dynamicsWorld;
 std::vector<btRigidBody*> physicalBodies;
 std::vector<btCollisionShape*> collisionObjs;

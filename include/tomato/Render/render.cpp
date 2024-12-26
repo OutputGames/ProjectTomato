@@ -2352,9 +2352,9 @@ void tmt::render::update()
 
     bgfx::setDebug(BGFX_DEBUG_TEXT);
 
-    u8 btn = ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_LEFT) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
-        ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_RIGHT) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |
-        ((input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE) == input::Mouse::Hold) ? IMGUI_MBUT_MIDDLE : 0);
+    u8 btn = ((input::Mouse::GetMouseButton(input::Mouse::Left) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
+        ((input::Mouse::GetMouseButton(input::Mouse::Right) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |
+        ((input::Mouse::GetMouseButton(input::Mouse::Middle) == input::Mouse::Hold) ? IMGUI_MBUT_MIDDLE : 0);
     glfwGetWindowSize(renderer->window, &renderer->windowWidth, &renderer->windowHeight);
 
     if (renderer->useImgui)

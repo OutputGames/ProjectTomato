@@ -40,7 +40,25 @@ tmt::render::Mesh* tmt::prim::GetPrimitive(PrimitiveType type)
             break;
             case Sphere:
             {
-                var mesh = par_shapes_create_parametric_sphere(12, 12);
+                var mesh = par_shapes_create_parametric_sphere(32, 12);
+                var [verts, inds, vc, ic] = convertMesh(mesh);
+                vertCount = vc;
+                indCount = ic;
+                vertices = verts;
+                indices = inds;
+                par_shapes_free_mesh(mesh);
+            }
+            break;
+            case Cylinder:
+            {
+                var mesh = par_shapes_create_torus(24, 12, 0.25);
+
+                float f[3] = {1, 0, 0};
+
+                par_shapes_rotate(mesh, glm::radians(90.0f), f);
+                //par_shapes_translate(mesh, 0, 0.5, 0);
+                par_shapes_scale(mesh, 1, 1, 1);
+
                 var [verts, inds, vc, ic] = convertMesh(mesh);
                 vertCount = vc;
                 indCount = ic;

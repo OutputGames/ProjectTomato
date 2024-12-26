@@ -1,7 +1,11 @@
 #include "input.hpp"
 #include "globals.hpp"
 
+
 using namespace tmt::input;
+
+
+static InputState currentInputState = KeyboardMouse;
 
 glm::vec2 Mouse::GetMousePosition()
 {
@@ -113,7 +117,39 @@ Keyboard::KeyState Keyboard::GetKey(int key)
 
 Gamepad::PadState Gamepad::GetButton(int button)
 {
+    GLFWgamepadstate s;
+    glfwGetGamepadState(GLFW_JOYSTICK_1, &s);
 
+    int state = s.buttons[button];
+
+    if (gstates.size() <= button)
+    {
+        gstates.resize(button + 1, Release);
+        gstates[button] = state;
+    }
+    else
+    {
+        if (state == Press && (gstates[button] == Press || gstates[button] == Hold))
+        {
+            state = Hold;
+        }
+        gstates[button] = state;
+    }
+
+    return static_cast<PadState>(state);
+}
+
+float Gamepad::GetAxis(int axis)
+{
+    GLFWgamepadstate s;
+    glfwGetGamepadState(GLFW_JOYSTICK_1, &s);
+
+    return s.axes[axis];
+}
+
+InputState tmt::input::GetInputState()
+{
+    return currentInputState;
 }
 
 float tmt::input::GetAxis(string axis)
@@ -134,16 +170,16 @@ float tmt::input::GetAxis(string axis)
 
             if (l)
             {
-                a = 1;
+                a = -1;
             }
             else if (r)
             {
-                a = -1;
+                a = 1;
             }
         }
         else if (currentInputState == Gamepad)
         {
-
+            a = Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_LEFT_X);
         }
     }
     else if (axis == "Vertical")
@@ -159,38 +195,98 @@ float tmt::input::GetAxis(string axis)
 
             if (u)
             {
-                a = 1;
+                a = -1;
             }
             else if (d)
             {
-                a = -1;
+                a = 1;
             }
         }
+        else if (currentInputState == Gamepad)
+        {
+            a = -Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_LEFT_Y);
+        }
 
+    }
+    else if (axis == "LookHorizontal")
+    {
+        if (currentInputState == KeyboardMouse)
+        {
+            a = Mouse::GetMouseDelta().x;
+        }
+        else if (currentInputState == Gamepad)
+        {
+            a = -Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_RIGHT_X);
+        }
+    }
+    else if (axis == "LookVertical")
+    {
+        if (currentInputState == KeyboardMouse)
+        {
+            a = Mouse::GetMouseDelta().y;
+        }
+        else if (currentInputState == Gamepad)
+        {
+            a = Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_RIGHT_Y);
+        }
+    }
+
+    if (glm::abs(a) <= 0.1)
+    {
+        a = 0;
     }
 
     return a;
 }
 
-void joystick_cb(int jid, int event)
+
+glm::vec2 tmt::input::GetAxis2(string axis)
+{
+    glm::vec2 a(0, 0);
+
+    if (axis == "Move")
+    {
+        a.x = GetAxis("Horizontal");
+        a.y = GetAxis("Vertical");
+    }
+    else if (axis == "Look")
+    {
+        a.x = -GetAxis("LookHorizontal");
+        a.y = GetAxis("LookVertical");
+    }
+
+    return a;
+}
+
+static void joystick_cb(int jid, int event)
 {
     if (event == GLFW_CONNECTED)
     {
         currentInputState = Gamepad;
+        std::cout << "Connected gamepad" << std::endl;
     }
     else if (event == GLFW_DISCONNECTED)
     {
         currentInputState = KeyboardMouse;
+        std::cout << "Disconnected gamepad" << std::endl;
     }
 }
 
 void tmt::input::init()
 {
-
+    glfwSetJoystickCallback(joystick_cb);
 }
 
 
-void Update()
+void tmt::input::Update()
 {
-
+    var present = glfwJoystickPresent(GLFW_JOYSTICK_1);
+    if (present)
+    {
+        currentInputState = Gamepad;
+    }
+    else
+    {
+        currentInputState = KeyboardMouse;
+    }
 }

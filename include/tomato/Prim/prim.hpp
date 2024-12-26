@@ -20,6 +20,7 @@ namespace tmt::prim
         Quad,
         Cube,
         Sphere,
+        Cylinder,
     };
 
     render::Mesh* GetPrimitive(PrimitiveType type);

@@ -77,7 +77,7 @@ void tmt::ui::ButtonObject::Update()
             function();
         }
 
-        if (input::Mouse::GetMouseButton(GLFW_MOUSE_BUTTON_LEFT) == input::Mouse::Press)
+        if (input::Mouse::GetMouseButton(input::Mouse::Left) == input::Mouse::Press)
         {
             click = true;
             if (!clickLast)

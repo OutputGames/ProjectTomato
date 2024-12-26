@@ -1,17 +1,6 @@
 #if !defined(TM_UTILS)
 #define TM_UTILS
 
-#ifdef TOMATO_DLLBUILD
-#define TMAPI __declspec(dllexport)
-#else
-#define TMAPI __declspec(dllimport)
-#endif
-
-#define var auto
-#define flt (float)
-#define arrsize(a) sizeof(a) / sizeof(a[0])
-#define randval(min, max) (rand()%(abs(max - min) + 1) + min)
-
 #include <array>
 #include <cstring>
 #include <filesystem>
@@ -28,6 +17,17 @@
 #include <typeinfo>
 #include <vector>
 
+
+#ifdef TOMATO_DLLBUILD
+#define TMAPI __declspec(dllexport)
+#else
+#define TMAPI __declspec(dllimport)
+#endif
+
+#define var auto
+#define flt (float)
+#define arrsize(a) std::size(a)
+#define randval(min, max) (rand()%(abs(max - min) + 1) + min)
 
 #ifndef PI
 #define PI 3.14159265358979323846f
@@ -125,6 +125,7 @@ namespace std
 
 #include <bx/math.h>
 
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 #include "vertex.h"
