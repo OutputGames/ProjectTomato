@@ -2001,13 +2001,9 @@ float *tmt::render::Camera::GetView()
     return view;
 }
 
-float *tmt::render::Camera::GetProjection()
+float const* tmt::render::Camera::GetProjection()
 {
-    float proj[16];
-
-    bx::mtxProj(proj, glm::radians(FOV), static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
-                NearPlane,FarPlane , bgfx::getCaps()->homogeneousDepth);
-    return proj;
+    return glm::value_ptr(GetProjection_m4());
 }
 
 glm::mat4 tmt::render::Camera::GetView_m4()

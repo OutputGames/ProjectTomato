@@ -11,27 +11,82 @@ glm::vec2 tmt::input::Mouse::GetMouseDelta()
     return mousedelta;
 }
 
-glm::vec3 unprojectMouseToWorld(int mouseX, int mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
-                                const glm::mat4& projMatrix)
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// Function to convert mouse position to a ray direction
+glm::vec3 ScreenToWorldRay(float mouseX, float mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
+                           const glm::mat4& projectionMatrix)
 {
-    // Convert mouse coordinates to normalized device coordinates (NDC)
-    float ndcX = (2.0f * flt mouseX) / flt screenWidth - 1.0f;
-    float ndcY = 1.0f - (2.0f * flt mouseY) / flt screenHeight; // Invert Y axis for NDC
-    float ndcZ = 1.0f;
+    // Convert mouse position to normalized device coordinates (NDC)
+    float x = (2.0f * mouseX) / flt screenWidth - 1.0f;
+    float y = 1.0f - (2.0f * mouseY) / flt screenHeight;
+    float z = 1.0f;
+    glm::vec3 rayNDC(x, y, z);
 
-    glm::vec4 ndc{ndcX, ndcY, ndcZ, 1.0f};
+    // Convert NDC to clip coordinates
+    glm::vec4 rayClip(rayNDC, 1.0f);
 
-    glm::mat4 invViewProj = glm::inverse(projMatrix * viewMatrix);
+    // Convert clip coordinates to eye coordinates
+    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
 
-    glm::vec4 worldPos = invViewProj * ndc;
+    // Convert eye coordinates to world coordinates
+    glm::vec3 rayWorld = glm::vec3(glm::inverse(viewMatrix) * rayEye);
+    rayWorld = glm::normalize(rayWorld);
 
-    return glm::vec3(worldPos) / worldPos.w;
+    return rayWorld;
 }
+
+// Example usage
+glm::vec3 RaycastFromMouse(float mouseX, float mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
+                      const glm::mat4& projectionMatrix)
+{
+    glm::vec3 rayDirection = ScreenToWorldRay(mouseX, mouseY, screenWidth, screenHeight, viewMatrix, projectionMatrix);
+
+
+    // Now you can use rayDirection to perform raycasting in your scene
+    // For example, intersecting with objects in the scene
+
+    return rayDirection;
+}
+
 
 glm::vec3 tmt::input::Mouse::GetWorldMousePosition(render::Camera* camera)
 {
-    return unprojectMouseToWorld(mousep.x, mousep.y, renderer->windowWidth, renderer->windowHeight, camera->GetView_m4(),
-                                 camera->GetProjection_m4());
+    /*
+    var dir = RaycastFromMouse(mousep.x, mousep.y, renderer->windowWidth, renderer->windowHeight, camera->GetView_m4(),
+                     camera->GetProjection_m4());
+
+    var pos = camera->position;
+
+    var ray = physics::Ray{pos, dir, 100};
+
+    var hit = ray.Cast();
+
+    if (hit)
+    {
+        return hit->point;
+    }
+    */
+
+    if (mousep.x < 0 || mousep.x > renderer->windowWidth || mousep.y < 0 || mousep.x > renderer->windowHeight)
+    {
+        return glm::vec3{0};
+    } 
+
+    float x = 2.0f * mousep.x / renderer->windowWidth - 1;
+    float y = 2.0f * mousep.y / renderer->windowHeight - 1;
+
+    glm::vec4 screenPos = glm::vec4(x, -y, -1.0f, 1.0f);
+
+    glm::mat4 projView = camera->GetProjection_m4() * camera->GetView_m4();
+    glm::mat4 viewProjInv = glm::inverse(projView);
+
+    glm::vec4 worldPos = viewProjInv * screenPos;
+
+    return glm::vec3(worldPos);
 }
 
 tmt::input::Mouse::MouseButtonState tmt::input::Mouse::GetMouseButton(int i)

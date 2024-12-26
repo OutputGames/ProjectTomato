@@ -517,7 +517,7 @@ struct Camera
     float FarPlane = 1000.0f;
 
     float *GetView();
-    float *GetProjection();
+    float const* GetProjection();
 
     glm::mat4 GetView_m4();
     glm::mat4 GetProjection_m4();
