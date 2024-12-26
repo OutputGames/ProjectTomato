@@ -46,31 +46,31 @@
 #endif
 #include <cstdint>
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+using u8 = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
 
-typedef int8_t s8;
-typedef int16_t s16;
-typedef int32_t s32;
-typedef int64_t s64;
+using s8 = int8_t;
+using s16 = int16_t;
+using s32 = int32_t;
+using s64 = int64_t;
 
-typedef unsigned long long ulong;
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned char byte;
+using ulong = unsigned long long;
+using uint = unsigned int;
+using ushort = unsigned short;
+using byte = unsigned char;
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/compatibility.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtx/easing.hpp>
-#include <glm/gtx/type_aligned.hpp>
 #include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/compatibility.hpp>
+#include <glm/gtx/easing.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/type_aligned.hpp>
 
 inline int randomInt(int a, int b)
 {
@@ -81,8 +81,9 @@ inline int randomInt(int a, int b)
     return a + (rand() % (b - a));
 }
 
-inline float randomFloat(float min, float max) {
-    return min + ((float)rand() / RAND_MAX) * (max - min);
+inline float randomFloat(float min, float max)
+{
+    return min + (static_cast<float>(rand()) / RAND_MAX) * (max - min);
 }
 
 inline void CombineVectors(std::vector<glm::vec3>& v1, std::vector<glm::vec3>& v2)
@@ -101,15 +102,16 @@ namespace std
 
     inline string to_string(glm::quat v)
     {
-        return "(" + std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w) + ")";
+        return "(" + std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," +
+            std::to_string(v.w) + ")";
     }
 }
 
 #include <stdio.h>
-#include <bx/bx.h>
+#include <GLFW/glfw3.h>
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
-#include <GLFW/glfw3.h>
+#include <bx/bx.h>
 #if BX_PLATFORM_LINUX
 #define GLFW_EXPOSE_NATIVE_X11
 #elif BX_PLATFORM_WINDOWS

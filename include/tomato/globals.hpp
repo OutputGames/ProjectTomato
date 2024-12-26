@@ -1,17 +1,17 @@
 #ifndef GLOBALS_HPP
- #define GLOBALS_HPP
+#define GLOBALS_HPP
 
+#include "tomato.hpp"
 #include "utils.hpp"
- #include "tomato.hpp"
-#include "bx/math.h"
 #include "bimg/include/bimg/bimg.h"
+#include "bx/math.h"
 #ifndef STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 #endif
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <complex.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #ifndef PAR_SHAPES_IMPLEMENTATION
 #include "par_shapes.h"
 #endif
@@ -40,8 +40,6 @@ extern tmt::light::LightUniforms* lightUniforms;
 extern bool subHandlesLoaded;
 extern std::map<tmt::prim::PrimitiveType, tmt::render::Mesh*> primitives;
 std::tuple<tmt::render::Vertex*, u16*, u16, u16> convertMesh(par_shapes_mesh* mesh);
-glm::quat LookRotation(glm::vec3 forward, glm::vec3 up);
-glm::quat FromToRotation(glm::vec3 from, glm::vec3 to);
 extern tmt::obj::CameraObject* mainCameraObject;
 tmt::obj::Object* LoadObject(aiNode* node, tmt::obj::ObjectLoader::SceneInfo info);
 extern std::vector<int> mstates;

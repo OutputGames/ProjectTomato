@@ -15,31 +15,33 @@ void tmt::light::LightUniforms::Apply(std::vector<Light*> lights)
 
     for (int i = lights.size(); i < maxLights; ++i)
     {
-        pos[i] = (glm::vec4( 0));
+        pos[i] = (glm::vec4(0));
         col[i] = (glm::vec4(0));
     }
 
-    bgfx::setUniform(position, pos);
-    bgfx::setUniform(color, col);
+    setUniform(position, pos);
+    setUniform(color, col);
 
     glm::vec4 lightData(lights.size(), 1, 1, 1);
 
-    bgfx::setUniform(data, lightData);
+    setUniform(data, lightData);
 
-    
+
 }
 
 tmt::light::LightUniforms::LightUniforms()
 {
-    position = bgfx::createUniform("iu_lightPosition", bgfx::UniformType::Vec4, maxLights);
-    direction = bgfx::createUniform("iu_lightDirection", bgfx::UniformType::Vec4, maxLights);
-    color = bgfx::createUniform("iu_lightColor", bgfx::UniformType::Vec4, maxLights);
-    power = bgfx::createUniform("iu_lightPower", bgfx::UniformType::Vec4, maxLights);
-    data = bgfx::createUniform("iu_lightData", bgfx::UniformType::Vec4);
+    position = createUniform("iu_lightPosition", bgfx::UniformType::Vec4, maxLights);
+    direction = createUniform("iu_lightDirection", bgfx::UniformType::Vec4, maxLights);
+    color = createUniform("iu_lightColor", bgfx::UniformType::Vec4, maxLights);
+    power = createUniform("iu_lightPower", bgfx::UniformType::Vec4, maxLights);
+    data = createUniform("iu_lightData", bgfx::UniformType::Vec4);
 }
 
 tmt::light::LightObject::LightObject()
-{ light = new Light; }
+{
+    light = new Light;
+}
 
 void tmt::light::LightObject::Update()
 {
@@ -47,7 +49,7 @@ void tmt::light::LightObject::Update()
     light->direction = GetForward();
     light->color = color;
 
-    tmt::render::pushLight(light);
+    render::pushLight(light);
 
     Object::Update();
 }

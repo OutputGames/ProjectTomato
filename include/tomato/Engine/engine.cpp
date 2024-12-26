@@ -1,8 +1,7 @@
+#include "engine.hpp"
+#include "globals.hpp"
 
-#include "engine.hpp" 
-#include "globals.hpp" 
-
-tmt::engine::EngineInfo *tmt::engine::init()
+tmt::engine::EngineInfo* tmt::engine::init()
 {
 
     var resourceManager = new fs::ResourceManager();
@@ -44,4 +43,6 @@ void tmt::engine::update()
 }
 
 void tmt::engine::shutdown()
-{ render::shutdown(); }
+{
+    render::shutdown();
+}

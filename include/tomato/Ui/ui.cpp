@@ -1,5 +1,5 @@
-#include "ui.hpp" 
-#include "globals.hpp" 
+#include "ui.hpp"
+#include "globals.hpp"
 
 bool tmt::ui::Rect::isPointInRect(glm::vec2 p)
 {
@@ -59,7 +59,7 @@ void tmt::ui::ButtonObject::Update()
     bool click = false;
 
     // mama a typecheck behind u
-    var sprite = dynamic_cast<SpriteObject *>(parent);
+    var sprite = dynamic_cast<SpriteObject*>(parent);
 
     float darkenAmt = 0.25;
 
@@ -72,7 +72,7 @@ void tmt::ui::ButtonObject::Update()
                 sprite->mainColor.darken(-darkenAmt);
             }
         }
-        for (const auto &function : hovers)
+        for (const auto& function : hovers)
         {
             function();
         }
@@ -82,7 +82,7 @@ void tmt::ui::ButtonObject::Update()
             click = true;
             if (!clickLast)
             {
-                for (const auto &function : clicks)
+                for (const auto& function : clicks)
                 {
                     function();
                 }

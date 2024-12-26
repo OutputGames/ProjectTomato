@@ -1,16 +1,17 @@
-#include "fs.hpp" 
+#include "fs.hpp"
 
 #include <ranges>
 
-#include "globals.hpp" 
+#include "globals.hpp"
 
 using namespace tmt::fs;
 
-tmt::fs::StringBinaryReader::StringBinaryReader(string data) : std::stringstream(data)
+StringBinaryReader::StringBinaryReader(string data) :
+    std::stringstream(data)
 {
 }
 
-string tmt::fs::StringBinaryReader::fLoadString(u32 offset)
+string StringBinaryReader::fLoadString(u32 offset)
 {
     var p = tellg();
     seekg(offset, _Seekbeg);
@@ -23,13 +24,13 @@ string tmt::fs::StringBinaryReader::fLoadString(u32 offset)
     return s;
 }
 
-string tmt::fs::StringBinaryReader::ReadString()
+string StringBinaryReader::ReadString()
 {
     // short size = ReadInt16();
     return ReadUtf8();
 }
 
-string tmt::fs::StringBinaryReader::ReadUtf8()
+string StringBinaryReader::ReadUtf8()
 {
     long start = tellg();
     int size = 0;
@@ -45,7 +46,7 @@ string tmt::fs::StringBinaryReader::ReadUtf8()
     return text;
 }
 
-string tmt::fs::StringBinaryReader::ReadString(int size)
+string StringBinaryReader::ReadString(int size)
 {
     string s = "";
 
@@ -58,7 +59,8 @@ string tmt::fs::StringBinaryReader::ReadString(int size)
 }
 
 
-tmt::fs::BinaryReader::BinaryReader(std::string path) : std::ifstream(path, std::ios::binary)
+BinaryReader::BinaryReader(std::string path) :
+    std::ifstream(path, std::ios::binary)
 {
     fileSize = tellg();
 
@@ -76,37 +78,37 @@ tmt::fs::BinaryReader::BinaryReader(std::string path) : std::ifstream(path, std:
     }
 }
 
-u64 tmt::fs::BinaryReader::ReadUInt64()
+u64 BinaryReader::ReadUInt64()
 {
     return Read<u64>();
 }
 
-u32 tmt::fs::BinaryReader::ReadUInt32()
+u32 BinaryReader::ReadUInt32()
 {
     return Read<u32>();
 }
 
-u16 tmt::fs::BinaryReader::ReadUInt16()
+u16 BinaryReader::ReadUInt16()
 {
     return Read<u16>();
 }
 
-s16 tmt::fs::BinaryReader::ReadInt16()
+s16 BinaryReader::ReadInt16()
 {
     return Read<s16>();
 }
 
-s32 tmt::fs::BinaryReader::ReadInt32()
+s32 BinaryReader::ReadInt32()
 {
     return Read<s32>();
 }
 
-s64 tmt::fs::BinaryReader::ReadInt64()
+s64 BinaryReader::ReadInt64()
 {
     return Read<s64>();
 }
 
-tmt::fs::BinaryReader::ByteOrder tmt::fs::BinaryReader::ReadByteOrder()
+BinaryReader::ByteOrder BinaryReader::ReadByteOrder()
 {
     byteOrder = BigEndian;
     var bom = Read<ByteOrder>();
@@ -114,18 +116,18 @@ tmt::fs::BinaryReader::ByteOrder tmt::fs::BinaryReader::ReadByteOrder()
     return bom;
 }
 
-unsigned char tmt::fs::BinaryReader::ReadByte()
+unsigned char BinaryReader::ReadByte()
 {
     return Read<unsigned char>();
 }
 
-u32 tmt::fs::BinaryReader::ReadOffset()
+u32 BinaryReader::ReadOffset()
 {
     var offset = static_cast<u32>(ReadUInt64());
     return offset == 0 ? 0 : offset;
 }
 
-string tmt::fs::BinaryReader::ReadString(int size)
+string BinaryReader::ReadString(int size)
 {
     string s = "";
 
@@ -137,7 +139,7 @@ string tmt::fs::BinaryReader::ReadString(int size)
     return s;
 }
 
-string tmt::fs::BinaryReader::ReadString()
+string BinaryReader::ReadString()
 {
     var size = ReadInt32();
     return ReadString(size);
@@ -145,21 +147,17 @@ string tmt::fs::BinaryReader::ReadString()
 
 ResourceManager* ResourceManager::pInstance;
 
-tmt::fs::ResourceManager::ResourceManager() { pInstance = this; }
+ResourceManager::ResourceManager() { pInstance = this; }
 
-tmt::audio::Sound* tmt::fs::ResourceManager::_GetSound(string path, audio::Sound::SoundInitInfo info)
+tmt::audio::Sound* ResourceManager::_GetSound(string path, audio::Sound::SoundInitInfo info)
 {
-    if (loaded_sounds.find(path) != loaded_sounds.end())
-{
+    if (loaded_sounds.contains(path))
+    {
         return loaded_sounds[path];
-}
-else
-{
-
-    var sound = new tmt::audio::Sound(path, info);
+    }
+    var sound = new audio::Sound(path, info);
     loaded_sounds[path] = sound;
     return sound;
-}
 }
 
 void ResourceManager::ReloadShaders()

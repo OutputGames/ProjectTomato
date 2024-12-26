@@ -1,28 +1,29 @@
 #ifndef PRIM_H
 #define PRIM_H
 
-#include "utils.hpp" 
+#include "utils.hpp"
 
 
-
-namespace tmt::render {
- struct Mesh;
- }
-
-
-namespace tmt::prim {
-
-enum PrimitiveType;
-
-enum PrimitiveType
+namespace tmt::render
 {
-    Quad,
-    Cube,
-    Sphere,
-};
+    struct Mesh;
+}
 
-render::Mesh *GetPrimitive(PrimitiveType type);
-;
+
+namespace tmt::prim
+{
+
+    enum PrimitiveType;
+
+    enum PrimitiveType
+    {
+        Quad,
+        Cube,
+        Sphere,
+    };
+
+    render::Mesh* GetPrimitive(PrimitiveType type);
+    ;
 
 }
 

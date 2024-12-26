@@ -1,4 +1,4 @@
-#include "render.hpp" 
+#include "render.hpp"
 #include "globals.hpp"
 #include "vertex.h"
 #include "common/imgui/imgui.h"
@@ -8,50 +8,55 @@
 using namespace tmt::render;
 
 RendererInfo* RendererInfo::GetRendererInfo()
-{ return renderer; }
+{
+    return renderer;
+}
 
-void tmt::render::ShaderUniform::Use()
+void ShaderUniform::Use()
 {
     switch (type)
     {
-    case bgfx::UniformType::Sampler:
-        if (tex)
-        {
-            setTexture(0, handle, tex->handle);
-        }
-        break;
-    case bgfx::UniformType::End:
-        break;
-    case bgfx::UniformType::Vec4:
-        setUniform(handle, math::vec4toArray(v4));
-        break;
-    case bgfx::UniformType::Mat3:
-        setUniform(handle, math::mat3ToArray(m3));
-        break;
-    case bgfx::UniformType::Mat4: {
-        float m[4][4];
-        for (int x = 0; x < 4; ++x)
-        {
-            for (int y = 0; y < 4; ++y)
+        case bgfx::UniformType::Sampler:
+            if (tex)
             {
-                m[x][y] = m4[x][y];
+                setTexture(0, handle, tex->handle);
             }
-        }
+            break;
+        case bgfx::UniformType::End:
+            break;
+        case bgfx::UniformType::Vec4:
+            setUniform(handle, math::vec4toArray(v4));
+            break;
+        case bgfx::UniformType::Mat3:
+            setUniform(handle, math::mat3ToArray(m3));
+            break;
+        case bgfx::UniformType::Mat4:
+        {
+            float m[4][4];
+            for (int x = 0; x < 4; ++x)
+            {
+                for (int y = 0; y < 4; ++y)
+                {
+                    m[x][y] = m4[x][y];
+                }
+            }
 
-        setUniform(handle, m);
-    }
-    break;
-    case bgfx::UniformType::Count:
+            setUniform(handle, m);
+        }
         break;
-    default:
-        break;
+        case bgfx::UniformType::Count:
+            break;
+        default:
+            break;
     }
 }
 
-tmt::render::ShaderUniform::~ShaderUniform()
-{ bgfx::destroy(handle); }
+ShaderUniform::~ShaderUniform()
+{
+    destroy(handle);
+}
 
-tmt::render::SubShader::SubShader(string name, ShaderType type)
+SubShader::SubShader(string name, ShaderType type)
 {
 
     this->name = name;
@@ -61,7 +66,7 @@ tmt::render::SubShader::SubShader(string name, ShaderType type)
     fs::ResourceManager::pInstance->loaded_sub_shaders[name] = this;
 }
 
-tmt::render::ShaderUniform *tmt::render::SubShader::GetUniform(string name)
+ShaderUniform* SubShader::GetUniform(string name)
 {
     for (var uni : uniforms)
     {
@@ -76,7 +81,7 @@ void SubShader::Reload()
 {
     if (isLoaded)
     {
-        bgfx::destroy(handle);
+        destroy(handle);
         uniforms.clear();
     }
     isLoaded = true;
@@ -125,7 +130,7 @@ void SubShader::Reload()
         case Compute:
             shaderPath += ".ccbsh";
             break;
-            // default: shaderPath += ".cbsh"; break;
+        // default: shaderPath += ".cbsh"; break;
     }
 
     std::ifstream in(shaderPath, std::ifstream::ate | std::ifstream::binary);
@@ -175,19 +180,19 @@ void SubShader::Reload()
         }
     }
 
-    bgfx::setName(handle, name.c_str());
+    setName(handle, name.c_str());
 }
 
-tmt::render::SubShader::~SubShader()
+SubShader::~SubShader()
 {
-    bgfx::destroy(handle);
+    destroy(handle);
     for (auto uniform : uniforms)
     {
         delete uniform;
     }
 }
 
-tmt::render::SubShader* tmt::render::SubShader::CreateSubShader(string name, ShaderType type)
+SubShader* SubShader::CreateSubShader(string name, ShaderType type)
 {
     if (IN_VECTOR(fs::ResourceManager::pInstance->loaded_sub_shaders, name))
     {
@@ -197,7 +202,7 @@ tmt::render::SubShader* tmt::render::SubShader::CreateSubShader(string name, Sha
     return new SubShader(name, type);
 }
 
-tmt::render::Shader::Shader(ShaderInitInfo info)
+Shader::Shader(ShaderInitInfo info)
 {
     program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, true);
 
@@ -207,7 +212,7 @@ tmt::render::Shader::Shader(ShaderInitInfo info)
     ResMgr->loaded_shaders[info.name] = this;
 }
 
-void tmt::render::Shader::Push(int viewId, MaterialOverride **overrides, size_t oc)
+void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
 {
     std::map<std::string, MaterialOverride> m_overrides;
 
@@ -245,9 +250,9 @@ void tmt::render::Shader::Push(int viewId, MaterialOverride **overrides, size_t 
     submit(viewId, program);
 }
 
-tmt::render::Shader::~Shader()
+Shader::~Shader()
 {
-    bgfx::destroy(program);
+    destroy(program);
     for (var shader : subShaders)
     {
         delete shader;
@@ -258,7 +263,7 @@ void Shader::Reload()
 {
     if (bgfx::isValid(program))
     {
-            bgfx::destroy(program);
+        destroy(program);
     }
 
     for (auto sub_shader : subShaders)
@@ -266,26 +271,26 @@ void Shader::Reload()
         sub_shader->Reload();
     }
 
-    program = bgfx::createProgram(subShaders[0]->handle, subShaders[1]->handle, true);
+    program = createProgram(subShaders[0]->handle, subShaders[1]->handle, true);
 }
 
-tmt::render::Shader* tmt::render::Shader::CreateShader(ShaderInitInfo info)
+Shader* Shader::CreateShader(ShaderInitInfo info)
 {
     if (info.name == "UNDEFINED")
     {
         std::hash<string> hsh;
-        info.name = hsh(info.fragmentProgram->name + "_"+info.vertexProgram->name);
+        info.name = hsh(info.fragmentProgram->name + "_" + info.vertexProgram->name);
     }
 
     if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
     {
-       return ResMgr->loaded_shaders[info.name];
+        return ResMgr->loaded_shaders[info.name];
     }
 
     return new Shader(info);
 }
 
-tmt::render::ComputeShader::ComputeShader(SubShader *shader)
+ComputeShader::ComputeShader(SubShader* shader)
 {
     program = createProgram(shader->handle, true);
     internalShader = shader;
@@ -293,7 +298,7 @@ tmt::render::ComputeShader::ComputeShader(SubShader *shader)
     ResMgr->loaded_compute_shaders[shader->name + "_CMP"] = this;
 }
 
-void tmt::render::ComputeShader::SetUniform(string name, bgfx::UniformType::Enum type, const void *data)
+void ComputeShader::SetUniform(string name, bgfx::UniformType::Enum type, const void* data)
 {
     var uni = createUniform(name.c_str(), type);
 
@@ -302,7 +307,7 @@ void tmt::render::ComputeShader::SetUniform(string name, bgfx::UniformType::Enum
     destroy(uni);
 }
 
-void tmt::render::ComputeShader::SetMat4(string name, glm::mat4 m)
+void ComputeShader::SetMat4(string name, glm::mat4 m)
 {
     // internalShader->GetUniform()
     for (int i = 0; i < 4; ++i)
@@ -311,7 +316,7 @@ void tmt::render::ComputeShader::SetMat4(string name, glm::mat4 m)
     }
 }
 
-void tmt::render::ComputeShader::Run(int vid, glm::vec3 groups)
+void ComputeShader::Run(int vid, glm::vec3 groups)
 {
     for (var uni : internalShader->uniforms)
     {
@@ -321,13 +326,13 @@ void tmt::render::ComputeShader::Run(int vid, glm::vec3 groups)
     dispatch(vid, program, groups.x, groups.y, groups.z);
 }
 
-tmt::render::ComputeShader::~ComputeShader()
+ComputeShader::~ComputeShader()
 {
-    bgfx::destroy(program);
+    destroy(program);
     delete internalShader;
 }
 
-tmt::render::ComputeShader* tmt::render::ComputeShader::CreateComputeShader(SubShader* shader)
+ComputeShader* ComputeShader::CreateComputeShader(SubShader* shader)
 {
     if (IN_VECTOR(ResMgr->loaded_compute_shaders, shader->name+"_CMP"))
     {
@@ -337,7 +342,7 @@ tmt::render::ComputeShader* tmt::render::ComputeShader::CreateComputeShader(SubS
     return new ComputeShader(shader);
 }
 
-tmt::render::MaterialOverride *tmt::render::Material::GetUniform(string name, bool force)
+MaterialOverride* Material::GetUniform(string name, bool force)
 {
     for (auto override : overrides)
         if (override->name == name)
@@ -356,7 +361,7 @@ tmt::render::MaterialOverride *tmt::render::Material::GetUniform(string name, bo
     return nullptr;
 }
 
-u64 tmt::render::Material::GetMaterialState()
+u64 Material::GetMaterialState()
 {
     u64 v = state.cull;
     v |= state.depth;
@@ -365,12 +370,12 @@ u64 tmt::render::Material::GetMaterialState()
     return v;
 }
 
-tmt::render::Material::Material(Shader *shader)
+Material::Material(Shader* shader)
 {
     Reload(shader);
 }
 
-void tmt::render::Material::Reload(Shader *shader)
+void Material::Reload(Shader* shader)
 {
     if (shader)
     {
@@ -388,30 +393,32 @@ void tmt::render::Material::Reload(Shader *shader)
     }
 }
 
-tmt::render::Material::~Material()
-{ delete[] overrides.data(); }
-
-tmt::render::Mesh::~Mesh()
+Material::~Material()
 {
-    bgfx::destroy(ibh);
-    bgfx::destroy(vbh);
+    delete[] overrides.data();
+}
+
+Mesh::~Mesh()
+{
+    destroy(ibh);
+    destroy(vbh);
     for (auto vertex_buffer : vertexBuffers)
     {
-        bgfx::destroy(vertex_buffer);
+        destroy(vertex_buffer);
     }
-    bgfx::destroy(indexBuffer);
+    destroy(indexBuffer);
 
     delete[] vertices;
     delete[] indices;
 }
 
-void tmt::render::Mesh::use()
+void Mesh::use()
 {
     setVertexBuffer(0, vbh, 0, vertexCount);
-    bgfx::setIndexBuffer(ibh, 0, indexCount);
+    setIndexBuffer(ibh, 0, indexCount);
 }
 
-void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vector<glm::mat4> anims)
+void Mesh::draw(glm::mat4 transform, Material* material, std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
 
@@ -437,7 +444,7 @@ void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vecto
         drawCall.transformMatrices[i + 1] = GetMatrixArray(glm::mat4(1.0));
     }
     */
-    
+
 
     drawCall.matrixCount = anims.size();
 
@@ -453,7 +460,7 @@ void tmt::render::Mesh::draw(glm::mat4 transform, Material *material, std::vecto
     pushDrawCall(drawCall);
 }
 
-tmt::render::Texture* tmt::render::Model::GetTextureFromName(string name)
+Texture* Model::GetTextureFromName(string name)
 {
 
     for (Texture* tex : textures)
@@ -465,12 +472,12 @@ tmt::render::Texture* tmt::render::Model::GetTextureFromName(string name)
     return nullptr;
 }
 
-tmt::render::Material* tmt::render::Model::CreateMaterial(int index, Shader* shader)
+Material* Model::CreateMaterial(int index, Shader* shader)
 {
     return CreateMaterial(materials[index], shader);
 }
 
-tmt::render::Material* tmt::render::Model::CreateMaterial(MaterialDescription* materialDesc, Shader* shader)
+Material* Model::CreateMaterial(MaterialDescription* materialDesc, Shader* shader)
 {
     var material = new Material(shader);
 
@@ -484,7 +491,7 @@ tmt::render::Material* tmt::render::Model::CreateMaterial(MaterialDescription* m
     return material;
 }
 
-tmt::render::Animation* tmt::render::Model::GetAnimation(string name)
+Animation* Model::GetAnimation(string name)
 {
     for (auto animation : animations)
     {
@@ -494,7 +501,7 @@ tmt::render::Animation* tmt::render::Model::GetAnimation(string name)
     return nullptr;
 }
 
-void tmt::render::SceneDescription::Node::SetParent(Node* parent)
+void SceneDescription::Node::SetParent(Node* parent)
 {
     if (this->parent)
     {
@@ -508,13 +515,15 @@ void tmt::render::SceneDescription::Node::SetParent(Node* parent)
         this->parent = parent;
         this->parent->children.push_back(this);
     }
-    
+
 }
 
-void tmt::render::SceneDescription::Node::AddChild(Node* child)
-{ child->SetParent(this); }
+void SceneDescription::Node::AddChild(Node* child)
+{
+    child->SetParent(this);
+}
 
-tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescription* scene)
+SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescription* scene)
 {
     name = reader->ReadString();
 
@@ -542,7 +551,7 @@ tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescrip
         }
     }
 
-    isBone = reader->ReadInt32() == 0 ? true : false;
+    isBone = reader->ReadInt32() == 0;
 
     var childCount = reader->ReadInt32();
 
@@ -552,7 +561,7 @@ tmt::render::SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescrip
     }
 }
 
-tmt::render::SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
+SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
 {
     name = node->mName.C_Str();
     glm::quat rot;
@@ -576,7 +585,7 @@ tmt::render::SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
 
 }
 
-tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNode(string name)
+SceneDescription::Node* SceneDescription::Node::GetNode(string name)
 {
     if (this->name == name)
         return this;
@@ -589,12 +598,12 @@ tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNod
     return nullptr;
 }
 
-tmt::render::SceneDescription::Node* tmt::render::SceneDescription::GetNode(string name)
+SceneDescription::Node* SceneDescription::GetNode(string name)
 {
     return rootNode->GetNode(name);
 }
 
-tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNode(aiNode* node)
+SceneDescription::Node* SceneDescription::Node::GetNode(aiNode* node)
 {
     {
         bool p = true;
@@ -618,7 +627,7 @@ tmt::render::SceneDescription::Node* tmt::render::SceneDescription::Node::GetNod
     return nullptr;
 }
 
-tmt::render::Model* tmt::render::SceneDescription::GetModel(string name)
+Model* SceneDescription::GetModel(string name)
 {
     for (auto model : models)
     {
@@ -629,12 +638,12 @@ tmt::render::Model* tmt::render::SceneDescription::GetModel(string name)
     return nullptr;
 }
 
-tmt::render::Mesh* tmt::render::SceneDescription::GetMesh(int idx)
+Mesh* SceneDescription::GetMesh(int idx)
 {
     var offset = 0;
     for (Model* model : models)
     {
-        if (idx >= model->meshes.size()+offset)
+        if (idx >= model->meshes.size() + offset)
         {
             offset += model->meshes.size();
             continue;
@@ -646,19 +655,19 @@ tmt::render::Mesh* tmt::render::SceneDescription::GetMesh(int idx)
     return nullptr;
 }
 
-tmt::render::SceneDescription::Node* tmt::render::SceneDescription::GetNode(aiNode* node)
+SceneDescription::Node* SceneDescription::GetNode(aiNode* node)
 {
     return rootNode->GetNode(node);
 }
 
-std::vector<tmt::render::SceneDescription::Node*> tmt::render::SceneDescription::GetAllChildren()
+std::vector<SceneDescription::Node*> SceneDescription::GetAllChildren()
 {
     return rootNode->GetAllChildren();
 }
 
-tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
+tmt::obj::Object* SceneDescription::Node::ToObject(int modelIndex)
 {
-    var obj = new tmt::obj::Object();
+    var obj = new obj::Object();
 
     obj->name = name;
     obj->position = position;
@@ -668,7 +677,7 @@ tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
     for (int mesh_index : meshIndices)
     {
         var mesh = scene->GetMesh(mesh_index);
-        var mshObj = tmt::obj::MeshObject::FromBasicMesh(mesh);
+        var mshObj = obj::MeshObject::FromBasicMesh(mesh);
         mshObj->name = "Mesh";
         mshObj->material = mesh->model->CreateMaterial(mesh->model->materialIndices[mesh_index], defaultShader);
         mshObj->SetParent(obj);
@@ -715,7 +724,7 @@ tmt::obj::Object* tmt::render::SceneDescription::Node::ToObject(int modelIndex)
     return obj;
 }
 
-std::vector<tmt::render::SceneDescription::Node*> tmt::render::SceneDescription::Node::GetAllChildren()
+std::vector<SceneDescription::Node*> SceneDescription::Node::GetAllChildren()
 {
     var c = std::vector<Node*>(children);
 
@@ -729,7 +738,7 @@ std::vector<tmt::render::SceneDescription::Node*> tmt::render::SceneDescription:
 
 }
 
-tmt::render::SceneDescription::SceneDescription(string path)
+SceneDescription::SceneDescription(string path)
 {
     if (path.ends_with(".tmdl"))
     {
@@ -757,7 +766,8 @@ tmt::render::SceneDescription::SceneDescription(string path)
     {
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
-                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_PopulateArmatureData | aiProcess_ValidateDataStructure);
+                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
+                                               aiProcess_PopulateArmatureData | aiProcess_ValidateDataStructure);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -784,18 +794,18 @@ tmt::render::SceneDescription::SceneDescription(string path)
     }
 }
 
-tmt::obj::Object* tmt::render::SceneDescription::ToObject()
+tmt::obj::Object* SceneDescription::ToObject()
 {
 
     return rootNode->ToObject();
 }
 
-tmt::render::SceneDescription::~SceneDescription()
+SceneDescription::~SceneDescription()
 {
     delete[] models.data();
 }
 
-int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
+int BoneObject::Load(SceneDescription::Node* node, int count)
 {
     for (auto child : node->children)
     {
@@ -815,7 +825,7 @@ int tmt::render::BoneObject::Load(SceneDescription::Node* node, int count)
     return count;
 }
 
-glm::mat4 tmt::render::BoneObject::GetGlobalOffsetMatrix()
+glm::mat4 BoneObject::GetGlobalOffsetMatrix()
 {
     var offset = GetOffsetMatrix();
 
@@ -835,14 +845,15 @@ glm::mat4 tmt::render::BoneObject::GetGlobalOffsetMatrix()
 glm::mat4 Skeleton::Bone::GetTransformation()
 {
     if (transformation == glm::mat4(-1))
-{
+    {
         transformation =
-        glm::translate(glm::mat4(1.0), position) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
+            translate(glm::mat4(1.0), position) * toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
     }
-return transformation;
+    return transformation;
 }
 
-glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
+glm::mat4 BoneObject::GetOffsetMatrix()
+{
     glm::mat4 offset(1.0);
     if (bone != nullptr)
     {
@@ -851,7 +862,7 @@ glm::mat4 tmt::render::BoneObject::GetOffsetMatrix() {
     return offset;
 }
 
-void tmt::render::SkeletonObject::Load(SceneDescription::Node* node)
+void SkeletonObject::Load(SceneDescription::Node* node)
 {
     name = node->name;
     var ct = -1;
@@ -873,7 +884,7 @@ void tmt::render::SkeletonObject::Load(SceneDescription::Node* node)
     bones = GetObjectsFromType<BoneObject>();
 }
 
-tmt::render::BoneObject* tmt::render::SkeletonObject::GetBone(string name)
+BoneObject* SkeletonObject::GetBone(string name)
 {
     for (auto bone : bones)
     {
@@ -884,7 +895,7 @@ tmt::render::BoneObject* tmt::render::SkeletonObject::GetBone(string name)
     return nullptr;
 }
 
-bool tmt::render::SkeletonObject::IsSkeletonBone(BoneObject* bone)
+bool SkeletonObject::IsSkeletonBone(BoneObject* bone)
 {
     return std::find(bones.begin(), bones.end(), bone) != bones.end();
 }
@@ -895,7 +906,7 @@ Animator::Animator()
 
 }
 
-glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
+glm::mat4 Animator::AnimationBone::Update(float animationTime)
 {
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
@@ -905,7 +916,7 @@ glm::mat4 tmt::render::Animator::AnimationBone::Update(float animationTime)
     return localTransform;
 }
 
-int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
+int Animator::AnimationBone::GetPositionIndex(float animationTime)
 {
     for (int index = 0; index < channel->positions.size() - 1; ++index)
     {
@@ -915,7 +926,7 @@ int tmt::render::Animator::AnimationBone::GetPositionIndex(float animationTime)
     assert(0);
 }
 
-int tmt::render::Animator::AnimationBone::GetRotationIndex(float animationTime)
+int Animator::AnimationBone::GetRotationIndex(float animationTime)
 {
     for (int index = 0; index < channel->rotations.size() - 1; ++index)
     {
@@ -925,7 +936,7 @@ int tmt::render::Animator::AnimationBone::GetRotationIndex(float animationTime)
     assert(0);
 }
 
-int tmt::render::Animator::AnimationBone::GetScaleIndex(float animationTime)
+int Animator::AnimationBone::GetScaleIndex(float animationTime)
 {
     for (int index = 0; index < channel->scales.size() - 1; ++index)
     {
@@ -935,7 +946,7 @@ int tmt::render::Animator::AnimationBone::GetScaleIndex(float animationTime)
     assert(0);
 }
 
-float tmt::render::Animator::AnimationBone::GetScaleFactor(float lasttime, float nexttime, float animationTime)
+float Animator::AnimationBone::GetScaleFactor(float lasttime, float nexttime, float animationTime)
 {
     float scaleFactor = 0.0f;
     float midWayLength = animationTime - lasttime;
@@ -944,12 +955,12 @@ float tmt::render::Animator::AnimationBone::GetScaleFactor(float lasttime, float
     return scaleFactor;
 }
 
-glm::mat4 tmt::render::Animator::AnimationBone::InterpolatePosition(float animationTime)
+glm::mat4 Animator::AnimationBone::InterpolatePosition(float animationTime)
 {
     if (1 == channel->positions.size())
     {
         var finalPosition = channel->positions[0]->value;
-        return glm::translate(glm::mat4(1.0f), finalPosition);
+        return translate(glm::mat4(1.0f), finalPosition);
     }
 
     int p0Index = GetPositionIndex(animationTime);
@@ -957,16 +968,16 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolatePosition(float animat
     float scaleFactor =
         GetScaleFactor(channel->positions[p0Index]->time, channel->positions[p1Index]->time, animationTime);
     glm::vec3 finalPosition =
-        glm::mix(channel->positions[p0Index]->value, channel->positions[p1Index]->value, scaleFactor);
-    return glm::translate(glm::mat4(1.0f), finalPosition);
+        mix(channel->positions[p0Index]->value, channel->positions[p1Index]->value, scaleFactor);
+    return translate(glm::mat4(1.0f), finalPosition);
 }
 
-glm::mat4 tmt::render::Animator::AnimationBone::InterpolateRotation(float animationTime)
+glm::mat4 Animator::AnimationBone::InterpolateRotation(float animationTime)
 {
     if (1 == channel->rotations.size())
     {
-        auto finalRotation = glm::normalize(channel->rotations[0]->value);
-        return glm::toMat4(finalRotation);
+        auto finalRotation = normalize(channel->rotations[0]->value);
+        return toMat4(finalRotation);
     }
 
     int p0Index = GetRotationIndex(animationTime);
@@ -975,11 +986,11 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolateRotation(float animat
         GetScaleFactor(channel->rotations[p0Index]->time, channel->rotations[p1Index]->time, animationTime);
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index]->value, channel->rotations[p1Index]->value, scaleFactor);
-    finalRotation = glm::normalize(finalRotation);
-    return glm::toMat4(finalRotation);
+    finalRotation = normalize(finalRotation);
+    return toMat4(finalRotation);
 }
 
-glm::mat4 tmt::render::Animator::AnimationBone::InterpolateScaling(float animationTime)
+glm::mat4 Animator::AnimationBone::InterpolateScaling(float animationTime)
 {
     if (1 == channel->scales.size())
     {
@@ -991,7 +1002,7 @@ glm::mat4 tmt::render::Animator::AnimationBone::InterpolateScaling(float animati
     int p1Index = p0Index + 1;
     float scaleFactor =
         GetScaleFactor(channel->scales[p0Index]->time, channel->scales[p1Index]->time, animationTime);
-    glm::vec3 finalScale = glm::mix(channel->scales[p0Index]->value, channel->scales[p1Index]->value, scaleFactor);
+    glm::vec3 finalScale = mix(channel->scales[p0Index]->value, channel->scales[p1Index]->value, scaleFactor);
     return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
@@ -1006,7 +1017,7 @@ Animator::AnimationBone* Animator::GetBone(string name)
     return nullptr;
 }
 
-void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentTransform)
+void BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentTransform)
 {
     if (bone == nullptr)
     {
@@ -1024,7 +1035,7 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, cons
     glm::mat4 globalTransformation = parentTransform * nodeTransform;
 
     auto boneInfoMap = skeleton->skeleton->boneInfoMap;
-    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    if (boneInfoMap.contains(nodeName))
     {
         int index = boneInfoMap[nodeName].id;
         glm::mat4 offset = boneInfoMap[nodeName].offset;
@@ -1041,16 +1052,16 @@ void tmt::render::BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, cons
     }
 }
 
-void tmt::render::Animator::Update()
+void Animator::Update()
 {
     if (!skeleton)
     {
         skeleton = parent->GetObjectFromType<SkeletonObject>();
     }
 
-    if (currentAnimation && skeleton) 
+    if (currentAnimation && skeleton)
     {
-        time += (flt currentAnimation->ticksPerSecond) * (deltaTime);
+        time += static_cast<float>(currentAnimation->ticksPerSecond) * (deltaTime);
         time = fmod(time, currentAnimation->duration);
         if (currentAnimation->duration <= 0)
             time = 0;
@@ -1077,10 +1088,10 @@ void tmt::render::Animator::Update()
     Object::Update();
 }
 
-void tmt::render::Animator::LoadAnimationBones()
+void Animator::LoadAnimationBones()
 {
 
-        if (!skeleton)
+    if (!skeleton)
     {
         skeleton = parent->GetObjectFromType<SkeletonObject>();
     }
@@ -1111,7 +1122,7 @@ void Animator::SetAnimation(Animation* animation)
     LoadAnimationBones();
 }
 
-void tmt::render::SkeletonObject::Update()
+void SkeletonObject::Update()
 {
 
     boneMatrices.clear();
@@ -1130,7 +1141,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
     int idx = 0;
 
     var boneInfoMap = skeleton->boneInfoMap;
-    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    if (boneInfoMap.contains(nodeName))
     {
         idx = boneInfoMap[nodeName].id;
     }
@@ -1145,7 +1156,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
-    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    if (boneInfoMap.contains(nodeName))
     {
         var index = boneInfoMap[nodeName].id;
         glm::mat4 offset = boneInfoMap[nodeName].offset;
@@ -1178,7 +1189,7 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
     var boneInfoMap = skeleton->skeleton->boneInfoMap;
-    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    if (boneInfoMap.contains(nodeName))
     {
         var index = boneInfoMap[nodeName].id;
         glm::mat4 offset = boneInfoMap[nodeName].offset;
@@ -1196,7 +1207,7 @@ void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4
 }
 
 
-tmt::render::Model::Model(string path)
+Model::Model(string path)
 {
     if (path.ends_with(".tmdl"))
     {
@@ -1212,7 +1223,8 @@ tmt::render::Model::Model(string path)
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
                                                aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
-                                                   aiProcess_FindInvalidData | aiProcess_PreTransformVertices | aiProcess_PopulateArmatureData | aiProcess_GenUVCoords );
+                                               aiProcess_FindInvalidData | aiProcess_PreTransformVertices |
+                                               aiProcess_PopulateArmatureData | aiProcess_GenUVCoords);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -1224,7 +1236,7 @@ tmt::render::Model::Model(string path)
     }
 }
 
-tmt::render::Skeleton::Bone* tmt::render::Skeleton::GetBone(string name)
+Skeleton::Bone* Skeleton::GetBone(string name)
 {
     for (auto value : bones)
     {
@@ -1235,18 +1247,22 @@ tmt::render::Skeleton::Bone* tmt::render::Skeleton::GetBone(string name)
     return nullptr;
 }
 
-tmt::render::Model::Model(const aiScene *scene)
-{ LoadFromAiScene(scene); }
-
-tmt::render::Model::Model(const aiScene* scene, SceneDescription* description)
-{ LoadFromAiScene(scene, description); }
-
-void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
+Model::Model(const aiScene* scene)
 {
-    name = "TMDL_"+std::string(scene->mName.C_Str());
+    LoadFromAiScene(scene);
+}
+
+Model::Model(const aiScene* scene, SceneDescription* description)
+{
+    LoadFromAiScene(scene, description);
+}
+
+void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
+{
+    name = "TMDL_" + std::string(scene->mName.C_Str());
     skeleton = new Skeleton();
 
-    skeleton->inverseTransform = tmt::math::convertMat4(scene->mRootNode->mTransformation.Inverse());
+    skeleton->inverseTransform = math::convertMat4(scene->mRootNode->mTransformation.Inverse());
 
 
     SceneDescription::Node* modelNode;
@@ -1297,7 +1313,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             int boneId = -1;
             string boneName = b->mName.C_Str();
 
-            if (skeleton->boneInfoMap.find(boneName) == skeleton->boneInfoMap.end())
+            if (!skeleton->boneInfoMap.contains(boneName))
             {
                 BoneInfo boneInfo;
                 boneInfo.id = skeleton->boneInfoMap.size();
@@ -1352,10 +1368,10 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             }
         }
 
-        Vertex* verts = new Vertex[vertices.size()];
+        auto verts = new Vertex[vertices.size()];
         std::copy(vertices.begin(), vertices.end(), verts);
 
-        u16* incs = new u16[indices.size()];
+        auto incs = new u16[indices.size()];
         std::copy(indices.begin(), indices.end(), incs);
 
         var mesh = createMesh(verts, incs, vertices.size(), indices.size(), Vertex::getVertexLayout(), this);
@@ -1364,8 +1380,8 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
         materialIndices.push_back(msh->mMaterialIndex);
 
 
-
-        if (description) {
+        if (description)
+        {
             var mnd = description->GetNode(msh->mName.C_Str());
 
             var meshNode = new SceneDescription::Node;
@@ -1424,7 +1440,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
         var animation = new Animation();
         animation->name = anim->mName.C_Str();
-        animation->duration = flt anim->mDuration;
+        animation->duration = static_cast<float>(anim->mDuration);
         animation->ticksPerSecond = static_cast<int>(anim->mTicksPerSecond);
 
         for (int i = 0; i < anim->mNumChannels; ++i)
@@ -1436,19 +1452,25 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
             for (int i = 0; i < channel->mNumPositionKeys; ++i)
             {
                 var posKey = channel->mPositionKeys[i];
-                nodeChannel->positions.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
+                nodeChannel->positions.push_back(
+                    new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime),
+                                                                   math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumScalingKeys; ++i)
             {
                 var posKey = channel->mScalingKeys[i];
-                nodeChannel->scales.push_back(new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime), math::convertVec3(posKey.mValue)));
+                nodeChannel->scales.push_back(
+                    new Animation::NodeChannel::NodeKey<glm::vec3>(static_cast<float>(posKey.mTime),
+                                                                   math::convertVec3(posKey.mValue)));
             }
 
             for (int i = 0; i < channel->mNumRotationKeys; ++i)
             {
                 var posKey = channel->mRotationKeys[i];
-                nodeChannel->rotations.push_back(new Animation::NodeChannel::NodeKey<glm::quat>(static_cast<float>(posKey.mTime), math::convertQuat(posKey.mValue)));
+                nodeChannel->rotations.push_back(
+                    new Animation::NodeChannel::NodeKey<glm::quat>(static_cast<float>(posKey.mTime),
+                                                                   math::convertQuat(posKey.mValue)));
             }
 
             animation->nodeChannels.push_back(nodeChannel);
@@ -1460,7 +1482,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
     for (int i = 0; i < scene->mNumSkeletons; ++i)
     {
         var skl = scene->mSkeletons[i];
-        
+
 
         break;
     }
@@ -1504,7 +1526,7 @@ void tmt::render::Model::LoadFromAiScene(const aiScene* scene, SceneDescription*
 
 }
 
-tmt::render::Model::~Model()
+Model::~Model()
 {
     delete[] meshes.data();
     delete[] textures.data();
@@ -1514,7 +1536,7 @@ tmt::render::Model::~Model()
     delete skeleton;
 }
 
-tmt::render::Model::Model(fs::BinaryReader* reader, SceneDescription* description)
+Model::Model(fs::BinaryReader* reader, SceneDescription* description)
 {
     var tmdlSig = reader->ReadString(4);
 
@@ -1564,7 +1586,8 @@ tmt::render::Model::Model(fs::BinaryReader* reader, SceneDescription* descriptio
                 var weightCount = reader->ReadInt32();
                 var weights = reader->ReadArray<float>(weightCount);
 
-                Vertex vtx = {p, n, u, math::convertIVec4(boneIds, boneIdxCount), math::convertVec4(weights, weightCount)};
+                Vertex vtx = {p, n, u, math::convertIVec4(boneIds, boneIdxCount),
+                              math::convertVec4(weights, weightCount)};
                 vertices[i] = vtx;
             }
 
@@ -1672,7 +1695,7 @@ tmt::render::Model::Model(fs::BinaryReader* reader, SceneDescription* descriptio
     }
 }
 
-tmt::render::Animation::Animation(fs::BinaryReader* reader)
+Animation::Animation(fs::BinaryReader* reader)
 {
     var sig = reader->ReadString(4);
 
@@ -1723,7 +1746,7 @@ tmt::render::Animation::Animation(fs::BinaryReader* reader)
     }
 }
 
-tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
+Skeleton::Skeleton(fs::BinaryReader* reader)
 {
     reader->Skip(4);
     var boneCount = reader->ReadInt32();
@@ -1767,7 +1790,7 @@ tmt::render::Skeleton::Skeleton(fs::BinaryReader* reader)
     rootName = reader->ReadString();
 }
 
-tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
+tmt::obj::Object* Model::CreateObject(Shader* shdr)
 {
 
     var shader = shdr;
@@ -1781,17 +1804,17 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
 
     std::vector<Material*> mats;
 
-    
+
     for (auto materialDesc : this->materials)
     {
         mats.push_back(CreateMaterial(materialDesc, shader));
     }
-    
+
 
     var midx = 0;
     for (auto value : meshes)
     {
-        var mshObj = tmt::obj::MeshObject::FromBasicMesh(value);
+        var mshObj = obj::MeshObject::FromBasicMesh(value);
         mshObj->material = mats[materialIndices[midx]];
         mshObj->SetParent(mdlObj);
 
@@ -1801,7 +1824,7 @@ tmt::obj::Object* tmt::render::Model::CreateObject(Shader* shdr)
     return mdlObj;
 }
 
-tmt::render::Texture::Texture(string path, bool isCubemap)
+Texture::Texture(string path, bool isCubemap)
 {
 
     uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
@@ -1811,7 +1834,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         u8* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
         var dataSize = width * height * nrChannels;
-        unsigned char* rgbaData = new unsigned char[dataSize];
+        auto rgbaData = new unsigned char[dataSize];
 
         if (nrChannels == 3)
         {
@@ -1837,17 +1860,16 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
                 rgbaData[i * 4 + 3] = data[i * nrChannels + 3]; // Add alpha channel with value 1.0
             }
         }
-        
-        
+
 
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
 
         // Create the texture in bgfx, passing the image data directly
-        handle = bgfx::createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
-                                       textureFlags, bgfx::copy(data, dataSize));
+        handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
+                                 textureFlags, bgfx::copy(data, dataSize));
         format = textureFormat;
 
-        
+
         stbi_image_free(data);
     }
     else
@@ -1859,7 +1881,7 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA32F;
 
         u32 dataSize = width * height * 4;
-        float* rgbaData = new float[dataSize];
+        auto rgbaData = new float[dataSize];
         for (int i = 0; i < width * height; ++i)
         {
             rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
@@ -1879,21 +1901,20 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
                                           1, // single layer
                                           textureFormat, BGFX_SAMPLER_UVW_CLAMP,
                                           bgfx::copy(rgbaData, dataSize * sizeof(float)) // copies the image data
-        );
-        bgfx::setName(temp_handle, "basecbtex");
+            );
+        setName(temp_handle, "basecbtex");
 
         //var colorBuffer = new tmt::render::Texture(size, size, bgfx::TextureFormat::RGBA32F,BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_POINT);
 
-        var readBackShader = Shader::CreateShader(tmt::render::ShaderInitInfo{
-            SubShader::CreateSubShader("equi/vert", tmt::render::SubShader::Vertex),
-            SubShader::CreateSubShader("equi/frag", tmt::render::SubShader::Fragment),
+        var readBackShader = Shader::CreateShader(ShaderInitInfo{
+            SubShader::CreateSubShader("equi/vert", SubShader::Vertex),
+            SubShader::CreateSubShader("equi/frag", SubShader::Fragment),
         });
 
 
-
-        var cubemapHandle = bgfx::createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
-                                                    BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
-        bgfx::setName(cubemapHandle, "realcbtex");
+        var cubemapHandle = createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
+                                              BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
+        setName(cubemapHandle, "realcbtex");
 
         var cubeMapRenderTexture =
             new RenderTexture(size, size, bgfx::TextureFormat::RGBA16F, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
@@ -1902,17 +1923,17 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
         bgfx::setViewClear(vid, BGFX_CLEAR_DEPTH);
         bgfx::setViewRect(vid, 0, 0, size, size);
-        bgfx::setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
+        setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
         bgfx::touch(vid);
 
         glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
         glm::mat4 captureViews[] = {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
         for (uint8_t i = 0; i < 6; ++i)
         {
@@ -1920,17 +1941,17 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
             var proj = captureProjection;
             bgfx::setViewTransform(vid, math::mat4ToArray(view), math::mat4ToArray(proj));
 
-            prim::GetPrimitive(prim::Cube)->use();
+            GetPrimitive(prim::Cube)->use();
 
-            bgfx::setTexture(0, bgfx::createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
+            setTexture(0, createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
             bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
             //bgfx::setTransform(math::mat4ToArray(glm::scale(glm::vec3{2})));
 
             readBackShader->Push(vid);
 
             bgfx::touch(vid);
-            
-            bgfx::blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0, size, size);
+
+            blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0, size, size);
 
             //break;
         }
@@ -1938,17 +1959,17 @@ tmt::render::Texture::Texture(string path, bool isCubemap)
 
         handle = cubemapHandle;
 
-        
+
         stbi_image_free(data);
     }
 
 }
 
-tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory *mem, string name)
+Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory* mem, string name)
 {
     handle = createTexture2D(width, height, false, 1, tf, flags, mem);
 
-    bgfx::setName(handle, name.c_str());
+    setName(handle, name.c_str());
 
     format = tf;
     this->width = width;
@@ -1956,19 +1977,21 @@ tmt::render::Texture::Texture(int width, int height, bgfx::TextureFormat::Enum t
     this->name = name;
 }
 
-tmt::render::Texture::~Texture()
-{ bgfx::destroy(handle); }
-
-tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 cf)
+Texture::~Texture()
 {
-    const bgfx::Memory *mem = nullptr;
+    destroy(handle);
+}
+
+RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 cf)
+{
+    const bgfx::Memory* mem = nullptr;
     if (format == bgfx::TextureFormat::RGBA8)
     {
         // std::vector<GLubyte> pixels(width * height * 4, (GLubyte)0xffffffff);
         // mem = bgfx::copy(pixels.data(), width * height* 4);
     }
 
-    realTexture = new Texture(width, height, format,BGFX_TEXTURE_RT,mem);
+    realTexture = new Texture(width, height, format,BGFX_TEXTURE_RT, mem);
 
     handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;
@@ -1978,17 +2001,17 @@ tmt::render::RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFo
     bgfx::setViewRect(vid, 0, 0, width, height);
     setViewFrameBuffer(vid, handle);
 
-    
+
 }
 
-tmt::render::RenderTexture::~RenderTexture()
+RenderTexture::~RenderTexture()
 {
-    bgfx::destroy(handle);
+    destroy(handle);
     delete realTexture;
     bgfx::resetView(vid);
 }
 
-float *tmt::render::Camera::GetView()
+float* Camera::GetView()
 {
     var Front = GetFront();
     var Up = GetUp();
@@ -2001,26 +2024,29 @@ float *tmt::render::Camera::GetView()
     return view;
 }
 
-float const* tmt::render::Camera::GetProjection()
+const float* Camera::GetProjection()
 {
-    return glm::value_ptr(GetProjection_m4());
+    return value_ptr(GetProjection_m4());
 }
 
-glm::mat4 tmt::render::Camera::GetView_m4()
-{ return glm::lookAt(position, position + GetFront(), GetUp()); }
+glm::mat4 Camera::GetView_m4()
+{
+    return lookAt(position, position + GetFront(), GetUp());
+}
 
-glm::mat4 tmt::render::Camera::GetProjection_m4()
+glm::mat4 Camera::GetProjection_m4()
 {
     return glm::perspective(glm::radians(FOV),
-                            static_cast<float>(renderer -> windowWidth) / static_cast<float>(renderer->windowHeight), NearPlane, FarPlane);
+                            static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
+                            NearPlane, FarPlane);
 }
 
-glm::vec3 tmt::render::Camera::GetFront()
+glm::vec3 Camera::GetFront()
 {
-    return rotation * glm::vec3{0,0,1};
+    return rotation * glm::vec3{0, 0, 1};
 }
 
-glm::vec3 tmt::render::Camera::GetUp()
+glm::vec3 Camera::GetUp()
 {
     var Front = GetFront();
 
@@ -2032,31 +2058,31 @@ glm::vec3 tmt::render::Camera::GetUp()
     return Up;
 }
 
-tmt::render::Camera *tmt::render::Camera::GetMainCamera()
+Camera* Camera::GetMainCamera()
 {
     return mainCamera;
 }
 
-tmt::render::Camera::Camera()
+Camera::Camera()
 {
     mainCamera = this;
 }
 
-bgfx::VertexLayout tmt::render::Vertex::getVertexLayout()
+bgfx::VertexLayout Vertex::getVertexLayout()
 {
     var layout = bgfx::VertexLayout();
     layout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
-        .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
-    .end();
+          .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+          .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+          .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+          .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
+          .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
+          .end();
 
     return layout;
 }
 
-void tmt::render::Vertex::SetBoneData(int boneId, float boneWeight)
+void Vertex::SetBoneData(int boneId, float boneWeight)
 {
     for (int i = 0; i < 4; ++i)
     {
@@ -2069,7 +2095,7 @@ void tmt::render::Vertex::SetBoneData(int boneId, float boneWeight)
     }
 }
 
-tmt::render::MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
+MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
 {
     MatrixArray mat(16, 0.0f);
     for (int x = 0; x < 4; ++x)
@@ -2083,8 +2109,8 @@ tmt::render::MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
     return mat;
 }
 
-tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertCount, u32 triSize,
-                                           bgfx::VertexLayout layout, Model* model)
+Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 triSize,
+                              bgfx::VertexLayout layout, Model* model)
 {
     u32 stride = layout.getStride();
     u32 vertS = stride * vertCount;
@@ -2103,7 +2129,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
     }
 
     {
-        const bgfx::Memory *mem = bgfx::alloc(vertS);
+        const bgfx::Memory* mem = bgfx::alloc(vertS);
 
         bx::memCopy(mem->data, data, vertS);
 
@@ -2119,7 +2145,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
                 std::cout << "multiplication error" << std::endl;
             }
 
-            bgfx::setName(vbh, "test");
+            setName(vbh, "test");
         }
 
         auto positions = new glm::vec3[vertCount];
@@ -2156,7 +2182,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
         {
             var vsz = sizeof(glm::vec3) * vertCount;
 
-            const bgfx::Memory *vmem = bgfx::alloc(vsz);
+            const bgfx::Memory* vmem = bgfx::alloc(vsz);
 
             bx::memCopy(vmem->data, positions, vsz);
 
@@ -2168,7 +2194,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
         {
             var vsz = sizeof(glm::vec3) * vertCount;
 
-            const bgfx::Memory *vmem = bgfx::alloc(vsz);
+            const bgfx::Memory* vmem = bgfx::alloc(vsz);
 
             bx::memCopy(vmem->data, normals, vsz);
 
@@ -2179,7 +2205,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
         {
             var vsz = sizeof(glm::vec2) * vertCount;
 
-            const bgfx::Memory *vmem = bgfx::alloc(vsz);
+            const bgfx::Memory* vmem = bgfx::alloc(vsz);
 
             bx::memCopy(vmem->data, uvs, vsz);
 
@@ -2190,7 +2216,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
     }
 
     {
-        const bgfx::Memory *mem = bgfx::alloc(indeS);
+        const bgfx::Memory* mem = bgfx::alloc(indeS);
 
         bx::memCopy(mem->data, indices, indeS);
 
@@ -2199,7 +2225,7 @@ tmt::render::Mesh *tmt::render::createMesh(Vertex *data, u16 *indices, u32 vertC
         mesh->ibh = ibh;
         mesh->indexCount = triSize;
 
-        const bgfx::Memory *vmem = bgfx::alloc(indeS);
+        const bgfx::Memory* vmem = bgfx::alloc(indeS);
 
         bx::memCopy(vmem->data, indices, indeS);
 
@@ -2215,15 +2241,17 @@ void tmt::render::pushDrawCall(DrawCall d)
 }
 
 void tmt::render::pushLight(light::Light* light)
-{ lights.push_back(light); }
+{
+    lights.push_back(light);
+}
 
-tmt::render::RendererInfo *tmt::render::init()
+RendererInfo* tmt::render::init()
 {
     glfwSetErrorCallback(glfw_errorCallback);
     if (!glfwInit())
         return nullptr;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *window = glfwCreateWindow(1024, 768, "helloworld", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1024, 768, "helloworld", nullptr, nullptr);
     if (!window)
         return nullptr;
     // glfwSetKeyCallback(window, glfw_keyCallback);
@@ -2304,7 +2332,7 @@ void tmt::render::update()
     // if no other draw calls are submitted to view 0.
     bgfx::dbgTextClear();
 
-    const bgfx::Stats *stats = bgfx::getStats();
+    const bgfx::Stats* stats = bgfx::getStats();
 
     //bgfx::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(bgfx::getRendererType()));
 
@@ -2314,12 +2342,11 @@ void tmt::render::update()
         {
             case debug::Text:
             {
-                    bgfx::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
+                bgfx::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
             }
-                break;
+            break;
             default:
                 break;
-                ;
         }
     }
 
@@ -2333,7 +2360,8 @@ void tmt::render::update()
     if (renderer->useImgui)
     {
 
-        imguiBeginFrame(mousep.x, mousep.y, btn, 0, (u16)renderer->windowWidth, (u16)renderer->windowHeight);
+        imguiBeginFrame(mousep.x, mousep.y, btn, 0, static_cast<u16>(renderer->windowWidth),
+                        static_cast<u16>(renderer->windowHeight));
 
         {
             for (auto debug_func : debugFuncs)
@@ -2344,7 +2372,7 @@ void tmt::render::update()
 
         imguiEndFrame();
     }
-    
+
 
     float proj[16];
     float ortho[16];
@@ -2381,8 +2409,8 @@ void tmt::render::update()
     }
 
     float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
-                  static_cast<float>(glm::cos(counterTime)), flt renderer->usePosAnim};
-    float d[4] = {(float)lights.size(), 0, 0, 0};
+                  static_cast<float>(glm::cos(counterTime)), static_cast<float>(renderer->usePosAnim)};
+    float d[4] = {static_cast<float>(lights.size()), 0, 0, 0};
     for (auto call : calls)
     {
         //bgfx::setTransform(call.transformMatrix);
@@ -2391,26 +2419,26 @@ void tmt::render::update()
         {
             switch (call.matrixMode)
             {
-            case MaterialState::ViewProj:
-                bgfx::setViewTransform(0, mainCamera->GetView(), proj);
-                break;
-            case MaterialState::View:
-                // bgfx::setViewTransform(0, mainCamera->GetView(), oneMat);
-                break;
-            case MaterialState::Proj:
-                // bgfx::setViewTransform(0, oneMat, proj);
-                break;
-            case MaterialState::None:
-                // bgfx::setViewTransform(0, oneMat, oneMat);
-                break;
-            case MaterialState::ViewOrthoProj:
-                // bgfx::setViewTransform(0, mainCamera->GetView(), ortho);
-                setUniform(orthoHandle, ortho);
-                break;
-            case MaterialState::OrthoProj:
-                // bgfx::setViewTransform(0, oneMat, ortho);
-                setUniform(orthoHandle, ortho);
-                break;
+                case MaterialState::ViewProj:
+                    bgfx::setViewTransform(0, mainCamera->GetView(), proj);
+                    break;
+                case MaterialState::View:
+                    // bgfx::setViewTransform(0, mainCamera->GetView(), oneMat);
+                    break;
+                case MaterialState::Proj:
+                    // bgfx::setViewTransform(0, oneMat, proj);
+                    break;
+                case MaterialState::None:
+                    // bgfx::setViewTransform(0, oneMat, oneMat);
+                    break;
+                case MaterialState::ViewOrthoProj:
+                    // bgfx::setViewTransform(0, mainCamera->GetView(), ortho);
+                    setUniform(orthoHandle, ortho);
+                    break;
+                case MaterialState::OrthoProj:
+                    // bgfx::setViewTransform(0, oneMat, ortho);
+                    setUniform(orthoHandle, ortho);
+                    break;
             }
         }
 
@@ -2420,7 +2448,7 @@ void tmt::render::update()
             setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
         }
 
-        bgfx::setTransform(glm::value_ptr(call.transformMatrix));
+        bgfx::setTransform(value_ptr(call.transformMatrix));
         if (call.animationMatrices.size() > 0)
         {
             //bgfx::setUniform(animHandle, call.animationMatrices);
@@ -2431,13 +2459,13 @@ void tmt::render::update()
             matrixData.reserve(matrixCount * 16);
 
             {
-                const float* transformPtr = glm::value_ptr(call.transformMatrix);
+                const float* transformPtr = value_ptr(call.transformMatrix);
                 matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
             }
 
             for (const auto& full_vec : call.animationMatrices)
             {
-                const float* matPtr = glm::value_ptr(full_vec);
+                const float* matPtr = value_ptr(full_vec);
                 matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
             }
 
@@ -2471,28 +2499,30 @@ void tmt::render::update()
         dde.setColor(d.color.getHex());
         switch (d.type)
         {
-        case debug::Line: {
-            dde.push();
+            case debug::Line:
+            {
+                dde.push();
 
-            dde.moveTo(math::convertVec3(d.origin));
-            dde.lineTo(math::convertVec3(d.direction));
+                dde.moveTo(math::convertVec3(d.origin));
+                dde.lineTo(math::convertVec3(d.direction));
 
-            dde.pop();
-        }
-        break;
-        case debug::Sphere: {
-            dde.push();
+                dde.pop();
+            }
+            break;
+            case debug::Sphere:
+            {
+                dde.push();
 
-            // dde.moveTo(math::convertVec3(d.origin));
-            dde.setWireframe(false);
-            dde.setTransform(glm::value_ptr(d.matrix));
-            dde.drawOrb(d.origin.x, d.origin.y, d.origin.z, d.radius);
+                // dde.moveTo(math::convertVec3(d.origin));
+                dde.setWireframe(false);
+                dde.setTransform(value_ptr(d.matrix));
+                dde.drawOrb(d.origin.x, d.origin.y, d.origin.z, d.radius);
 
-            dde.pop();
-        }
+                dde.pop();
+            }
             break;
             default:
-            break;;
+                break;
         }
     }
 
@@ -2516,32 +2546,32 @@ void tmt::render::shutdown()
     glfwTerminate();
 }
 
-void bgfx::setUniform(bgfx::UniformHandle handle, glm::vec4 v)
+void bgfx::setUniform(UniformHandle handle, glm::vec4 v)
 {
-    bgfx::setUniform(handle, tmt::math::vec4toArray(v));
+    setUniform(handle, tmt::math::vec4toArray(v));
 }
 
-void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v)
+void bgfx::setUniform(UniformHandle handle, std::vector<glm::vec4> v)
 {
-    float* arr = new float[v.size() * 4];
-    for (int i = 0; i < v.size()*4; i+=4)
+    auto arr = new float[v.size() * 4];
+    for (int i = 0; i < v.size() * 4; i += 4)
     {
-        var vec = v[i/4];
+        var vec = v[i / 4];
         for (int j = 0; j < 4; ++j)
         {
             arr[i + j] = vec[j];
         }
     }
 
-    bgfx::setUniform(handle, arr, v.size());
+    setUniform(handle, arr, v.size());
 
     delete[] arr;
 }
 
-void bgfx::setUniform(bgfx::UniformHandle handle, std::vector<glm::mat4> v)
+void bgfx::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 {
     var arr = tmt::math::mat4ArrayToArray(v);
-    bgfx::setUniform(handle, arr, v.size());
+    setUniform(handle, arr, v.size());
 
     delete[] arr;
 }

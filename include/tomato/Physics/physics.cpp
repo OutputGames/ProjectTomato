@@ -1,14 +1,14 @@
-#include "physics.hpp" 
-#include "globals.hpp" 
+#include "physics.hpp"
+#include "globals.hpp"
 
 using namespace tmt::physics;
 
-std::vector<tmt::physics::OBB*> obbs;
+std::vector<OBB*> obbs;
 
-btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
-                                                          const btCollisionObjectWrapper *colObj0Wrap, int partId0,
-                                                          int index0, const btCollisionObjectWrapper *colObj1Wrap,
-                                                          int partId1, int index1)
+btScalar CollisionCallback::addSingleResult(btManifoldPoint& cp,
+                                            const btCollisionObjectWrapper* colObj0Wrap, int partId0,
+                                            int index0, const btCollisionObjectWrapper* colObj1Wrap,
+                                            int partId1, int index1)
 {
     btCollisionObjectWrapper *thisObj, *other;
     int thisIdx, otherIdx;
@@ -18,8 +18,8 @@ btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
 
     if (colObj0Wrap->getCollisionShape() == collisionObjs[collider->pId])
     {
-        thisObj = const_cast<btCollisionObjectWrapper *>(colObj0Wrap);
-        other = const_cast<btCollisionObjectWrapper *>(colObj1Wrap);
+        thisObj = const_cast<btCollisionObjectWrapper*>(colObj0Wrap);
+        other = const_cast<btCollisionObjectWrapper*>(colObj1Wrap);
 
         thisIdx = index0;
         otherIdx = index1;
@@ -35,8 +35,8 @@ btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
     }
     else
     {
-        thisObj = const_cast<btCollisionObjectWrapper *>(colObj1Wrap);
-        other = const_cast<btCollisionObjectWrapper *>(colObj0Wrap);
+        thisObj = const_cast<btCollisionObjectWrapper*>(colObj1Wrap);
+        other = const_cast<btCollisionObjectWrapper*>(colObj0Wrap);
 
         thisIdx = index1;
         otherIdx = index0;
@@ -87,9 +87,10 @@ btScalar tmt::physics::CollisionCallback::addSingleResult(btManifoldPoint &cp,
     return 0;
 }
 
-btScalar tmt::physics::ParticleCollisionCallback::addSingleResult(btManifoldPoint& cp,
-    const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap,
-    int partId1, int index1)
+btScalar ParticleCollisionCallback::addSingleResult(btManifoldPoint& cp,
+                                                    const btCollisionObjectWrapper* colObj0Wrap, int partId0,
+                                                    int index0, const btCollisionObjectWrapper* colObj1Wrap,
+                                                    int partId1, int index1)
 {
     btCollisionObjectWrapper *thisObj, *other;
     int thisIdx, otherIdx;
@@ -168,13 +169,13 @@ btScalar tmt::physics::ParticleCollisionCallback::addSingleResult(btManifoldPoin
     return 0;
 }
 
-tmt::physics::PhysicalWorld::PhysicalWorld()
+PhysicalWorld::PhysicalWorld()
 {
     auto configuration = new btDefaultCollisionConfiguration();
 
     auto dispatcher = new btCollisionDispatcher(configuration);
 
-    btBroadphaseInterface *overlappingPairCache = new btDbvtBroadphase();
+    btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
 
     auto solver = new btSequentialImpulseConstraintSolver;
 
@@ -185,12 +186,12 @@ tmt::physics::PhysicalWorld::PhysicalWorld()
     AddLayer(0);
 }
 
-void ResolveCollision(tmt::physics::OBB* a, tmt::physics::OBB* b, const glm::vec3& mtv)
+void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
 {
     if (a->isStatic && b->isStatic)
         return; // Both objects are static
 
-    glm::vec3 mtvDir = glm::normalize(mtv);
+    glm::vec3 mtvDir = normalize(mtv);
     float mtvMagnitude = glm::length(mtv);
 
     if (mtvMagnitude <= 0)
@@ -220,7 +221,7 @@ void ResolveCollision(tmt::physics::OBB* a, tmt::physics::OBB* b, const glm::vec
 }
 
 
-void tmt::physics::PhysicalWorld::Update()
+void PhysicalWorld::Update()
 {
     dynamicsWorld->stepSimulation(1.0 / 6.0f, 1);
 
@@ -228,9 +229,9 @@ void tmt::physics::PhysicalWorld::Update()
     int nManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
     for (int i = 0; i < nManifolds; i++)
     {
-        btPersistentManifold *contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-        const btCollisionObject *obA = contactManifold->getBody0();
-        const btCollisionObject *obB = contactManifold->getBody1();
+        btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        const btCollisionObject* obA = contactManifold->getBody0();
+        const btCollisionObject* obB = contactManifold->getBody1();
         contactManifold->refreshContactPoints(obA->getWorldTransform(), obB->getWorldTransform());
         int numContacts = contactManifold->getNumContacts();
         for (int j = 0; j < numContacts; j++)
@@ -238,8 +239,8 @@ void tmt::physics::PhysicalWorld::Update()
             // std::cout << "Collision between shapes " << obA->getCollisionShape()
             //	<< " and " << obB->getCollisionShape() << std::endl;
 
-            PhysicsBody *goA = nullptr;
-            PhysicsBody *goB = nullptr;
+            PhysicsBody* goA = nullptr;
+            PhysicsBody* goB = nullptr;
 
             var goai = obA->getCollisionShape()->getUserIndex();
             var gobi = obB->getCollisionShape()->getUserIndex();
@@ -253,8 +254,8 @@ void tmt::physics::PhysicalWorld::Update()
                 goB = bodies[gobi];
             }
 
-            auto poA = static_cast<particle::Particle *>(obA->getCollisionShape()->getUserPointer());
-            auto poB = static_cast<particle::Particle *>(obB->getCollisionShape()->getUserPointer());
+            auto poA = static_cast<particle::Particle*>(obA->getCollisionShape()->getUserPointer());
+            auto poB = static_cast<particle::Particle*>(obB->getCollisionShape()->getUserPointer());
 
             int exo = 0;
 
@@ -262,22 +263,22 @@ void tmt::physics::PhysicalWorld::Update()
             {
                 switch (i)
                 {
-                case 0:
-                    if (goA)
-                        exo++;
-                    break;
-                case 1:
-                    if (goB)
-                        exo++;
-                    break;
-                case 2:
-                    if (poA)
-                        exo++;
-                    break;
-                case 3:
-                    if (poB)
-                        exo++;
-                    break;
+                    case 0:
+                        if (goA)
+                            exo++;
+                        break;
+                    case 1:
+                        if (goB)
+                            exo++;
+                        break;
+                    case 2:
+                        if (poA)
+                            exo++;
+                        break;
+                    case 3:
+                        if (poB)
+                            exo++;
+                        break;
                 }
 
                 if (exo >= 2)
@@ -286,7 +287,7 @@ void tmt::physics::PhysicalWorld::Update()
 
             if (exo == 2)
             {
-                btManifoldPoint &pt = contactManifold->getContactPoint(j);
+                btManifoldPoint& pt = contactManifold->getContactPoint(j);
                 btVector3 ptA, ptB;
                 ptA = pt.getPositionWorldOnB();
                 ptB = pt.getPositionWorldOnA();
@@ -363,7 +364,8 @@ void tmt::physics::PhysicalWorld::Update()
                 */
 
                 std::function<CollisionBase(bool)> CreateCollisionBase = [this, lpta, ptA, nrmA, lptb, ptB, nrmB,
-                                                                          faceIdA, faceIdB](bool a) -> CollisionBase {
+                        faceIdA, faceIdB](bool a) -> CollisionBase
+                {
                     btVector3 lpt, pta, nrma;
                     int fid;
                     if (a)
@@ -488,12 +490,12 @@ void tmt::physics::PhysicalWorld::Update()
     for (auto value : obbs)
     {
         value->center += value->velocity * (1.0f / 60.0f);
-    } 
+    }
 
     doneFirstPhysicsUpdate = true;
 }
 
-void tmt::physics::PhysicalWorld::RemoveBody(int pid, int cpid)
+void PhysicalWorld::RemoveBody(int pid, int cpid)
 {
     dynamicsWorld->removeRigidBody(physicalBodies[pid]);
 
@@ -521,7 +523,7 @@ void tmt::physics::PhysicalWorld::RemoveBody(int pid, int cpid)
     }
 }
 
-short tmt::physics::PhysicalWorld::AddLayer(short mask)
+short PhysicalWorld::AddLayer(short mask)
 {
     var l = 1 << layers.size();
     layerMasks.push_back(mask);
@@ -529,7 +531,7 @@ short tmt::physics::PhysicalWorld::AddLayer(short mask)
     return l;
 }
 
-short tmt::physics::PhysicalWorld::AddLayer()
+short PhysicalWorld::AddLayer()
 {
     var l = 1 << layers.size();
 
@@ -537,29 +539,29 @@ short tmt::physics::PhysicalWorld::AddLayer()
 
     for (short layer : layers)
         m |= layer;
- 
+
     layerMasks.push_back(m);
     layers.push_back(l);
     return l;
 }
 
-inline short tmt::physics::PhysicalWorld::GetLayer(short idx) { return layers[idx]; }
+inline short PhysicalWorld::GetLayer(short idx) { return layers[idx]; }
 
 
-std::vector<tmt::physics::PhysicsBody *> tmt::physics::PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody *collider)
+std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody* collider)
 {
     {
-        std::vector<PhysicsBody *> collisions;
+        std::vector<PhysicsBody*> collisions;
 
         int nManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
         for (int i = 0; i < nManifolds; i++)
         {
-            btPersistentManifold *contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-            const btCollisionObject *obA = contactManifold->getBody0();
-            const btCollisionObject *obB = contactManifold->getBody1();
+            btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+            const btCollisionObject* obA = contactManifold->getBody0();
+            const btCollisionObject* obB = contactManifold->getBody1();
 
-            auto goA = static_cast<PhysicsBody *>(obA->getCollisionShape()->getUserPointer());
-            auto goB = static_cast<PhysicsBody *>(obB->getCollisionShape()->getUserPointer());
+            auto goA = static_cast<PhysicsBody*>(obA->getCollisionShape()->getUserPointer());
+            auto goB = static_cast<PhysicsBody*>(obB->getCollisionShape()->getUserPointer());
             if (goA != nullptr && goB != nullptr)
                 std::cout << "Collision between " << goA->name << " and " << goB->name << std::endl;
             if (goA == collider && goB != nullptr &&
@@ -587,7 +589,7 @@ std::vector<tmt::physics::PhysicsBody *> tmt::physics::PhysicalWorld::GetGameObj
     }
 }
 
-tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForBox(glm::vec3 bounds)
+ColliderInitInfo ColliderInitInfo::ForBox(glm::vec3 bounds)
 {
 
     var info = ColliderInitInfo();
@@ -599,7 +601,7 @@ tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForBox(glm::vec3 
     return info;
 }
 
-tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForSphere(float radius)
+ColliderInitInfo ColliderInitInfo::ForSphere(float radius)
 {
     var info = ColliderInitInfo();
 
@@ -609,7 +611,7 @@ tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForSphere(float r
     return info;
 }
 
-tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForCapsule(float radius, float height)
+ColliderInitInfo ColliderInitInfo::ForCapsule(float radius, float height)
 {
     var info = ColliderInitInfo();
 
@@ -620,7 +622,7 @@ tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForCapsule(float 
     return info;
 }
 
-tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForMesh(render::Mesh *mesh)
+ColliderInitInfo ColliderInitInfo::ForMesh(render::Mesh* mesh)
 {
     var info = ColliderInitInfo();
 
@@ -630,7 +632,7 @@ tmt::physics::ColliderInitInfo tmt::physics::ColliderInitInfo::ForMesh(render::M
     return info;
 }
 
-tmt::physics::ColliderObject::ColliderObject(ColliderInitInfo i, Object *parent)
+ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent)
 {
     SetParent(parent);
     initInfo = i;
@@ -647,7 +649,8 @@ tmt::physics::ColliderObject::ColliderObject(ColliderInitInfo i, Object *parent)
     collisionObjs.push_back(shape);
 }
 
-tmt::physics::PhysicsBody::PhysicsBody(ColliderObject *collisionObj, float mass) : Object()
+PhysicsBody::PhysicsBody(ColliderObject* collisionObj, float mass) :
+    Object()
 {
     if (!collisionObj->parent)
     {
@@ -685,7 +688,7 @@ void PhysicsBody::SetForward(glm::vec3 v)
     }
 }
 
-void tmt::physics::PhysicsBody::Update()
+void PhysicsBody::Update()
 {
     if (!parent)
         transRelation = Self;
@@ -785,7 +788,7 @@ void tmt::physics::PhysicsBody::Update()
     // pBody->activate();
 }
 
-void tmt::physics::PhysicsBody::SetVelocity(glm::vec3 v)
+void PhysicsBody::SetVelocity(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -794,7 +797,7 @@ void tmt::physics::PhysicsBody::SetVelocity(glm::vec3 v)
     pBody->setLinearVelocity(convertVec3(v));
 }
 
-glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
+glm::vec3 PhysicsBody::GetVelocity()
 {
     if (pId >= physicalBodies.size())
         return glm::vec3{0};
@@ -803,14 +806,14 @@ glm::vec3 tmt::physics::PhysicsBody::GetVelocity()
     return convertVec3(pBody->getLinearVelocity());
 }
 
-void tmt::physics::PhysicsBody::SetPushVelocity(glm::vec3 v)
+void PhysicsBody::SetPushVelocity(glm::vec3 v)
 {
     var pBody = physicalBodies[pId];
 
     pBody->setPushVelocity(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
+void PhysicsBody::SetAngular(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -819,7 +822,7 @@ void tmt::physics::PhysicsBody::SetAngular(glm::vec3 v)
     pBody->setAngularVelocity(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::AddImpulse(glm::vec3 v)
+void PhysicsBody::AddImpulse(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -828,7 +831,7 @@ void tmt::physics::PhysicsBody::AddImpulse(glm::vec3 v)
     pBody->applyCentralImpulse(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::AddForce(glm::vec3 v)
+void PhysicsBody::AddForce(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -837,7 +840,7 @@ void tmt::physics::PhysicsBody::AddForce(glm::vec3 v)
     pBody->applyCentralForce(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::SetLinearFactor(glm::vec3 v)
+void PhysicsBody::SetLinearFactor(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -846,7 +849,7 @@ void tmt::physics::PhysicsBody::SetLinearFactor(glm::vec3 v)
     pBody->setLinearFactor(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::SetAngularFactor(glm::vec3 v)
+void PhysicsBody::SetAngularFactor(glm::vec3 v)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -855,7 +858,7 @@ void tmt::physics::PhysicsBody::SetAngularFactor(glm::vec3 v)
     pBody->setAngularFactor(convertVec3(v));
 }
 
-void tmt::physics::PhysicsBody::SetDamping(float linear, float angular)
+void PhysicsBody::SetDamping(float linear, float angular)
 {
     if (pId >= physicalBodies.size())
         return;
@@ -864,21 +867,21 @@ void tmt::physics::PhysicsBody::SetDamping(float linear, float angular)
     pBody->setDamping(linear, angular);
 }
 
-void tmt::physics::PhysicsBody::AddCollisionEvent(std::function<void(Collision)> func)
+void PhysicsBody::AddCollisionEvent(std::function<void(Collision)> func)
 
 {
 
     collisionEvents.push_back(func);
 }
 
-void tmt::physics::PhysicsBody::AddParticleCollisionEvent(std::function<void(ParticleCollision)> func)
+void PhysicsBody::AddParticleCollisionEvent(std::function<void(ParticleCollision)> func)
 
 {
 
     particleCollisionEvents.push_back(func);
 }
 
-glm::vec3 tmt::physics::PhysicsBody::GetBasisColumn(float v)
+glm::vec3 PhysicsBody::GetBasisColumn(float v)
 {
     var pBody = physicalBodies[pId];
 
@@ -889,7 +892,7 @@ glm::vec3 tmt::physics::PhysicsBody::GetBasisColumn(float v)
     return convertVec3(vector);
 }
 
-glm::vec3 tmt::physics::PhysicsBody::GetBasisRow(float v)
+glm::vec3 PhysicsBody::GetBasisRow(float v)
 {
     var pBody = physicalBodies[pId];
 
@@ -900,7 +903,7 @@ glm::vec3 tmt::physics::PhysicsBody::GetBasisRow(float v)
     return convertVec3(vector);
 }
 
-void tmt::physics::PhysicsBody::Reset()
+void PhysicsBody::Reset()
 {
     var pBody = physicalBodies[pId];
 
@@ -908,7 +911,7 @@ void tmt::physics::PhysicsBody::Reset()
     pBody->setLinearVelocity({0, 0, 0});
 }
 
-void tmt::physics::PhysicsBody::OnCollision(Collision c)
+void PhysicsBody::OnCollision(Collision c)
 {
     for (auto collision_event : collisionEvents)
     {
@@ -916,7 +919,7 @@ void tmt::physics::PhysicsBody::OnCollision(Collision c)
     }
 }
 
-void tmt::physics::PhysicsBody::OnParticleCollision(ParticleCollision c)
+void PhysicsBody::OnParticleCollision(ParticleCollision c)
 {
     for (auto collision_event : particleCollisionEvents)
     {
@@ -924,7 +927,7 @@ void tmt::physics::PhysicsBody::OnParticleCollision(ParticleCollision c)
     }
 }
 
-tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
+RaycastHit* Ray::Cast()
 {
     auto start = convertVec3(position);
     auto end = convertVec3(position + (direction * maxDistance));
@@ -944,7 +947,7 @@ tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
         hit->point = convertVec3(point);
         hit->normal = convertVec3(nrm);
 
-        PhysicsBody *goA = nullptr;
+        PhysicsBody* goA = nullptr;
 
         var goai = obj->getCollisionShape()->getUserIndex();
 
@@ -960,15 +963,15 @@ tmt::physics::RaycastHit *tmt::physics::Ray::Cast()
     return nullptr;
 }
 
-tmt::physics::OBB::OBB()
-{ obbs.push_back(this); }
+OBB::OBB()
+{
+    obbs.push_back(this);
+}
 
 // Check for overlap on a given axis
 bool overlapOnAxis(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm::mat3& rotA, const glm::vec3& posB,
                    const glm::vec3& halfSizeB, const glm::mat3& rotB, const glm::vec3& axis, float& depth)
 {
-    // Project OBBs onto the axis
-    float aMin, aMax, bMin, bMax;
     auto project = [](const glm::vec3& pos, const glm::vec3& halfSize, const glm::mat3& rot, const glm::vec3& axis)
     {
         glm::vec3 corners[8] = {pos + rot * glm::vec3(halfSize.x, halfSize.y, halfSize.z),
@@ -992,8 +995,8 @@ bool overlapOnAxis(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm:
         return std::make_pair(min, max);
     };
 
-    std::tie(aMin, aMax) = project(posA, halfSizeA, rotA, axis);
-    std::tie(bMin, bMax) = project(posB, halfSizeB, rotB, axis);
+    auto [aMin, aMax] = project(posA, halfSizeA, rotA, axis);
+    auto [bMin, bMax] = project(posB, halfSizeB, rotB, axis);
 
     if (aMax < bMin || bMax < aMin)
     {
@@ -1021,7 +1024,7 @@ std::vector<glm::vec3> getAxes(const glm::mat3& rotA, const glm::mat3& rotB)
     {
         for (int j = 0; j < 3; ++j)
         {
-            axes.push_back(glm::cross(rotA[i], rotB[j]));
+            axes.push_back(cross(rotA[i], rotB[j]));
         }
     }
 
@@ -1053,7 +1056,7 @@ bool testOBBOBB(const glm::vec3& posA, const glm::vec3& halfSizeA, const glm::ma
     return true; // Collision detected
 }
 
-bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
+bool OBB::Check(OBB* other, glm::vec3& mtv)
 {
     // Axes of this and other OBB
     glm::vec3 axesA[3] = {axis[0], axis[1], axis[2]};
@@ -1115,7 +1118,7 @@ bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
     {
         for (int j = 0; j < 3; j++)
         {
-            glm::vec3 axis = glm::cross(axesA[i], axesB[j]);
+            glm::vec3 axis = cross(axesA[i], axesB[j]);
             if (glm::length(axis) < EPSILON)
                 continue; // Skip near-zero axes
 
@@ -1130,7 +1133,7 @@ bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
             if (overlap < minOverlap)
             {
                 minOverlap = overlap;
-                collisionAxis = glm::normalize(axis) * glm::sign(glm::dot(t, axis));
+                collisionAxis = normalize(axis) * glm::sign(glm::dot(t, axis));
             }
         }
     }
@@ -1141,13 +1144,13 @@ bool tmt::physics::OBB::Check(OBB* other, glm::vec3& mtv)
 }
 
 
-tmt::physics::OBB* tmt::physics::OBB::FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation)
+OBB* OBB::FromBox(glm::vec3 position, glm::vec3 size, glm::quat rotation)
 {
     var box = new OBB;
 
     box->center = position;
     box->halfSize = size / 2.0f;
-    box->axis = glm::mat3_cast(rotation);
+    box->axis = mat3_cast(rotation);
 
     return box;
 }

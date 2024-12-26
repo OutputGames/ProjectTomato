@@ -1,30 +1,31 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "utils.hpp" 
+#include "utils.hpp"
 
 
-
-namespace tmt::render {
- struct RendererInfo;
- }
-
-
-namespace tmt::engine {
-
-struct EngineInfo;
-
-struct EngineInfo
+namespace tmt::render
 {
-    render::RendererInfo *renderer;
-};
+    struct RendererInfo;
+}
 
-EngineInfo *init();
 
-void update();
+namespace tmt::engine
+{
+
+    struct EngineInfo;
+
+    struct EngineInfo
+    {
+        render::RendererInfo* renderer;
+    };
+
+    EngineInfo* init();
+
+    void update();
 
     void shutdown();
-;
+    ;
 
 }
 

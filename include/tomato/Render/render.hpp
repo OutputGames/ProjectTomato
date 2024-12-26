@@ -1,7 +1,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include "utils.hpp" 
+#include "utils.hpp"
 #include "Fs/fs.hpp"
 #include "Obj/obj.hpp"
 
@@ -13,229 +13,231 @@ namespace tmt::obj
     struct Object;
 }
 
-namespace tmt::obj {
- struct CameraObject;
- }
+namespace tmt::obj
+{
+    struct CameraObject;
+}
 
 namespace tmt::light
- {
+{
     struct Light;
- }
+}
 
-namespace tmt::render {
+namespace tmt::render
+{
     struct Animator;
     struct SkeletonObject;
     struct SceneDescription;
 
     struct RendererInfo;
-struct ShaderInitInfo;
-struct ShaderUniform;
-struct SubShader;
-struct Shader;
-struct ComputeShader;
-struct MaterialOverride;
-struct MaterialState;
-struct Material;
-struct Mesh;
-struct Model;
-struct Texture;
-struct RenderTexture;
-struct Camera;
-struct Color;
-struct DrawCall;
+    struct ShaderInitInfo;
+    struct ShaderUniform;
+    struct SubShader;
+    struct Shader;
+    struct ComputeShader;
+    struct MaterialOverride;
+    struct MaterialState;
+    struct Material;
+    struct Mesh;
+    struct Model;
+    struct Texture;
+    struct RenderTexture;
+    struct Camera;
+    struct Color;
+    struct DrawCall;
 
-struct RendererInfo
-{
-    GLFWwindow *window;
-    bgfx::ViewId clearView;
-    int windowWidth, windowHeight;
-    bool useImgui = true;
-    bool usePosAnim = true;
-
-   static RendererInfo* GetRendererInfo();
-};
-
-struct ShaderInitInfo
-{
-    SubShader *vertexProgram, *fragmentProgram;
-    string name = "UNDEFINED";
-};
-
-struct ShaderUniform
-{
-    bgfx::UniformHandle handle = BGFX_INVALID_HANDLE;
-    string name;
-    bgfx::UniformType::Enum type;
-
-    glm::vec4 v4 = glm::vec4(0);
-    glm::mat3 m3 = glm::mat3(1.0);
-    glm::mat4 m4 = glm::mat4(1.0);
-    Texture *tex = nullptr;
-
-    void Use();
-
-    ~ShaderUniform();
-};
-
-struct SubShader
-{
-    enum ShaderType
+    struct RendererInfo
     {
-        Vertex = 0,
-        Fragment,
-        Compute
-    } type;
+        GLFWwindow* window;
+        bgfx::ViewId clearView;
+        int windowWidth, windowHeight;
+        bool useImgui = true;
+        bool usePosAnim = true;
 
-    bgfx::ShaderHandle handle;
-    std::vector<ShaderUniform *> uniforms;
-    string name;
-
-    ShaderUniform *GetUniform(string name);
-
-    void Reload();
-
-    ~SubShader();
-
-    static SubShader* CreateSubShader(string name, ShaderType type);
-
-private:
-    bool isLoaded = false;
-
-    friend fs::ResourceManager;
-    SubShader(string name, ShaderType type);
-};
-
-struct Shader
-{
-    bgfx::ProgramHandle program;
-    std::vector<SubShader *> subShaders;
-
-    void Push(int viewId = 0, MaterialOverride **overrides = nullptr, size_t overrideCount = 0);
-
-    ~Shader();
-
-    void Reload();
-
-    static Shader* CreateShader(ShaderInitInfo info);
-
-private:
-    friend fs::ResourceManager;
-
-    Shader(ShaderInitInfo info);
-};
-
-struct ComputeShader
-{
-    bgfx::ProgramHandle program;
-    SubShader *internalShader;
-
-    void SetUniform(string name, bgfx::UniformType::Enum type, const void *data);
-
-    void SetMat4(string name, glm::mat4 m);
-
-    void Run(int viewId, glm::vec3 groups = {1, 1, 1});
-
-    ~ComputeShader();
-
-    static ComputeShader* CreateComputeShader(SubShader* shader);
-
-private:
-    friend fs::ResourceManager;
-    ComputeShader(SubShader* shader);
-};
-
-struct MaterialOverride
-{
-    std::string name;
-    glm::vec4 v4 = glm::vec4(0);
-    glm::mat3 m3 = glm::mat3(1.0);
-    glm::mat4 m4 = glm::mat4(1.0);
-    Texture *tex = nullptr;
-};
-
-struct MaterialState
-{
-    enum DepthTest
-    {
-        Less = BGFX_STATE_DEPTH_TEST_LESS,
-        LessEqual = BGFX_STATE_DEPTH_TEST_LEQUAL,
-        Equal = BGFX_STATE_DEPTH_TEST_EQUAL,
-        GreaterEqual = BGFX_STATE_DEPTH_TEST_GEQUAL,
-        Greater = BGFX_STATE_DEPTH_TEST_GREATER,
-        NotEqual = BGFX_STATE_DEPTH_TEST_NOTEQUAL,
-        Never = BGFX_STATE_DEPTH_TEST_NEVER,
-        Always = BGFX_STATE_DEPTH_TEST_ALWAYS,
-    } depth = Less;
-
-    enum CullMode
-    {
-        Clockwise = BGFX_STATE_CULL_CW,
-        Counterclockwise = BGFX_STATE_CULL_CCW
-    } cull = Counterclockwise;
-
-    enum WriteMode
-    {
-        Red = BGFX_STATE_WRITE_R,
-        Green = BGFX_STATE_WRITE_G,
-        Blue = BGFX_STATE_WRITE_B,
-        Alpha = BGFX_STATE_WRITE_A,
-        Depth = BGFX_STATE_WRITE_Z,
-        All = BGFX_STATE_WRITE_MASK
+        static RendererInfo* GetRendererInfo();
     };
 
-    u64 write = All;
-
-    enum MatrixMode
+    struct ShaderInitInfo
     {
-        ViewProj,
-        View,
-        Proj,
-        ViewOrthoProj,
-        OrthoProj,
-        None
-    } matrixMode = ViewProj;
-};
+        SubShader *vertexProgram, *fragmentProgram;
+        string name = "UNDEFINED";
+    };
 
-struct Material
-{
-    MaterialState state;
-    Shader *shader;
-    std::vector<MaterialOverride *> overrides;
+    struct ShaderUniform
+    {
+        bgfx::UniformHandle handle = BGFX_INVALID_HANDLE;
+        string name;
+        bgfx::UniformType::Enum type;
 
-    MaterialOverride *GetUniform(string name, bool force = false);
-    u64 GetMaterialState();
+        glm::vec4 v4 = glm::vec4(0);
+        glm::mat3 m3 = glm::mat3(1.0);
+        glm::mat4 m4 = glm::mat4(1.0);
+        Texture* tex = nullptr;
 
-    Material(Shader *shader = nullptr);
+        void Use();
 
-    void Reload(Shader *shader);
+        ~ShaderUniform();
+    };
+
+    struct SubShader
+    {
+        enum ShaderType
+        {
+            Vertex = 0,
+            Fragment,
+            Compute
+        } type;
+
+        bgfx::ShaderHandle handle;
+        std::vector<ShaderUniform*> uniforms;
+        string name;
+
+        ShaderUniform* GetUniform(string name);
+
+        void Reload();
+
+        ~SubShader();
+
+        static SubShader* CreateSubShader(string name, ShaderType type);
+
+    private:
+        bool isLoaded = false;
+
+        friend fs::ResourceManager;
+        SubShader(string name, ShaderType type);
+    };
+
+    struct Shader
+    {
+        bgfx::ProgramHandle program;
+        std::vector<SubShader*> subShaders;
+
+        void Push(int viewId = 0, MaterialOverride** overrides = nullptr, size_t overrideCount = 0);
+
+        ~Shader();
+
+        void Reload();
+
+        static Shader* CreateShader(ShaderInitInfo info);
+
+    private:
+        friend fs::ResourceManager;
+
+        Shader(ShaderInitInfo info);
+    };
+
+    struct ComputeShader
+    {
+        bgfx::ProgramHandle program;
+        SubShader* internalShader;
+
+        void SetUniform(string name, bgfx::UniformType::Enum type, const void* data);
+
+        void SetMat4(string name, glm::mat4 m);
+
+        void Run(int viewId, glm::vec3 groups = {1, 1, 1});
+
+        ~ComputeShader();
+
+        static ComputeShader* CreateComputeShader(SubShader* shader);
+
+    private:
+        friend fs::ResourceManager;
+        ComputeShader(SubShader* shader);
+    };
+
+    struct MaterialOverride
+    {
+        std::string name;
+        glm::vec4 v4 = glm::vec4(0);
+        glm::mat3 m3 = glm::mat3(1.0);
+        glm::mat4 m4 = glm::mat4(1.0);
+        Texture* tex = nullptr;
+    };
+
+    struct MaterialState
+    {
+        enum DepthTest
+        {
+            Less         = BGFX_STATE_DEPTH_TEST_LESS,
+            LessEqual    = BGFX_STATE_DEPTH_TEST_LEQUAL,
+            Equal        = BGFX_STATE_DEPTH_TEST_EQUAL,
+            GreaterEqual = BGFX_STATE_DEPTH_TEST_GEQUAL,
+            Greater      = BGFX_STATE_DEPTH_TEST_GREATER,
+            NotEqual     = BGFX_STATE_DEPTH_TEST_NOTEQUAL,
+            Never        = BGFX_STATE_DEPTH_TEST_NEVER,
+            Always       = BGFX_STATE_DEPTH_TEST_ALWAYS,
+        } depth = Less;
+
+        enum CullMode
+        {
+            Clockwise        = BGFX_STATE_CULL_CW,
+            Counterclockwise = BGFX_STATE_CULL_CCW
+        } cull = Counterclockwise;
+
+        enum WriteMode
+        {
+            Red   = BGFX_STATE_WRITE_R,
+            Green = BGFX_STATE_WRITE_G,
+            Blue  = BGFX_STATE_WRITE_B,
+            Alpha = BGFX_STATE_WRITE_A,
+            Depth = BGFX_STATE_WRITE_Z,
+            All   = BGFX_STATE_WRITE_MASK
+        };
+
+        u64 write = All;
+
+        enum MatrixMode
+        {
+            ViewProj,
+            View,
+            Proj,
+            ViewOrthoProj,
+            OrthoProj,
+            None
+        } matrixMode = ViewProj;
+    };
+
+    struct Material
+    {
+        MaterialState state;
+        Shader* shader;
+        std::vector<MaterialOverride*> overrides;
+
+        MaterialOverride* GetUniform(string name, bool force = false);
+        u64 GetMaterialState();
+
+        Material(Shader* shader = nullptr);
+
+        void Reload(Shader* shader);
 
         ~Material();
-};
+    };
 
     struct MaterialDescription
-{
-    string Name;
-    std::map<string, string> Textures;
-};
+    {
+        string Name;
+        std::map<string, string> Textures;
+    };
 
-struct Mesh
-{
-    bgfx::IndexBufferHandle ibh;
-    bgfx::VertexBufferHandle vbh;
-    std::vector<bgfx::DynamicVertexBufferHandle> vertexBuffers;
-    bgfx::DynamicIndexBufferHandle indexBuffer;
-    size_t vertexCount, indexCount;
-    Vertex *vertices;
-    u16 *indices;
-    Model* model = nullptr;
-    int idx = -1;
+    struct Mesh
+    {
+        bgfx::IndexBufferHandle ibh;
+        bgfx::VertexBufferHandle vbh;
+        std::vector<bgfx::DynamicVertexBufferHandle> vertexBuffers;
+        bgfx::DynamicIndexBufferHandle indexBuffer;
+        size_t vertexCount, indexCount;
+        Vertex* vertices;
+        u16* indices;
+        Model* model = nullptr;
+        int idx = -1;
 
-    ~Mesh();
+        ~Mesh();
 
-    void use();
+        void use();
 
-    void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
-};
+        void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+    };
 
     struct BoneInfo
     {
@@ -256,7 +258,7 @@ struct Mesh
             string name;
             int id = -1;
 
-            template<typename T>
+            template <typename T>
             struct NodeKey
             {
                 float time;
@@ -268,6 +270,7 @@ struct Mesh
             std::vector<NodeKey<glm::vec3>*> scales;
 
         };
+
         std::vector<NodeChannel*> nodeChannels;
 
         Animation(fs::BinaryReader* reader);
@@ -288,7 +291,7 @@ struct Mesh
 
             string name;
             glm::vec3 position{}, scale{1};
-            glm::quat rotation{1,0,0,0};
+            glm::quat rotation{1, 0, 0, 0};
 
             glm::mat4 transformation = glm::mat4(-1);
             glm::mat4 GetTransformation();
@@ -316,34 +319,34 @@ struct Mesh
     };
 
     struct Model
-{
-    std::vector<Mesh *> meshes;
-    std::vector<int> materialIndices;
-    std::vector<Texture*> textures;
-    std::vector<MaterialDescription*> materials;
-    std::vector<Animation*> animations;
-    Skeleton* skeleton;
-    string name;
+    {
+        std::vector<Mesh*> meshes;
+        std::vector<int> materialIndices;
+        std::vector<Texture*> textures;
+        std::vector<MaterialDescription*> materials;
+        std::vector<Animation*> animations;
+        Skeleton* skeleton;
+        string name;
 
-    Model(string path);
-    Model(const aiScene *scene);
-    Model(const aiScene* scene, SceneDescription* description);
-    Model(fs::BinaryReader* reader, SceneDescription* description);
+        Model(string path);
+        Model(const aiScene* scene);
+        Model(const aiScene* scene, SceneDescription* description);
+        Model(fs::BinaryReader* reader, SceneDescription* description);
 
-    tmt::obj::Object* CreateObject(Shader*shader=nullptr);
+        obj::Object* CreateObject(Shader* shader = nullptr);
 
-    Texture* GetTextureFromName(string name);
+        Texture* GetTextureFromName(string name);
 
         Material* CreateMaterial(int index, Shader* shader);
-    Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
+        Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
 
         Animation* GetAnimation(string name);
 
     private:
-    void LoadFromAiScene(const aiScene* scene, SceneDescription* description=nullptr);
+        void LoadFromAiScene(const aiScene* scene, SceneDescription* description = nullptr);
 
         ~Model();
-};
+    };
 
     struct SceneDescription
     {
@@ -374,7 +377,7 @@ struct Mesh
             Node* GetNode(string name);
             Node* GetNode(aiNode* node);
 
-            tmt::obj::Object* ToObject(int modelIndex = -1);
+            obj::Object* ToObject(int modelIndex = -1);
 
             std::vector<Node*> GetAllChildren();
         };
@@ -398,8 +401,8 @@ struct Mesh
         ~SceneDescription();
     };
 
-    
-    struct BoneObject : tmt::obj::Object
+
+    struct BoneObject : obj::Object
     {
         Skeleton::Bone* bone;
 
@@ -408,10 +411,10 @@ struct Mesh
         glm::mat4 GetGlobalOffsetMatrix();
         glm::mat4 GetOffsetMatrix();
 
-        void CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentMatrix);
+        void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
     };
 
-    struct SkeletonObject : tmt::obj::Object
+    struct SkeletonObject : obj::Object
     {
         std::vector<BoneObject*> bones;
 
@@ -431,7 +434,7 @@ struct Mesh
         void CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform);
     };
 
-    struct Animator : tmt::obj::Object
+    struct Animator : obj::Object
     {
         std::vector<glm::mat4> pushBoneMatrices;
 
@@ -476,141 +479,141 @@ struct Mesh
 
         Animation* currentAnimation = nullptr;
 
-    private:
     };
- 
+
 
     struct Texture
-{
-    string name;
-    bgfx::TextureHandle handle;
-    bgfx::TextureFormat::Enum format;
-
-    int width, height;
-
-    Texture(string path, bool isCubemap = false);
-    Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
-            string name = "");
-    ~Texture();
-};
-
-struct RenderTexture
-{
-    bgfx::FrameBufferHandle handle;
-    bgfx::ViewId vid = 1;
-    Texture *realTexture;
-    Texture* depthTexture;
-
-    bgfx::TextureFormat::Enum format;
-
-    RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 clearFlags);
-
-    ~RenderTexture();
-};
-
-struct Camera
-{
-    glm::vec3 position;
-    glm::quat rotation;
-    float FOV = 90.0f;
-    float NearPlane = 0.001f;
-    float FarPlane = 1000.0f;
-
-    float *GetView();
-    float const* GetProjection();
-
-    glm::mat4 GetView_m4();
-    glm::mat4 GetProjection_m4();
-
-    glm::vec3 GetFront();
-    glm::vec3 GetUp();
-
-    static Camera *GetMainCamera();
-
-  private:
-    friend obj::CameraObject;
-
-    Camera();
-};
-
-struct Color
-{
-    float r = 1, g = 1, b = 1, a = 1;
-
-    Color(float r = 1, float g = 1, float b = 1, float a = 1)
     {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-        this->a = a;
-    }
+        string name;
+        bgfx::TextureHandle handle;
+        bgfx::TextureFormat::Enum format;
 
-    glm::vec4 getData() const
+        int width, height;
+
+        Texture(string path, bool isCubemap = false);
+        Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
+                string name = "");
+        ~Texture();
+    };
+
+    struct RenderTexture
     {
-        return glm::vec4{r, g, b, a};
-    }
+        bgfx::FrameBufferHandle handle;
+        bgfx::ViewId vid = 1;
+        Texture* realTexture;
+        Texture* depthTexture;
 
-    void darken(float amt)
+        bgfx::TextureFormat::Enum format;
+
+        RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 clearFlags);
+
+        ~RenderTexture();
+    };
+
+    struct Camera
     {
-        r += amt;
-        g += amt;
-        b += amt;
-    }
+        glm::vec3 position;
+        glm::quat rotation;
+        float FOV = 90.0f;
+        float NearPlane = 0.001f;
+        float FarPlane = 1000.0f;
 
-    u32 getHex() const
+        float* GetView();
+        const float* GetProjection();
+
+        glm::mat4 GetView_m4();
+        glm::mat4 GetProjection_m4();
+
+        glm::vec3 GetFront();
+        glm::vec3 GetUp();
+
+        static Camera* GetMainCamera();
+
+    private:
+        friend obj::CameraObject;
+
+        Camera();
+    };
+
+    struct Color
     {
-        // Clamp values between 0 and 255 after scaling
-        uint32_t red = static_cast<uint32_t>(r * 255) & 0xFF;
-        uint32_t green = static_cast<uint32_t>(g * 255) & 0xFF;
-        uint32_t blue = static_cast<uint32_t>(b * 255) & 0xFF;
-        uint32_t alpha = static_cast<uint32_t>(a * 255) & 0xFF;
+        float r = 1, g = 1, b = 1, a = 1;
 
-        // Combine into a single 32-bit integer in RGBA order
-        return (alpha << 24) | (blue << 16) | (green << 8) | red;
-    }
+        Color(float r = 1, float g = 1, float b = 1, float a = 1)
+        {
+            this->r = r;
+            this->g = g;
+            this->b = b;
+            this->a = a;
+        }
 
-    static Color White, Red, Blue, Green;
-};
+        glm::vec4 getData() const
+        {
+            return glm::vec4{r, g, b, a};
+        }
+
+        void darken(float amt)
+        {
+            r += amt;
+            g += amt;
+            b += amt;
+        }
+
+        u32 getHex() const
+        {
+            // Clamp values between 0 and 255 after scaling
+            uint32_t red = static_cast<uint32_t>(r * 255) & 0xFF;
+            uint32_t green = static_cast<uint32_t>(g * 255) & 0xFF;
+            uint32_t blue = static_cast<uint32_t>(b * 255) & 0xFF;
+            uint32_t alpha = static_cast<uint32_t>(a * 255) & 0xFF;
+
+            // Combine into a single 32-bit integer in RGBA order
+            return (alpha << 24) | (blue << 16) | (green << 8) | red;
+        }
+
+        static Color White, Red, Blue, Green;
+    };
 
     using MatrixArray = std::vector<float>;
 
-struct DrawCall
-{
-    u64 state;
+    struct DrawCall
+    {
+        u64 state;
 
-    MaterialOverride **overrides;
-    size_t overrideCt = 0;
+        MaterialOverride** overrides;
+        size_t overrideCt = 0;
 
-    Mesh *mesh;
-    glm::mat4 transformMatrix;
-    std::vector<glm::mat4> animationMatrices;
-    //float animationMatrices[4][4][MAX_BONE_MATRICES];
-    int matrixCount = 0;
-    Shader *program;
-    MaterialState::MatrixMode matrixMode;
-};
+        Mesh* mesh;
+        glm::mat4 transformMatrix;
+        std::vector<glm::mat4> animationMatrices;
+        //float animationMatrices[4][4][MAX_BONE_MATRICES];
+        int matrixCount = 0;
+        Shader* program;
+        MaterialState::MatrixMode matrixMode;
+    };
 
     MatrixArray GetMatrixArray(glm::mat4 m);
 
-Mesh *createMesh(Vertex *data, u16 *indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl, Model* model=nullptr);
+    Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl,
+                     Model* model = nullptr);
 
-void pushDrawCall(DrawCall d);
+    void pushDrawCall(DrawCall d);
 
     void pushLight(light::Light* light);
 
-RendererInfo *init();
+    RendererInfo* init();
 
-void update();
+    void update();
 
-void shutdown();
+    void shutdown();
 
 }
 
 namespace bgfx
 {
-    void setUniform(bgfx::UniformHandle handle, glm::vec4 v);
-    void setUniform(bgfx::UniformHandle handle, std::vector<glm::vec4> v);
-    void setUniform(bgfx::UniformHandle handle, std::vector<glm::mat4> v);
+    void setUniform(UniformHandle handle, glm::vec4 v);
+    void setUniform(UniformHandle handle, std::vector<glm::vec4> v);
+    void setUniform(UniformHandle handle, std::vector<glm::mat4> v);
 } // namespace bgfx
 
 #endif

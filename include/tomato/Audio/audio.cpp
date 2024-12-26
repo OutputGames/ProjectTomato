@@ -1,5 +1,3 @@
-
-
 #include "audio.hpp"
 
 #include "Time/time.hpp"
@@ -15,7 +13,7 @@ using namespace tmt::audio;
     }
 
 
-tmt::audio::AudioDevice* mInstance;
+AudioDevice* mInstance;
 
 ma_resource_manager resource_manager;
 
@@ -23,13 +21,15 @@ ma_sound_group defaultGroup;
 
 void log_callback(void* pUserData, ma_uint32 level, const char* pMessage)
 {
-    std ::cout << "Level: " << level << " " << pMessage;
+    std::cout << "Level: " << level << " " << pMessage;
 }
 
-tmt::audio::AudioDevice* AudioDevice::GetInstance()
-{ return mInstance; }
+AudioDevice* AudioDevice::GetInstance()
+{
+    return mInstance;
+}
 
-tmt::audio::AudioDevice::AudioDevice()
+AudioDevice::AudioDevice()
 {
     mInstance = this;
     ma_result result;
@@ -75,10 +75,11 @@ void AudioDevice::AddListener(SoundListener* listener)
     listeners.push_back(listener);
 }
 
-tmt::audio::Sound::Sound(string path, SoundInitInfo info)
+Sound::Sound(string path, SoundInitInfo info)
 {
-    var result = ma_sound_init_from_file(&mInstance->engine, path.c_str(), info.useSpatialization ? 0 : MA_SOUND_FLAG_NO_SPATIALIZATION,
-        nullptr, nullptr, &sound);
+    var result = ma_sound_init_from_file(&mInstance->engine, path.c_str(),
+                                         info.useSpatialization ? 0 : MA_SOUND_FLAG_NO_SPATIALIZATION,
+                                         nullptr, nullptr, &sound);
     if (result != MA_SUCCESS)
     {
         printf("WARNING: Failed to load sound \"%s\"", path.c_str());
@@ -164,7 +165,7 @@ void AudioPlayer::formatSound(Sound* s)
 
 void AudioPlayer::Update()
 {
-    var t = tmt::time::getTime();
+    var t = time::getTime();
     //formatSound(sound);
 
     if (t == 0)
@@ -191,7 +192,11 @@ void AudioPlayer::playOneShot(Sound* sound)
 }
 
 void tmt::audio::init()
-{ var audioDevice = new AudioDevice(); }
+{
+    var audioDevice = new AudioDevice();
+}
 
 void tmt::audio::update()
-{mInstance->Update(); }
+{
+    mInstance->Update();
+}

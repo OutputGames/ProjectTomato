@@ -1,20 +1,20 @@
 #ifndef TM_H
 #define TM_H
 
+#include "utils.hpp"
 #include ".//Audio/audio.hpp"
-#include "utils.hpp" 
-#include ".//Render/render.hpp"
-#include ".//Prim/prim.hpp"
+#include ".//Debug/debug.hpp"
 #include ".//Engine/engine.hpp"
+#include ".//Fs/fs.hpp"
+#include ".//Input/input.hpp"
+#include ".//Light/light.hpp"
 #include ".//Math/math.hpp"
-#include ".//Time/time.hpp"
 #include ".//Obj/obj.hpp"
 #include ".//Particle/particle.hpp"
 #include ".//Physics/physics.hpp"
+#include ".//Prim/prim.hpp"
+#include ".//Render/render.hpp"
+#include ".//Time/time.hpp"
 #include ".//Ui/ui.hpp"
-#include ".//Input/input.hpp"
-#include ".//Fs/fs.hpp"
-#include ".//Debug/debug.hpp"
-#include ".//Light/light.hpp"
 
 #endif

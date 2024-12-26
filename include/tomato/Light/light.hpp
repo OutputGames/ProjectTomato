@@ -26,7 +26,7 @@ namespace tmt::light
         LightUniforms();
     };
 
-    struct LightObject : tmt::obj::Object
+    struct LightObject : obj::Object
     {
 
         LightObject();
