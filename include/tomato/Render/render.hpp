@@ -182,6 +182,8 @@ namespace tmt::render
             Blue  = BGFX_STATE_WRITE_B,
             Alpha = BGFX_STATE_WRITE_A,
             Depth = BGFX_STATE_WRITE_Z,
+            RGB   = Red | Green | Blue,
+            RGBA  = RGB | Alpha,
             All   = BGFX_STATE_WRITE_MASK
         };
 

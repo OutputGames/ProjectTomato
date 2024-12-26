@@ -366,6 +366,7 @@ u64 Material::GetMaterialState()
     u64 v = state.cull;
     v |= state.depth;
     v |= BGFX_STATE_WRITE_MASK;
+    v |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
     return v;
 }
@@ -2287,6 +2288,7 @@ RendererInfo* tmt::render::init()
     constexpr bgfx::ViewId kClearView = 0;
     bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0);
     setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+
 
     var m_debug = BGFX_DEBUG_TEXT;
 
