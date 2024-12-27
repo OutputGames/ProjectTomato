@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning].
 * Why didn't you use the blinn-phong lighting model when moving between Phong and PBR?
     * The Blinn-Phong lighting model isn't physically accurate because it returns more "light" than it was given, and there are specific rules to having realistic lighting such as **returning less than what was given.** I would recommend watching [this video](https://www.youtube.com/watch?v=KkOkx0FiHDA) which explains how lighting models work.
 
-## 0.05 - 15-7-2024
+## 0.0.1a - 
+
+## 0.05p - 15-7-2024
 
 ### Added
 
@@ -32,7 +34,7 @@ and this project adheres to [Semantic Versioning].
 * Physics system (engine not chosen yet)
 * Audio system using OpenAL
 
-## 0.04 - 14-7-2024
+## 0.04p - 14-7-2024
 
 ### Added
 
@@ -104,7 +106,7 @@ and this project adheres to [Semantic Versioning].
 * Physics system (engine not chosen yet)
 * Audio system using OpenAL
 
-## 0.0.3 - 25-6-2024
+## 0.0.3p - 25-6-2024
 ### Added
 
 * **Script systen using [Mono](https://en.wikipedia.org/wiki/Mono_(software))**
@@ -173,7 +175,7 @@ and this project adheres to [Semantic Versioning].
 * Unloading & Deleting
 
 
-## 0.0.2 - 8-6-2024
+## 0.0.2p - 8-6-2024
 ### Added
 
 * Framebuffer system w/ **deferred rendering**
@@ -195,7 +197,7 @@ and this project adheres to [Semantic Versioning].
 ### In Progress (at commit time)
 
 
-## 0.0.1 - 8-6-2024
+## 0.0.1p - 8-6-2024
 
 ### Added
 
