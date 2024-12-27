@@ -13,7 +13,80 @@ and this project adheres to [Semantic Versioning].
 * Why didn't you use the blinn-phong lighting model when moving between Phong and PBR?
     * The Blinn-Phong lighting model isn't physically accurate because it returns more "light" than it was given, and there are specific rules to having realistic lighting such as **returning less than what was given.** I would recommend watching [this video](https://www.youtube.com/watch?v=KkOkx0FiHDA) which explains how lighting models work.
 
-## 0.0.1a - 
+## 0.0.3a - In Progress
+
+### Added
+
+* ### Animations
+    * Unlike previous system, now uses nodes to calculate bone transformations
+    * Integrated into TMDL format
+* ### Audio Module
+    * Using [`miniaudio`](https://miniaud.io/docs/manual/)
+* ### Lighting Module
+    * PBR & other light models integrated into shader system
+* ### AI Module
+    * Pathfinding (using [A*](https://en.wikipedia.org/wiki/A*_search_algorithm))
+* ### Netcode Module
+    * Soon..
+* Gamepad support
+* Hot reloading
+* Frustum Culling
+
+### Changed
+
+
+
+## 0.0.2a - 15-12-2024
+
+### Added
+
+* ### New Physics Module
+    * [Bullet3](https://github.com/bulletphysics/bullet3/tree/master/)
+    * Particle Systems based on Unity ***(first time implementation!)***
+* ### Graphics Improvements
+    * UI Module
+        * Buttons
+        * Images
+    * **Compute Shaders**
+    * Debug drawing
+        * Spheres
+        * Lines
+        * Text
+* BinaryReader using `std::ifstream`
+* TMDL Model Format reading (see tmdl_utility)
+* Separated code into dedicated files per namespace/module
+    * Debug
+    * Filesystem
+    * Input
+    * Math
+    * Particles
+    * Physics
+    * Graphics
+    * Time
+
+### Changed
+
+
+
+## 0.0.1a - 26-11-2024
+
+### Completely Revamped Engine
+* New rendering API - [bgfx](https://github.com/bkaradzic/bgfx)
+    * Allows access to more rendering libraries
+        * OpenGL
+        * Vulkan
+        * **Direct X11/12**
+        * **Metal**
+        * **WebGPU**
+    * Allows access to **Compute Shaders** (not yet implemented)
+    * Built in debug system
+    * Abstract shader system
+* tmECS replaced with tmOBJ based on Unreal Engine/Godot
+    * Instead of a usual Entity-Component System, I implemented a fully object based scene system.
+
+### Why?
+
+I stopped working on the engine completely, and as I came back I had zero knowledge on how to navigate the code. I stopped working on this project due to inabilities to build a project using the Mono system. With this new iteration,  ***I will not*** attempt to implement a scripting system into the engine, as it is the reason why I took a hiatus from the project. I will attempt to focus on creating a <ins>game engine</ins> and not a game editor. My extreme focus on the editor and lack of attention towards the engine is why I was not able to continue with the engine a multi-month long break.
 
 ## 0.05p - 15-7-2024
 
