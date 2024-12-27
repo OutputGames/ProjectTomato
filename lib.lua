@@ -10,6 +10,7 @@ local BX_DIR = "vendor/bx/"
 local GLFW_DIR = "vendor/glfw/"
 local IMGUI_DIR = "vendor/dear-imgui/"
 local MINI_DIR = "vendor/miniaudio/"
+local RECAST_DIR = "C:/Program Files (x86)/RecastNavigation/"
 
 local BULLET_LIBS = {
     "BulletDynamics",
@@ -22,6 +23,8 @@ local BULLET_LIBS = {
     "BulletCollision",
     "BulletDynamics"
 }
+
+
 
 function setBxCompat()
 	filter "action:vs*"
@@ -192,3 +195,4 @@ end
             path.join(MINI_DIR, "extras/miniaudio_split/miniaudio.h"),
             path.join(MINI_DIR, "extras/miniaudio_split/miniaudio.c"),
         }
+    include(RECAST_DIR .. "premake5.lua")
