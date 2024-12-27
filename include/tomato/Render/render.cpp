@@ -653,6 +653,30 @@ SceneDescription::Node* SceneDescription::GetNode(aiNode* node)
     return rootNode->GetNode(node);
 }
 
+SceneDescription::Node* SceneDescription::GetNode(aiMesh* mesh, int index)
+{
+    var nodes = rootNode->GetAllChildren();
+    nodes.push_back(rootNode);
+
+    for (auto value : nodes)
+    {
+        if (value->name == mesh->mName.C_Str())
+        {
+            return value;
+        }
+        for (int meshIndex : value->meshIndices)
+        {
+            if (meshIndex == index)
+            {
+                return value;
+            }
+        }
+    }
+
+    return nullptr;
+
+}
+
 std::vector<SceneDescription::Node*> SceneDescription::GetAllChildren()
 {
     return rootNode->GetAllChildren();
@@ -1159,9 +1183,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
 
         if (animBone->parent)
         {
-            debug::Gizmos::color = Color::Blue;
-            debug::Gizmos::DrawLine(animBone->parent->GetGlobalPosition() * animBone->parent->rotation,
-                                    animBone->position * animBone->rotation);
+
         }
     }
 
@@ -1390,10 +1412,10 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
         if (description)
         {
-            var mnd = description->GetNode(msh->mName.C_Str());
+            var mnd = description->GetNode(msh, i);
 
             var meshNode = new SceneDescription::Node;
-            meshNode->name = msh->mName.C_Str();
+            meshNode->name = "TMSH_" + string(msh->mName.C_Str());
 
             meshNode->meshIndices.push_back(i);
             meshNode->SetParent(modelNode);

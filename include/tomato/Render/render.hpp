@@ -6,6 +6,7 @@
 #include "Obj/obj.hpp"
 
 
+struct aiMesh;
 struct aiAnimation;
 struct aiNode;
 
@@ -398,6 +399,7 @@ namespace tmt::render
 
         Node* GetNode(string name);
         Node* GetNode(aiNode* node);
+        Node* GetNode(aiMesh* mesh, int index);
 
         std::vector<Node*> GetAllChildren();
 
