@@ -499,10 +499,14 @@ namespace tmt::render
 
         int width, height;
 
-        Texture(string path, bool isCubemap = false);
+        static Texture* CreateTexture(string path, bool isCubemap = false);
+
         Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
                 string name = "");
         ~Texture();
+
+    private:
+        Texture(string path, bool isCubemap = false);
     };
 
     struct RenderTexture

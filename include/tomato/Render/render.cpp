@@ -1425,11 +1425,23 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             meshNode->scale = mnd->scale;
             meshNode->scene = description;
 
-            mnd->SetParent(nullptr);
+            //mnd->SetParent(nullptr);
 
-            delete mnd;
+            //delete mnd;
         }
     }
+
+    var c = description->GetAllChildren();
+
+    for (auto value : c)
+    {
+        if (value->meshIndices.size() > 0 && !value->name.starts_with("TMSH_"))
+        {
+            value->SetParent(nullptr);
+            delete value;
+        }
+    }
+
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
     {
@@ -1462,16 +1474,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
 
         materials.push_back(desc);
-    }
-
-    for (int i = 0; i < scene->mNumAnimations; ++i)
-    {
-        var anim = scene->mAnimations[i];
-
-        var animation = new Animation();
-        animation->LoadFromAiAnimation(anim);
-
-        animations.push_back(animation);
     }
 
     for (int i = 0; i < scene->mNumSkeletons; ++i)
@@ -1517,6 +1519,17 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     }
                 }
             }
+        }
+
+        for (int i = 0; i < scene->mNumAnimations; ++i)
+        {
+            var anim = scene->mAnimations[i];
+
+            var animation = new Animation();
+            animation->LoadFromAiAnimation(anim);
+
+
+            animations.push_back(animation);
         }
 
         modelNode->SetParent(description->rootNode);
@@ -2029,6 +2042,16 @@ Texture::Texture(string path, bool isCubemap)
         stbi_image_free(data);
     }
 
+}
+
+Texture* Texture::CreateTexture(string path, bool isCubemap)
+{
+    if (IN_VECTOR(ResMgr->loaded_textures, path))
+    {
+        return ResMgr->loaded_textures[path];
+    }
+
+    return new Texture(path, isCubemap);
 }
 
 Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory* mem, string name)

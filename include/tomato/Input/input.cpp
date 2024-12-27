@@ -264,6 +264,11 @@ glm::vec2 tmt::input::GetAxis2(string axis)
     return a;
 }
 
+string tmt::input::GetGamepadName()
+{
+    return glfwGetJoystickName(0);
+}
+
 static void joystick_cb(int jid, int event)
 {
     if (event == GLFW_CONNECTED)

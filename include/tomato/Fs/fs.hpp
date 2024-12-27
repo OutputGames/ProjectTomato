@@ -7,6 +7,7 @@
 
 namespace tmt::render
 {
+    struct Texture;
     struct ComputeShader;
     struct Shader;
     struct SubShader;
@@ -259,6 +260,7 @@ namespace tmt::fs
         std::map<string, render::SubShader*> loaded_sub_shaders;
         std::map<string, render::Shader*> loaded_shaders;
         std::map<string, render::ComputeShader*> loaded_compute_shaders;
+        std::map<string, render::Texture*> loaded_textures;
 
         void ReloadShaders();
 

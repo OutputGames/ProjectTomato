@@ -75,6 +75,8 @@ namespace tmt::input
     float GetAxis(string axis);
     glm::vec2 GetAxis2(string axis);
 
+    string GetGamepadName();
+
     void Update();
     void init();
 
