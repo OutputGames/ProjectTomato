@@ -230,6 +230,8 @@ namespace tmt::fs
             seekg(pos, std::ios::_Seekbeg);
         }
 
+        void SeekCurrent(int pos) { seekg(pos, std::ios::_Seekcur); }
+
         void Align(int alignment)
         {
             seekg((-tellg() % alignment + alignment) % alignment, _Seekcur);
