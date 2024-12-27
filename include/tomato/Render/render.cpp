@@ -1133,7 +1133,7 @@ void SkeletonObject::Update()
     boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
     //GetBone(skeleton->rootName)->CalculateBoneMatrix(this, glm::mat4(1.0));
-    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), GetTransform());
+    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), glm::mat4(1.0));
 
     Object::Update();
 }
