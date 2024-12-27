@@ -1133,7 +1133,7 @@ void SkeletonObject::Update()
     boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
 
     //GetBone(skeleton->rootName)->CalculateBoneMatrix(this, glm::mat4(1.0));
-    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), glm::mat4(1.0));
+    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), GetTransform());
 
     Object::Update();
 }
@@ -1156,6 +1156,13 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
     {
         // animBone->Update(time);
         nodeTransform = bones[idx]->GetLocalTransform();
+
+        if (animBone->parent)
+        {
+            debug::Gizmos::color = Color::Blue;
+            debug::Gizmos::DrawLine(animBone->parent->GetGlobalPosition() * animBone->parent->rotation,
+                                    animBone->position * animBone->rotation);
+        }
     }
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -1164,11 +1171,8 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
     {
         var index = boneInfoMap[nodeName].id;
         glm::mat4 offset = boneInfoMap[nodeName].offset;
-        boneMatrices[index] = globalTransform * offset;
+        boneMatrices[index] = globalTransform * (offset);
     }
-
-    //debug::Gizmos::matrix = globalTransform;
-    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
 
     for (string child : skeleBone->children)
     {
