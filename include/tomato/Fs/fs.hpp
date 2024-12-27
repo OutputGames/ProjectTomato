@@ -147,6 +147,7 @@ namespace tmt::fs
         glm::quat ReadQuat()
         {
             var v = ReadVec4();
+
             return glm::quat(v.w, v.x, v.y, v.z);
         }
 
