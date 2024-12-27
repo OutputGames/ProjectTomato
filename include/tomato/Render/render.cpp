@@ -1810,9 +1810,9 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
         bone->rotation = rot;
         bone->scale = scl;
 
-        glm::mat3x4 offsetMatrix;
+        glm::mat4 offsetMatrix;
 
-        for (int x = 0; x < 3; ++x)
+        for (int x = 0; x < 4; ++x)
         {
             for (int y = 0; y < 4; ++y)
             {
