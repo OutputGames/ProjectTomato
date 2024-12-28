@@ -786,6 +786,8 @@ void PhysicsBody::Update()
     //
 
     // pBody->activate();
+
+    Object::Update();
 }
 
 void PhysicsBody::SetVelocity(glm::vec3 v)
@@ -909,6 +911,11 @@ void PhysicsBody::Reset()
 
     pBody->setAngularVelocity({0, 0, 0});
     pBody->setLinearVelocity({0, 0, 0});
+}
+
+PhysicsBody::~PhysicsBody()
+{
+    mainScene->physicsWorld->RemoveBody(pId, cPID);
 }
 
 void PhysicsBody::OnCollision(Collision c)

@@ -180,6 +180,9 @@ btQuaternion convertQuat(glm::quat q)
 
 void ApplyTransform(tmt::physics::PhysicsBody* body, btTransform transform)
 {
+    if (!body->active)
+        return;
+
     var parent = body->parent;
     if (body->transRelation == tmt::physics::PhysicsBody::Self)
     {

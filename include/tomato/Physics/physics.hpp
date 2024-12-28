@@ -186,6 +186,8 @@ namespace tmt::physics
         glm::vec3 GetBasisRow(float v);
         void Reset();
 
+        ~PhysicsBody() override;
+
     private:
         friend PhysicalWorld;
         friend CollisionCallback;
