@@ -2,6 +2,7 @@
 #define TM_H
 
 #include "utils.hpp"
+#include ".//Ai/ai.hpp"
 #include ".//Audio/audio.hpp"
 #include ".//Debug/debug.hpp"
 #include ".//Engine/engine.hpp"

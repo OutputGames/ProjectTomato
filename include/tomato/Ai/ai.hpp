@@ -1,16 +1,17 @@
 #if !defined(AI_HPP)
 #define AI_HPP
 
-#include "DetourCommon.h"
-#include "DetourNavMesh.h"
-#include "DetourNavMeshQuery.h"
+#include <DetourNavMeshQuery.h>
 #include "utils.hpp"
 #include "Obj/obj.hpp"
 
-#include "Recast.h"
+class dtQueryFilter;
+class dtNavMeshQuery;
+class dtNavMesh;
 
 namespace tmt::ai
 {
+    struct NavMeshOBB;
     struct NavMesh;
 
 
@@ -19,12 +20,21 @@ namespace tmt::ai
         float size;
         float height;
         float walkableSlopeAngle;
+        int id = -1;
+
+
+        AgentInfo();
+
+        AgentInfo(float sz, float hg, float s);
     };
 
     struct NavigationMgr
     {
         std::vector<AgentInfo> agentInfos;
-        std::vector<NavMesh*> navMeshes;
+        std::vector<NavMeshOBB> obbs;
+        NavMesh* navMesh;
+
+        void CalculateAllMeshes();
 
         static NavigationMgr* pInstance;
 
@@ -33,10 +43,24 @@ namespace tmt::ai
         void Calculate(NavMesh* navMesh);
     };
 
+    struct NavMeshObject
+    {
+        render::Mesh* mesh;
+        glm::mat4 modelMatrix;
+    };
+
+    struct NavMeshOBB
+    {
+        glm::vec3 center;
+        glm::vec3 extent;
+        glm::mat4 rotation;
+    };
+
     struct NavMesh
     {
         NavMesh();
-        void Init(std::vector<glm::vec3> vertices, std::vector<int> indices);
+        void Init(std::vector<NavMeshObject> meshes);
+        void Init(std::vector<NavMeshOBB> meshes);
 
         dtNavMesh* Calculate(AgentInfo info);
 
@@ -51,14 +75,25 @@ namespace tmt::ai
     struct PathfindingAgent : obj::Object
     {
 
-        PathfindingAgent();
+        PathfindingAgent(AgentInfo info);
 
         std::vector<glm::vec3> FindPath(const glm::vec3& startPos, const glm::vec3& endPos);
+
+        void Update() override;
+
+        AgentInfo info;
 
     private:
         dtNavMesh* m_navMesh;
         dtNavMeshQuery* m_navQuery;
         dtQueryFilter m_filter;
+    };
+
+    struct NavMeshSurface : obj::Object
+    {
+        NavMeshSurface();
+
+
     };
 
 
