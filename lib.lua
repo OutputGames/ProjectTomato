@@ -10,7 +10,7 @@ local BX_DIR = "vendor/bx/"
 local GLFW_DIR = "vendor/glfw/"
 local IMGUI_DIR = "vendor/dear-imgui/"
 local MINI_DIR = "vendor/miniaudio/"
-local RECAST_DIR = "C:/Program Files (x86)/RecastNavigation/"
+local RECAST_DIR = "C:/RecastNavigation/"
 
 local BULLET_LIBS = {
     "BulletDynamics",
@@ -24,7 +24,10 @@ local BULLET_LIBS = {
     "BulletDynamics"
 }
 
-
+function includeNavProj(proj)
+    includedirs(RECAST_DIR..proj.."/Include")
+    links(proj)
+end
 
 function setBxCompat()
 	filter "action:vs*"
@@ -49,6 +52,11 @@ end
         compileas "C++"
         targetdir "bin/%{cfg.buildcfg}"
         staticruntime "on"
+
+        libdirs(RECAST_DIR.."Build/vs2022/lib/%{cfg.buildcfg}")
+
+        includeNavProj("Recast")
+        includeNavProj("Detour")
 
         buildoptions {
             "/Zc:__cplusplus",  -- Enable updated __cplusplus macro.
