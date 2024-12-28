@@ -194,8 +194,8 @@ namespace tmt::physics
 
         CollisionCallback callback_;
 
-        u16 pId = -1;
-        u16 cPID = -1;
+        u16 pId = UINT16_MAX;
+        u16 cPID = UINT16_MAX;
 
         std::vector<std::function<void(Collision)>> collisionEvents;
         std::vector<std::function<void(ParticleCollision)>> particleCollisionEvents;

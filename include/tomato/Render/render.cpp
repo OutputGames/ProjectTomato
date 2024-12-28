@@ -2250,10 +2250,6 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
             positions[i] = vertex.position;
             normals[i] = vertex.normal;
             uvs[i] = vertex.uv0;
-            if (i == 116)
-            {
-                std::cout << std::endl;
-            }
         }
 
         bgfx::VertexLayout playout;

@@ -562,8 +562,8 @@ std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody
 
             auto goA = static_cast<PhysicsBody*>(obA->getCollisionShape()->getUserPointer());
             auto goB = static_cast<PhysicsBody*>(obB->getCollisionShape()->getUserPointer());
-            if (goA != nullptr && goB != nullptr)
-                std::cout << "Collision between " << goA->name << " and " << goB->name << std::endl;
+            //if (goA != nullptr && goB != nullptr)
+            //std::cout << "Collision between " << goA->name << " and " << goB->name << std::endl;
             if (goA == collider && goB != nullptr &&
                 std::find(collisions.begin(), collisions.end(), goB) == collisions.end())
                 collisions.push_back(goB);
@@ -693,7 +693,7 @@ void PhysicsBody::Update()
     if (!parent)
         transRelation = Self;
 
-    if (!doneFirstPhysicsUpdate)
+    if (!doneFirstPhysicsUpdate || pId == UINT16_MAX)
     {
         pId = physicalBodies.size();
 
