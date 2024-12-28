@@ -1409,6 +1409,12 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         meshes.push_back(mesh);
         materialIndices.push_back(msh->mMaterialIndex);
 
+        for (int j = 0; j < msh->mNumBones; ++j)
+        {
+            var bone = msh->mBones[j];
+
+            mesh->bones.push_back(bone->mName.C_Str());
+        }
 
         if (description)
         {

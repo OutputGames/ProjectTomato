@@ -233,6 +233,9 @@ namespace tmt::render
         size_t vertexCount, indexCount;
         Vertex* vertices;
         u16* indices;
+
+        std::vector<string> bones;
+
         Model* model = nullptr;
         int idx = -1;
 

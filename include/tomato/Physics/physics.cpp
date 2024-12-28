@@ -719,13 +719,18 @@ void PhysicsBody::Update()
 
         auto myMotionState = new btDefaultMotionState(startTransform);
         btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collisionObjs[cPID], localInertia);
+        
 
         var rigidBody = new btRigidBody(rbInfo);
 
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
         rigidBody->setUserIndex2(physicalBodies.size());
 
-        dynamicsWorld->addRigidBody(rigidBody);
+        var physicalWorld = tmt::obj::Scene::physicsWorld;
+
+        // adding physics masks!
+
+        dynamicsWorld->addRigidBody(rigidBody,layer, );
 
         physicalBodies.push_back(rigidBody);
     }
@@ -738,7 +743,7 @@ void PhysicsBody::Update()
 
     var pBody = physicalBodies[pId];
     pBody->setUserPointer(this);
-    // CONSTRAINTS !!! >x<
+    // cringeee
 
     if (pBody && pBody->getMotionState())
     {
