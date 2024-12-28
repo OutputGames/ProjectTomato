@@ -5,34 +5,24 @@
 #include "utils.hpp"
 #include "Obj/obj.hpp"
 
+class rcContext;
 class dtQueryFilter;
 class dtNavMeshQuery;
 class dtNavMesh;
 
 namespace tmt::ai
 {
+    struct AgentInfo;
     struct NavMeshOBB;
     struct NavMesh;
 
-
-    struct AgentInfo
-    {
-        float size;
-        float height;
-        float walkableSlopeAngle;
-        int id = -1;
-
-
-        AgentInfo();
-
-        AgentInfo(float sz, float hg, float s);
-    };
 
     struct NavigationMgr
     {
         std::vector<AgentInfo> agentInfos;
         std::vector<NavMeshOBB> obbs;
         NavMesh* navMesh;
+        rcContext* ctx;
 
         void CalculateAllMeshes();
 
@@ -41,6 +31,27 @@ namespace tmt::ai
         NavigationMgr();
 
         void Calculate(NavMesh* navMesh);
+    };
+
+    struct AgentInfo
+    {
+        float size;
+        float height;
+        float walkableSlopeAngle;
+        float maxClimb;
+        int id = -1;
+
+
+        AgentInfo();
+
+        AgentInfo(float sz, float hg, float s, float maxClimb)
+        {
+            size = sz;
+            height = hg;
+            walkableSlopeAngle = s;
+            this->maxClimb = maxClimb;
+            id = NavigationMgr::pInstance->agentInfos.size();
+        }
     };
 
     struct NavMeshObject

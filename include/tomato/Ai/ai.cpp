@@ -20,6 +20,7 @@ PathfindingAgent::PathfindingAgent(AgentInfo info):
     m_navQuery = dtAllocNavMeshQuery();
     m_navQuery->init(NavigationMgr::pInstance->navMesh->navMeshes[info.id], 2048);
     m_navMesh = NavigationMgr::pInstance->navMesh->navMeshes[info.id];
+    m_filter = dtQueryFilter();
 }
 
 std::vector<glm::vec3> PathfindingAgent::FindPath(const glm::vec3& startPos, const glm::vec3& endPos)
@@ -29,11 +30,11 @@ std::vector<glm::vec3> PathfindingAgent::FindPath(const glm::vec3& startPos, con
 
     std::vector<glm::vec3> path;
 
-    float extents[3] = {info.size, info.height, info.size};
+    float extents[3] = {info.size * 2.0f, info.size * 1.5f, info.size * 2.0f};
 
     dtPolyRef startRef, endRef;
-    float startNearest[3], endNearest[3];
-    m_navQuery->findNearestPoly(&startPos.x, extents, &m_filter, &startRef, startNearest);
+    float startNearest[3] = {startPos.x, startPos.y, startPos.z}, endNearest[3];
+    m_navQuery->findNearestPoly(startNearest, extents, &m_filter, &startRef, startNearest);
     m_navQuery->findNearestPoly(&endPos.x, extents, &m_filter, &endRef, endNearest);
 
     if (startRef && endRef)
@@ -74,14 +75,6 @@ AgentInfo::AgentInfo()
     id = NavigationMgr::pInstance->agentInfos.size();
 }
 
-AgentInfo::AgentInfo(float sz, float hg, float s)
-{
-    size = sz;
-    height = hg;
-    walkableSlopeAngle = id;
-    id = NavigationMgr::pInstance->agentInfos.size();
-}
-
 void NavigationMgr::CalculateAllMeshes()
 {
     var scene = obj::Scene::GetMainScene();
@@ -96,15 +89,17 @@ void NavigationMgr::CalculateAllMeshes()
         meshes.push_back({mesh->mesh, mesh->GetTransform()});
     }
 
-    var navMesh = new NavMesh;
+    navMesh = new NavMesh;
     navMesh->Init(meshes);
 
     Calculate(navMesh);
+
 }
 
 NavigationMgr::NavigationMgr()
 {
     pInstance = this;
+    ctx = new rcContext(true);
 }
 
 void NavigationMgr::Calculate(NavMesh* navMesh)
@@ -115,6 +110,7 @@ void NavigationMgr::Calculate(NavMesh* navMesh)
     }
 
     navMesh->navMeshes.clear();
+    navMesh->navMeshes.resize(agentInfos.size());
 
     for (int i = 0; i < agentInfos.size(); ++i)
     {
@@ -205,6 +201,8 @@ void NavMesh::Init(std::vector<NavMeshOBB> meshes)
 // Function to create a navigation mesh
 dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<int>& indices, const rcConfig& config)
 {
+    var ctx = NavigationMgr::pInstance->ctx;
+
     // Step 1: Create a heightfield
     rcHeightfield* heightfield = rcAllocHeightfield();
     if (!heightfield)
@@ -213,7 +211,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (!rcCreateHeightfield(nullptr, *heightfield, config.width, config.height, config.bmin, config.bmax, config.cs,
+    if (!rcCreateHeightfield(ctx, *heightfield, config.width, config.height, config.bmin, config.bmax, config.cs,
                              config.ch))
     {
         std::cerr << "Failed to create heightfield." << std::endl;
@@ -222,15 +220,15 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
 
     // Step 2: Rasterize the triangles
     std::vector<unsigned char> triAreas(indices.size() / 3, 0);
-    rcMarkWalkableTriangles(nullptr, config.walkableSlopeAngle, vertices.data(), vertices.size() / 3, indices.data(),
+    rcMarkWalkableTriangles(ctx, config.walkableSlopeAngle, vertices.data(), vertices.size() / 3, indices.data(),
                             indices.size() / 3, triAreas.data());
-    rcRasterizeTriangles(nullptr, vertices.data(), vertices.size() / 3, indices.data(), triAreas.data(),
+    rcRasterizeTriangles(ctx, vertices.data(), vertices.size() / 3, indices.data(), triAreas.data(),
                          indices.size() / 3, *heightfield, config.walkableClimb);
 
     // Step 3: Filter the walkable surfaces
-    rcFilterLowHangingWalkableObstacles(nullptr, config.walkableClimb, *heightfield);
-    rcFilterLedgeSpans(nullptr, config.walkableHeight, config.walkableClimb, *heightfield);
-    rcFilterWalkableLowHeightSpans(nullptr, config.walkableHeight, *heightfield);
+    rcFilterLowHangingWalkableObstacles(ctx, config.walkableClimb, *heightfield);
+    rcFilterLedgeSpans(ctx, config.walkableHeight, config.walkableClimb, *heightfield);
+    rcFilterWalkableLowHeightSpans(ctx, config.walkableHeight, *heightfield);
 
     // Step 4: Create a compact heightfield
     rcCompactHeightfield* compactHeightfield = rcAllocCompactHeightfield();
@@ -240,7 +238,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (!rcBuildCompactHeightfield(nullptr, config.walkableHeight, config.walkableClimb, *heightfield,
+    if (!rcBuildCompactHeightfield(ctx, config.walkableHeight, config.walkableClimb, *heightfield,
                                    *compactHeightfield))
     {
         std::cerr << "Failed to build compact heightfield." << std::endl;
@@ -248,21 +246,21 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
     }
 
     // Step 5: Erode the walkable area
-    if (!rcErodeWalkableArea(nullptr, config.walkableRadius, *compactHeightfield))
+    if (!rcErodeWalkableArea(ctx, config.walkableRadius, *compactHeightfield))
     {
         std::cerr << "Failed to erode walkable area." << std::endl;
         return nullptr;
     }
 
     // Step 6: Build the distance field
-    if (!rcBuildDistanceField(nullptr, *compactHeightfield))
+    if (!rcBuildDistanceField(ctx, *compactHeightfield))
     {
         std::cerr << "Failed to build distance field." << std::endl;
         return nullptr;
     }
 
     // Step 7: Build the regions
-    if (!rcBuildRegions(nullptr, *compactHeightfield, 0, config.minRegionArea, config.mergeRegionArea))
+    if (!rcBuildRegions(ctx, *compactHeightfield, 0, config.minRegionArea, config.mergeRegionArea))
     {
         std::cerr << "Failed to build regions." << std::endl;
         return nullptr;
@@ -276,7 +274,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (!rcBuildContours(nullptr, *compactHeightfield, config.maxSimplificationError, config.maxEdgeLen, *contourSet))
+    if (!rcBuildContours(ctx, *compactHeightfield, config.maxSimplificationError, config.maxEdgeLen, *contourSet))
     {
         std::cerr << "Failed to build contours." << std::endl;
         return nullptr;
@@ -290,7 +288,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (!rcBuildPolyMesh(nullptr, *contourSet, config.maxVertsPerPoly, *polyMesh))
+    if (!rcBuildPolyMesh(ctx, *contourSet, config.maxVertsPerPoly, *polyMesh))
     {
         std::cerr << "Failed to build poly mesh." << std::endl;
         return nullptr;
@@ -304,7 +302,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (!rcBuildPolyMeshDetail(nullptr, *polyMesh, *compactHeightfield, config.detailSampleDist,
+    if (!rcBuildPolyMeshDetail(ctx, *polyMesh, *compactHeightfield, config.detailSampleDist,
                                config.detailSampleMaxError, *polyMeshDetail))
     {
         std::cerr << "Failed to build poly mesh detail." << std::endl;
@@ -336,6 +334,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
     params.ch = config.ch;
     params.buildBvTree = true;
 
+
     if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
     {
         std::cerr << "Failed to create navmesh data." << std::endl;
@@ -350,11 +349,16 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    if (dtStatusFailed(navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA)))
+    float o[3] = {0, 0, 0};
+
+    if (dtStatusFailed(navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA, o)))
     {
         std::cerr << "Failed to initialize navmesh." << std::endl;
         return nullptr;
     }
+
+    //const float o[3] = {0, 0, 0};
+    //dtVcopy(navMesh->getParams()->orig, o);
 
     return navMesh;
 }
@@ -362,12 +366,12 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
 dtNavMesh* NavMesh::Calculate(AgentInfo info)
 {
     rcConfig config = {};
-    config.cs = info.size;
-    config.ch = info.height;
+    config.cs = 0.3f;
+    config.ch = 0.2f;
     config.walkableSlopeAngle = info.walkableSlopeAngle;
-    config.walkableHeight = static_cast<int>(ceilf(2.0f / config.ch));
-    config.walkableClimb = static_cast<int>(floorf(0.9f / config.ch));
-    config.walkableRadius = static_cast<int>(ceilf(0.6f / config.cs));
+    config.walkableHeight = static_cast<int>(ceilf(info.height / config.ch));
+    config.walkableClimb = static_cast<int>(floorf(info.maxClimb / config.ch));
+    config.walkableRadius = static_cast<int>(ceilf(info.size / config.cs));
     config.maxEdgeLen = static_cast<int>(12.0f / config.cs);
     config.maxSimplificationError = 1.3f;
     config.minRegionArea = rcSqr(8); // Note: area = size*size
@@ -377,6 +381,7 @@ dtNavMesh* NavMesh::Calculate(AgentInfo info)
     config.detailSampleMaxError = config.ch * 1.0f;
 
     rcCalcBounds(vertices.data(), vertices.size() / 3, config.bmin, config.bmax);
+    rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
 
     return CreateNavMesh(vertices, indices, config);
 }
