@@ -86,10 +86,11 @@ namespace tmt::physics
 
         void RemoveBody(int pid, int cpid);
 
-        short
-
         std::vector<PhysicsBody*> GetGameObjectsCollidingWith(PhysicsBody* collider);
 
+        void SetLayerMask(int layer, std::vector<int> mask);
+
+        std::vector<int> layerMasks;
     };
 
 

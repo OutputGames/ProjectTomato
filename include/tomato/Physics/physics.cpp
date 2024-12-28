@@ -183,7 +183,7 @@ PhysicalWorld::PhysicalWorld()
 
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
-    AddLayer(0);
+    SetLayerMask(0, {0, 1, 2, 3, 4, 5});
 }
 
 void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
@@ -523,30 +523,6 @@ void PhysicalWorld::RemoveBody(int pid, int cpid)
     }
 }
 
-short PhysicalWorld::AddLayer(short mask)
-{
-    var l = 1 << layers.size();
-    layerMasks.push_back(mask);
-    layers.push_back(l);
-    return l;
-}
-
-short PhysicalWorld::AddLayer()
-{
-    var l = 1 << layers.size();
-
-    short m = l;
-
-    for (short layer : layers)
-        m |= layer;
-
-    layerMasks.push_back(m);
-    layers.push_back(l);
-    return l;
-}
-
-inline short PhysicalWorld::GetLayer(short idx) { return layers[idx]; }
-
 
 std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody* collider)
 {
@@ -587,6 +563,24 @@ std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody
         return collisions;
         */
     }
+}
+
+void PhysicalWorld::SetLayerMask(int layer, std::vector<int> mask)
+{
+    if (layerMasks.size() <= layer)
+    {
+        layerMasks.resize(layer + 1);
+    }
+
+    int m = 0;
+
+    for (int value : mask)
+    {
+        m |= (value);
+    }
+
+    layerMasks[layer] = m;
+
 }
 
 ColliderInitInfo ColliderInitInfo::ForBox(glm::vec3 bounds)
@@ -719,18 +713,18 @@ void PhysicsBody::Update()
 
         auto myMotionState = new btDefaultMotionState(startTransform);
         btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collisionObjs[cPID], localInertia);
-        
+
 
         var rigidBody = new btRigidBody(rbInfo);
 
         rigidBody->setActivationState(DISABLE_DEACTIVATION);
         rigidBody->setUserIndex2(physicalBodies.size());
 
-        var physicalWorld = tmt::obj::Scene::physicsWorld;
+        var physicalWorld = obj::Scene::GetMainScene()->physicsWorld;
 
         // adding physics masks!
 
-        dynamicsWorld->addRigidBody(rigidBody,layer, );
+        dynamicsWorld->addRigidBody(rigidBody, layer, physicalWorld->layerMasks[layer]);
 
         physicalBodies.push_back(rigidBody);
     }
