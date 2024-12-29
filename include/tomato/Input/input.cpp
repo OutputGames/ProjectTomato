@@ -201,11 +201,11 @@ float tmt::input::GetAxis(string axis)
 
             if (u)
             {
-                a = -1;
+                a = 1;
             }
             else if (d)
             {
-                a = 1;
+                a = -1;
             }
         }
         else if (currentInputState == Gamepad)
