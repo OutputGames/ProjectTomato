@@ -25,6 +25,8 @@ extern std::vector<tmt::light::Light*> lights;
 extern std::vector<std::function<void()>> debugFuncs;
 extern glm::vec2 mousep;
 extern glm::vec2 mousedelta;
+extern glm::vec2 mousescrl;
+extern int lastKey;
 extern tmt::render::Camera* mainCamera;
 extern tmt::obj::Scene* mainScene;
 extern tmt::render::Shader* defaultShader;

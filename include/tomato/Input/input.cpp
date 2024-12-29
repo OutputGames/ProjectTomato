@@ -1,11 +1,13 @@
 #include "input.hpp"
 #include "globals.hpp"
+#include "imgui.h"
 
 
 using namespace tmt::input;
 
 
 static InputState currentInputState = KeyboardMouse;
+static bool forcedInputState = false;
 
 glm::vec2 Mouse::GetMousePosition()
 {
@@ -15,6 +17,11 @@ glm::vec2 Mouse::GetMousePosition()
 glm::vec2 Mouse::GetMouseDelta()
 {
     return mousedelta;
+}
+
+glm::vec2 Mouse::GetMouseScroll()
+{
+    return mousescrl;
 }
 
 // Function to convert mouse position to a ray direction
@@ -158,6 +165,12 @@ InputState tmt::input::GetInputState()
     return currentInputState;
 }
 
+void tmt::input::ForceInputState(InputState state)
+{
+    forcedInputState = true;
+    currentInputState = state;
+}
+
 float tmt::input::GetAxis(string axis)
 {
     var a = 0.0f;
@@ -269,6 +282,11 @@ string tmt::input::GetGamepadName()
     return glfwGetJoystickName(0);
 }
 
+int tmt::input::GetLastKey()
+{
+    return lastKey;
+}
+
 static void joystick_cb(int jid, int event)
 {
     if (event == GLFW_CONNECTED)
@@ -283,21 +301,50 @@ static void joystick_cb(int jid, int event)
     }
 }
 
+static void char_cb(GLFWwindow* window, uint key)
+{
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddInputCharacter(key);
+}
+
+static void key_cb(GLFWwindow* window, int key, int, int action, int mods)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    bool down = false;
+    if (action == GLFW_PRESS)
+    {
+        down = true;
+    }
+    io.AddKeyEvent((ImGuiKey)key, down);
+}
+
+static void scrl_cb(GLFWwindow* window, float xoffset, float yoffset)
+{
+    mousescrl = {xoffset, yoffset};
+}
+
 void tmt::input::init()
 {
     glfwSetJoystickCallback(joystick_cb);
+    glfwSetCharCallback(renderer->window, char_cb);
+    glfwSetKeyCallback(renderer->window, key_cb);
 }
 
 
 void tmt::input::Update()
 {
-    var present = glfwJoystickPresent(GLFW_JOYSTICK_1);
-    if (present)
+    if (!forcedInputState)
     {
-        currentInputState = Gamepad;
-    }
-    else
-    {
-        currentInputState = KeyboardMouse;
+
+        var present = glfwJoystickPresent(GLFW_JOYSTICK_1);
+        if (present)
+        {
+            currentInputState = Gamepad;
+        }
+        else
+        {
+            currentInputState = KeyboardMouse;
+        }
     }
 }

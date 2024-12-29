@@ -19,6 +19,7 @@ namespace tmt::input
     {
         static glm::vec2 GetMousePosition();
         static glm::vec2 GetMouseDelta();
+        static glm::vec2 GetMouseScroll();
         static glm::vec3 GetWorldMousePosition(render::Camera* camera);
 
         enum MouseButton
@@ -71,11 +72,13 @@ namespace tmt::input
     };
 
     InputState GetInputState();
+    void ForceInputState(InputState state);
 
     float GetAxis(string axis);
     glm::vec2 GetAxis2(string axis);
 
     string GetGamepadName();
+    int GetLastKey();
 
     void Update();
     void init();

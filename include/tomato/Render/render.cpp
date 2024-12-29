@@ -2455,8 +2455,10 @@ void tmt::render::update()
     if (renderer->useImgui)
     {
 
-        imguiBeginFrame(mousep.x, mousep.y, btn, 0, static_cast<u16>(renderer->windowWidth),
-                        static_cast<u16>(renderer->windowHeight));
+
+        imguiBeginFrame(mousep.x, mousep.y, btn, input::Mouse::GetMouseScroll().y,
+                        static_cast<u16>(renderer->windowWidth),
+                        static_cast<u16>(renderer->windowHeight), input::GetLastKey());
 
         {
             for (auto debug_func : debugFuncs)
@@ -2628,6 +2630,7 @@ void tmt::render::update()
     lights.clear();
 
     frameTime = bgfx::frame();
+    lastKey = -1;
     glfwPollEvents();
     counterTime++;
 

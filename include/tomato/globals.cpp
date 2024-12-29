@@ -20,6 +20,8 @@ std::vector<tmt::light::Light*> lights;
 std::vector<std::function<void()>> debugFuncs;
 glm::vec2 mousep;
 glm::vec2 mousedelta;
+glm::vec2 mousescrl;
+int lastKey;
 tmt::render::Camera* mainCamera;
 tmt::obj::Scene* mainScene;
 tmt::render::Shader* defaultShader;

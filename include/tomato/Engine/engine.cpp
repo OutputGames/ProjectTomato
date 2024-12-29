@@ -6,9 +6,9 @@ tmt::engine::EngineInfo* tmt::engine::init()
 
     var resourceManager = new fs::ResourceManager();
 
-    input::init();
-
     var rendererInfo = render::init();
+
+    input::init();
 
     var engineInfo = new EngineInfo();
     engineInfo->renderer = rendererInfo;
@@ -25,10 +25,10 @@ void tmt::engine::update()
     debug::DebugUi::Update();
 #endif
 
-    input::Update();
 
     obj::update();
     render::update();
+    input::Update();
     audio::update();
 
     double xpos = 0;
