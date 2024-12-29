@@ -218,6 +218,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
+
     // Step 2: Rasterize the triangles
     std::vector<unsigned char> triAreas(indices.size() / 3, 0);
     rcMarkWalkableTriangles(ctx, config.walkableSlopeAngle, vertices.data(), vertices.size() / 3, indices.data(),
@@ -334,6 +335,31 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
     params.ch = config.ch;
     params.buildBvTree = true;
 
+    int gw = 0, gh = 0;
+    const float* bmin = config.bmin;
+    const float* bmax = config.bmax;
+    rcCalcGridSize(bmin, bmax, config.cs, &gw, &gh);
+    const int ts = config.tileSize;
+    const int tw = (gw + ts - 1) / ts;
+    const int th = (gh + ts - 1) / ts;
+
+    // Max tiles and max polys affect how the tile IDs are caculated.
+    // There are 22 bits available for identifying a tile and a polygon.
+    int tileBits = rcMin(static_cast<int>(dtIlog2(bx::nextPow2(tw * th))), 14);
+    if (tileBits > 14)
+        tileBits = 14;
+    int polyBits = 22 - tileBits;
+    var m_maxTiles = 1 << tileBits;
+    var m_maxPolysPerTile = 1 << polyBits;
+
+
+    constexpr float o[3] = {0, 0, 0};
+
+    dtNavMeshParams nparams = {};
+    nparams.tileWidth = config.tileSize * config.cs;
+    nparams.tileHeight = config.tileSize * config.cs;
+    nparams.maxTiles = m_maxTiles;
+    nparams.maxPolys = m_maxPolysPerTile;
 
     if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
     {
@@ -349,15 +375,21 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    float o[3] = {0, 0, 0};
-
+    /*
     if (dtStatusFailed(navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA, o)))
     {
         std::cerr << "Failed to initialize navmesh." << std::endl;
         return nullptr;
     }
+    */
 
-    //const float o[3] = {0, 0, 0};
+    if (dtStatusFailed(navMesh->init(&nparams)))
+    {
+        std::cerr << "Failed to initialize navmesh." << std::endl;
+        return nullptr;
+    }
+
+    var t = navMesh->getMaxTiles();
     //dtVcopy(navMesh->getParams()->orig, o);
 
     return navMesh;
@@ -379,9 +411,17 @@ dtNavMesh* NavMesh::Calculate(AgentInfo info)
     config.maxVertsPerPoly = 6;
     config.detailSampleDist = config.cs * 6.0f;
     config.detailSampleMaxError = config.ch * 1.0f;
+    config.tileSize = 16;
+    config.borderSize = config.walkableRadius + 3;
+
 
     rcCalcBounds(vertices.data(), vertices.size() / 3, config.bmin, config.bmax);
     rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+
+    config.bmin[0] -= config.borderSize * config.cs;
+    config.bmin[2] -= config.borderSize * config.cs;
+    config.bmax[0] -= config.borderSize * config.cs;
+    config.bmax[2] -= config.borderSize * config.cs;
 
     return CreateNavMesh(vertices, indices, config);
 }
