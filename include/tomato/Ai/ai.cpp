@@ -63,7 +63,10 @@ void PathfindingAgent::Update()
 {
     m_navMesh = NavigationMgr::pInstance->navMesh->navMeshes[info.id];
 
-    Object::Update();
+    m_navMesh.
+
+
+        Object::Update();
 }
 
 NavMeshSurface::NavMeshSurface()
