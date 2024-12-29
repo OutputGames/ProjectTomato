@@ -30,12 +30,12 @@ std::vector<glm::vec3> PathfindingAgent::FindPath(const glm::vec3& startPos, con
 
     std::vector<glm::vec3> path;
 
-    float extents[3] = {info.size * 2.0f, info.size * 1.5f, info.size * 2.0f};
+    float extents[3] = {2, 4, 2};
 
     dtPolyRef startRef, endRef;
-    float startNearest[3] = {startPos.x, startPos.y, startPos.z}, endNearest[3];
-    m_navQuery->findNearestPoly(startNearest, extents, &m_filter, &startRef, startNearest);
-    m_navQuery->findNearestPoly(&endPos.x, extents, &m_filter, &endRef, endNearest);
+    float startNearest[3] = {startPos.x, startPos.y, startPos.z}, endNearest[3] = {endPos.x, endPos.y, endPos.z};
+    m_navQuery->findNearestPoly(startNearest, extents, &m_filter, &startRef, nullptr);
+    m_navQuery->findNearestPoly(&endPos.x, extents, &m_filter, &endRef, nullptr);
 
     if (startRef && endRef)
     {
@@ -202,6 +202,7 @@ void NavMesh::Init(std::vector<NavMeshOBB> meshes)
 dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<int>& indices, const rcConfig& config)
 {
     var ctx = NavigationMgr::pInstance->ctx;
+    var vertCount = vertices.size();
 
     // Step 1: Create a heightfield
     rcHeightfield* heightfield = rcAllocHeightfield();
@@ -353,7 +354,7 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
     var m_maxPolysPerTile = 1 << polyBits;
 
 
-    constexpr float o[3] = {0, 0, 0};
+    float o[3] = {0, 0, 0};
 
     dtNavMeshParams nparams = {};
     nparams.tileWidth = config.tileSize * config.cs;
@@ -375,19 +376,13 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
-    /*
+
     if (dtStatusFailed(navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA, o)))
     {
         std::cerr << "Failed to initialize navmesh." << std::endl;
         return nullptr;
     }
-    */
 
-    if (dtStatusFailed(navMesh->init(&nparams)))
-    {
-        std::cerr << "Failed to initialize navmesh." << std::endl;
-        return nullptr;
-    }
 
     var t = navMesh->getMaxTiles();
     //dtVcopy(navMesh->getParams()->orig, o);
@@ -417,11 +412,6 @@ dtNavMesh* NavMesh::Calculate(AgentInfo info)
 
     rcCalcBounds(vertices.data(), vertices.size() / 3, config.bmin, config.bmax);
     rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
-
-    config.bmin[0] -= config.borderSize * config.cs;
-    config.bmin[2] -= config.borderSize * config.cs;
-    config.bmax[0] -= config.borderSize * config.cs;
-    config.bmax[2] -= config.borderSize * config.cs;
 
     return CreateNavMesh(vertices, indices, config);
 }
