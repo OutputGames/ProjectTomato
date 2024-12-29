@@ -314,6 +314,13 @@ dtNavMesh* CreateNavMesh(const std::vector<float>& vertices, const std::vector<i
         return nullptr;
     }
 
+    for (int i = 0; i < polyMesh->npolys; ++i)
+    {
+        if (polyMesh->areas[i] == RC_WALKABLE_AREA)
+            polyMesh->flags[i] = 0x01;
+    }
+
+
     // Step 11: Create the navmesh data
     unsigned char* navData = nullptr;
     int navDataSize = 0;
