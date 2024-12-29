@@ -21,6 +21,8 @@ PathfindingAgent::PathfindingAgent(AgentInfo info):
     m_navQuery->init(NavigationMgr::pInstance->navMesh->navMeshes[info.id], 2048);
     m_navMesh = NavigationMgr::pInstance->navMesh->navMeshes[info.id];
     m_filter = dtQueryFilter();
+    m_filter.setIncludeFlags(0xffff);
+    m_filter.setExcludeFlags(0);
 }
 
 std::vector<glm::vec3> PathfindingAgent::FindPath(const glm::vec3& startPos, const glm::vec3& endPos)
@@ -35,7 +37,7 @@ std::vector<glm::vec3> PathfindingAgent::FindPath(const glm::vec3& startPos, con
     dtPolyRef startRef, endRef;
     float startNearest[3] = {startPos.x, startPos.y, startPos.z}, endNearest[3] = {endPos.x, endPos.y, endPos.z};
     m_navQuery->findNearestPoly(startNearest, extents, &m_filter, &startRef, nullptr);
-    m_navQuery->findNearestPoly(&endPos.x, extents, &m_filter, &endRef, nullptr);
+    m_navQuery->findNearestPoly(endNearest, extents, &m_filter, &endRef, nullptr);
 
     if (startRef && endRef)
     {
@@ -63,10 +65,8 @@ void PathfindingAgent::Update()
 {
     m_navMesh = NavigationMgr::pInstance->navMesh->navMeshes[info.id];
 
-    m_navMesh.
 
-
-        Object::Update();
+    Object::Update();
 }
 
 NavMeshSurface::NavMeshSurface()
