@@ -316,7 +316,7 @@ static void key_cb(GLFWwindow* window, int key, int, int action, int mods)
     {
         down = true;
     }
-    io.AddKeyEvent((ImGuiKey)key, down);
+    io.AddKeyEvent(static_cast<ImGuiKey>(key), down);
 }
 
 static void scrl_cb(GLFWwindow* window, float xoffset, float yoffset)
