@@ -254,7 +254,7 @@ void Shader::Reload()
 {
     if (bgfx::isValid(program))
     {
-        //destroy(program);
+        destroy(program);
     }
 
     for (auto sub_shader : subShaders)
@@ -379,6 +379,8 @@ void Material::Reload(Shader* shader)
             {
                 var ovr = new MaterialOverride();
                 ovr->name = uniform->name;
+                ovr->shaderType = sub_shader->type;
+                ovr->type = uniform->type;
 
                 overrides.push_back(ovr);
             }
@@ -2070,6 +2072,8 @@ Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags,
     this->width = width;
     this->height = height;
     this->name = name;
+
+    ResMgr->loaded_textures[name] = this;
 }
 
 Texture::~Texture()
@@ -2413,6 +2417,22 @@ RendererInfo* tmt::render::init()
 
     if (renderer->useImgui)
         imguiCreate();
+
+    std::vector<byte> whiteData;
+
+    for (int x = 0; x < 10; ++x)
+    {
+        for (int y = 0; y < 10; ++y)
+        {
+            for (int c = 0; c < 3; ++c)
+            {
+                whiteData.push_back(0xFFF);
+            }
+        }
+    }
+
+    var white =
+        new Texture(10, 10, bgfx::TextureFormat::RGB8, 0, bgfx::copy(whiteData.data(), whiteData.size()), "White");
 
     return renderer;
 }

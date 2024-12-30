@@ -141,6 +141,7 @@ namespace std
 #define MAX_BONE_MATRICES 128
 #define TO_ARGS(v) v.x, v.y, v.z
 #define IN_VECTOR(vec, val) vec.find(val) != vec.end()
+#define STR_CONTAINS(str, chk) str.find(chk) != std::string::npos
 #define BIT(x) (1 << (x))
 
 #endif // TM_UTILS

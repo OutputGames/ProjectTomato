@@ -155,6 +155,9 @@ namespace tmt::render
         glm::mat3 m3 = glm::mat3(1.0);
         glm::mat4 m4 = glm::mat4(1.0);
         Texture* tex = nullptr;
+
+        SubShader::ShaderType shaderType;
+        bgfx::UniformType::Enum type;
     };
 
     struct MaterialState
@@ -217,12 +220,12 @@ namespace tmt::render
             }
         };
 
-        inline static std::map<CullMode, const char*> cullNames = {{
+        inline static std::map<CullMode, const char*> cullNames = {
             {toName(Clockwise)},
             {toName(Counterclockwise)},
-        }};
+        };
 
-        inline static std::map<WriteMode, const char*> writeNames = {{
+        inline static std::map<WriteMode, const char*> writeNames = {
             {toName(All)},
             {toName(RGBA)},
             {toName(RGB)},
@@ -231,7 +234,7 @@ namespace tmt::render
             {toName(Blue)},
             {toName(Depth)},
             {toName(Alpha)},
-        }};
+        };
 #endif
     };
 
