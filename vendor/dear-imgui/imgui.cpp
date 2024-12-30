@@ -6503,7 +6503,6 @@ void ImGui::Render()
     {
         IM_MSVC_WARNING_SUPPRESS(
             6011)
-        ; // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
         if (IsWindowActiveAndVisible(window) && (window->Flags & ImGuiWindowFlags_ChildWindow) == 0 &&
             window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1])
             AddRootWindowToDrawData(window);
@@ -6596,7 +6595,6 @@ void ImGui::FindHoveredWindowEx(const ImVec2& pos, bool find_first_and_in_any_vi
     {
         ImGuiWindow* window = g.Windows[i];
         IM_MSVC_WARNING_SUPPRESS(28182)
-        ; // [Static Analyzer] Dereferencing NULL pointer.
         if (!window->WasActive || window->Hidden)
             continue;
         if (window->Flags & ImGuiWindowFlags_NoMouseInputs)
@@ -6628,7 +6626,6 @@ void ImGui::FindHoveredWindowEx(const ImVec2& pos, bool find_first_and_in_any_vi
         if (hovered_window == nullptr)
             hovered_window = window;
         IM_MSVC_WARNING_SUPPRESS(28182)
-        ; // [Static Analyzer] Dereferencing NULL pointer.
         if (hovered_window_under_moving_window == nullptr &&
             (!g.MovingWindow || window->RootWindow != g.MovingWindow->RootWindow))
             hovered_window_under_moving_window = window;
@@ -10194,7 +10191,7 @@ ImGuiKey ImGui::GetKeyIndex(ImGuiKey key)
 #endif
 
 // Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
-static constexpr char* const GKeyNames[] = {
+static constexpr const char* GKeyNames[] = {
     "Tab",
     "LeftArrow",
     "RightArrow",

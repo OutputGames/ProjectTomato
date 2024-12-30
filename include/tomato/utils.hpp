@@ -28,6 +28,7 @@
 #define flt (float)
 #define arrsize(a) std::size(a)
 #define randval(min, max) (rand()%(abs(max - min) + 1) + min)
+#define TO_STRING(v) #v
 
 #ifndef PI
 #define PI 3.14159265358979323846f

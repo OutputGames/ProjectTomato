@@ -200,6 +200,39 @@ namespace tmt::render
             OrthoProj,
             None
         } matrixMode = ViewProj;
+
+#ifdef TMT_EDITOR
+#define toName(v) v, TO_STRING(v)
+
+        inline static std::map<DepthTest, const char*> depthNames = {
+            {
+                {toName(Less)},
+                {toName(LessEqual)},
+                {toName(Equal)},
+                {toName(GreaterEqual)},
+                {toName(Greater)},
+                {toName(NotEqual)},
+                {toName(Never)},
+                {toName(Always)},
+            }
+        };
+
+        inline static std::map<CullMode, const char*> cullNames = {{
+            {toName(Clockwise)},
+            {toName(Counterclockwise)},
+        }};
+
+        inline static std::map<WriteMode, const char*> writeNames = {{
+            {toName(All)},
+            {toName(RGBA)},
+            {toName(RGB)},
+            {toName(Red)},
+            {toName(Green)},
+            {toName(Blue)},
+            {toName(Depth)},
+            {toName(Alpha)},
+        }};
+#endif
     };
 
     struct Material
