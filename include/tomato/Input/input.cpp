@@ -9,20 +9,11 @@ using namespace tmt::input;
 static InputState currentInputState = KeyboardMouse;
 static bool forcedInputState = false;
 
-glm::vec2 Mouse::GetMousePosition()
-{
-    return mousep;
-}
+glm::vec2 Mouse::GetMousePosition() { return mousep; }
 
-glm::vec2 Mouse::GetMouseDelta()
-{
-    return mousedelta;
-}
+glm::vec2 Mouse::GetMouseDelta() { return mousedelta; }
 
-glm::vec2 Mouse::GetMouseScroll()
-{
-    return mousescrl;
-}
+glm::vec2 Mouse::GetMouseScroll() { return mousescrl; }
 
 // Function to convert mouse position to a ray direction
 glm::vec3 ScreenToWorldRay(float mouseX, float mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
@@ -48,7 +39,6 @@ glm::vec3 ScreenToWorldRay(float mouseX, float mouseY, int screenWidth, int scre
     rayWorld = normalize(rayWorld);
 
     return rayWorld;
-
 }
 
 // Example usage
@@ -71,7 +61,7 @@ glm::vec3 Mouse::GetWorldMousePosition(render::Camera* camera)
     var dir = RaycastFromMouse(mousep.x, mousep.y, renderer->windowWidth, renderer->windowHeight, camera->GetView_m4(),
                                camera->GetProjection_m4());
 
-    //debug::Gizmos::DrawSphere(camera->position + dir, 0.1f);
+    // debug::Gizmos::DrawSphere(camera->position + dir, 0.1f);
 
     var pos = camera->position;
 
@@ -160,10 +150,7 @@ float Gamepad::GetAxis(int axis)
     return a;
 }
 
-InputState tmt::input::GetInputState()
-{
-    return currentInputState;
-}
+InputState tmt::input::GetInputState() { return currentInputState; }
 
 void tmt::input::ForceInputState(InputState state)
 {
@@ -206,11 +193,11 @@ float tmt::input::GetAxis(string axis)
         if (currentInputState == KeyboardMouse)
         {
 
-            var u = (Keyboard::GetKey(GLFW_KEY_UP) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_W) ==
-                Keyboard::Hold);
+            var u =
+                (Keyboard::GetKey(GLFW_KEY_UP) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_W) == Keyboard::Hold);
 
-            var d = (Keyboard::GetKey(GLFW_KEY_DOWN) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_A) ==
-                Keyboard::Hold);
+            var d =
+                (Keyboard::GetKey(GLFW_KEY_DOWN) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_A) == Keyboard::Hold);
 
             if (u)
             {
@@ -225,7 +212,6 @@ float tmt::input::GetAxis(string axis)
         {
             a = -Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_LEFT_Y);
         }
-
     }
     else if (axis == "LookHorizontal")
     {
@@ -277,15 +263,9 @@ glm::vec2 tmt::input::GetAxis2(string axis)
     return a;
 }
 
-string tmt::input::GetGamepadName()
-{
-    return glfwGetJoystickName(0);
-}
+string tmt::input::GetGamepadName() { return glfwGetJoystickName(0); }
 
-int tmt::input::GetLastKey()
-{
-    return lastKey;
-}
+int tmt::input::GetLastKey() { return lastKey; }
 
 static void joystick_cb(int jid, int event)
 {
@@ -319,10 +299,7 @@ static void key_cb(GLFWwindow* window, int key, int, int action, int mods)
     io.AddKeyEvent(static_cast<ImGuiKey>(key), down);
 }
 
-static void scrl_cb(GLFWwindow* window, float xoffset, float yoffset)
-{
-    mousescrl = {xoffset, yoffset};
-}
+static void scrl_cb(GLFWwindow* window, float xoffset, float yoffset) { mousescrl = {xoffset, yoffset}; }
 
 void tmt::input::init()
 {
