@@ -81,6 +81,7 @@ namespace tmt::physics
     struct PhysicalWorld
     {
         PhysicalWorld();
+        ~PhysicalWorld();
 
         void Update();
 
@@ -136,6 +137,7 @@ namespace tmt::physics
     struct ColliderObject : obj::Object
     {
         ColliderInitInfo initInfo;
+        bool scaleByObject = false;
         ColliderObject(ColliderInitInfo info, Object* parent = nullptr);
 
     private:
@@ -154,7 +156,7 @@ namespace tmt::physics
 
         enum TransformRelationship
         {
-            Self,
+            Self = 0,
             Parent
         } transRelation = Self;
 

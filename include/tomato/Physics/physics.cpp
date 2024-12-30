@@ -169,21 +169,37 @@ btScalar ParticleCollisionCallback::addSingleResult(btManifoldPoint& cp,
     return 0;
 }
 
+btCollisionDispatcher* dispatcher;
+btBroadphaseInterface* overlappingPairCache;
+btSequentialImpulseConstraintSolver* solver;
+
 PhysicalWorld::PhysicalWorld()
 {
     auto configuration = new btDefaultCollisionConfiguration();
 
-    auto dispatcher = new btCollisionDispatcher(configuration);
+    dispatcher = new btCollisionDispatcher(configuration);
 
-    btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
+    overlappingPairCache = new btDbvtBroadphase();
 
-    auto solver = new btSequentialImpulseConstraintSolver;
+    solver = new btSequentialImpulseConstraintSolver;
 
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, configuration);
 
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
     SetLayerMask(0, {0, 1, 2, 3, 4, 5});
+}
+
+PhysicalWorld::~PhysicalWorld()
+{
+    delete dynamicsWorld;
+    delete solver;
+    delete overlappingPairCache;
+    delete dispatcher;
+
+    dynamicsWorld = nullptr;
+
+    doneFirstPhysicsUpdate = true;
 }
 
 void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
@@ -631,7 +647,7 @@ ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent)
     SetParent(parent);
     initInfo = i;
     var shape = ShapeFromInfo(i);
-    if (i.s == Mesh)
+    if (i.s == Mesh || scaleByObject)
     {
         var scale = convertVec3(GetGlobalScale());
         shape->setLocalScaling(scale);
@@ -687,7 +703,7 @@ void PhysicsBody::Update()
     if (!parent)
         transRelation = Self;
 
-    if (!doneFirstPhysicsUpdate || pId == UINT16_MAX)
+    if ((!doneFirstPhysicsUpdate || pId == UINT16_MAX) && dynamicsWorld != nullptr)
     {
         pId = physicalBodies.size();
 
@@ -735,9 +751,13 @@ void PhysicsBody::Update()
         // dynamicsWorld->contactTest(physicalBodies[pId].object, callback);
     }
 
-    var pBody = physicalBodies[pId];
-    pBody->setUserPointer(this);
-    // cringeee
+    btRigidBody* pBody = nullptr;
+
+    if (physicalBodies.size() > pId)
+    {
+        pBody = physicalBodies[pId];
+        pBody->setUserPointer(this);
+    }
 
     if (pBody && pBody->getMotionState())
     {

@@ -16,7 +16,8 @@ namespace tmt::debug
     {
         Line,
         Sphere,
-        Text
+        Text,
+        Box
     };
 
     struct DebugCall
@@ -36,6 +37,7 @@ namespace tmt::debug
         inline static auto matrix = glm::mat4(1.0);
 
         static void DrawLine(glm::vec3 start, glm::vec3 end);
+        static void DrawBox(glm::vec3 pos, glm::vec3 size);
         static void DrawSphere(glm::vec3 position, float radius);
         static void _DrawText(glm::vec2 pos, string text);
     };

@@ -2638,6 +2638,23 @@ void tmt::render::update()
                 dde.pop();
             }
             break;
+            case debug::Box:
+            {
+                dde.push();
+
+                dde.setWireframe(true);
+                dde.setTransform(value_ptr(d.matrix));
+
+                var min = d.origin - (d.direction / 2.0f);
+                var max = d.origin + (d.direction / 2.0f);
+
+                var aabb = bx::Aabb(math::convertVec3(min), math::convertVec3(max));
+
+                dde.draw(aabb);
+
+                dde.pop();
+            }
+            break;
             default:
                 break;
         }

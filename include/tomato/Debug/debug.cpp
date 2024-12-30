@@ -12,6 +12,15 @@ void tmt::debug::Gizmos::DrawLine(glm::vec3 start, glm::vec3 end)
     matrix = glm::mat4(1.0);
 }
 
+void tmt::debug::Gizmos::DrawBox(glm::vec3 pos, glm::vec3 size)
+{
+    var clr = color;
+
+    debugCalls.push_back(DebugCall{Box, pos, size, 0, clr, "", matrix});
+
+    matrix = glm::mat4(1.0);
+}
+
 void tmt::debug::Gizmos::DrawSphere(glm::vec3 position, float radius)
 {
     var clr = color;
