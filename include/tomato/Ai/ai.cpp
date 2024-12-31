@@ -8,6 +8,7 @@
 #include "Recast.h"
 #include "Recast.h"
 #include "Debug/debug.hpp"
+#include "Math/math.hpp"
 #include "Render/render.hpp"
 
 using namespace tmt::ai;
@@ -117,6 +118,8 @@ void drawNavMeshPoly(const dtNavMesh* mesh, dtPolyRef ref)
 {
     const dtMeshTile* tile = nullptr;
     const dtPoly* poly = nullptr;
+    if (dtStatusFailed(mesh->getTileAndPolyByRef(ref, &tile, &poly)))
+        return;
 
     const uint ip = poly - tile->polys;
 
@@ -127,7 +130,24 @@ void drawNavMeshPoly(const dtNavMesh* mesh, dtPolyRef ref)
     else
     {
         const dtPolyDetail* pd = &tile->detailMeshes[ip];
+        auto tris = new tmt::debug::DebugTriangle[pd->triCount];
+        for (int i = 0; i < pd->triCount; ++i)
+        {
+            const unsigned char* t = &tile->detailTris[(pd->triBase + i) * 4];
+            var tri = tmt::debug::DebugTriangle{};
+            for (int j = 0; j < 3; ++j)
+            {
+                if (t[j] < poly->vertCount)
+                {
+                    var pt = &tile->verts[poly->verts[t[j]] * 3];
 
+                    tri[j] = tmt::math::convertVec3(pt);
+                }
+            }
+            tris[i] = tri;
+
+        }
+        tmt::debug::Gizmos::DrawTriangles(tris, pd->triCount);
     }
 }
 

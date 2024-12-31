@@ -2627,7 +2627,7 @@ void tmt::render::update()
 
     for (auto d : debugCalls)
     {
-        dde.setWireframe(true);
+        dde.setWireframe(false);
         dde.setColor(d.color.getHex());
         switch (d.type)
         {
@@ -2668,6 +2668,27 @@ void tmt::render::update()
                 dde.draw(aabb);
 
                 dde.pop();
+            }
+            break;
+            case debug::TriangleList:
+            {
+                dde.push();
+
+                //dde.setWireframe(true);
+                dde.setTransform(value_ptr(d.matrix));
+
+                for (int i = 0; i < static_cast<int>(d.radius); ++i)
+                {
+                    var tri = d.triangles[i];
+
+                    var angle =
+                        bx::Triangle{math::convertVec3(tri.p1), math::convertVec3(tri.p2), math::convertVec3(tri.p3)};
+
+                    dde.draw(angle);
+                }
+
+                dde.pop();
+
             }
             break;
             default:
