@@ -659,8 +659,7 @@ ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent)
     collisionObjs.push_back(shape);
 }
 
-PhysicsBody::PhysicsBody(ColliderObject* collisionObj, float mass) :
-    Object()
+void PhysicsBody::Init(ColliderObject* collisionObj, float mass)
 {
     if (!collisionObj->parent)
     {
@@ -677,6 +676,17 @@ PhysicsBody::PhysicsBody(ColliderObject* collisionObj, float mass) :
     callback_.collider = collisionObj;
 
     bodies.push_back(this);
+}
+
+PhysicsBody::PhysicsBody(ColliderObject* collisionObj, float mass) :
+    Object()
+{
+    Init(collisionObj, mass);
+}
+
+PhysicsBody::PhysicsBody()
+{
+
 }
 
 void PhysicsBody::SetForward(glm::vec3 v)

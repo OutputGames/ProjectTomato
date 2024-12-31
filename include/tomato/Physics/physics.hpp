@@ -152,7 +152,9 @@ namespace tmt::physics
         float mass = 1;
         int layer = 0;
 
+        void Init(ColliderObject* collisionObj, float mass);
         PhysicsBody(ColliderObject* collisionObj, float mass = 1);
+        PhysicsBody();
 
         enum TransformRelationship
         {

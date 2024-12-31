@@ -79,7 +79,7 @@ namespace tmt::fs
 
         void WriteString(string s)
         {
-            Write(s.size());
+            WriteInt32(s.size());
             WriteSignature(s);
         }
 
