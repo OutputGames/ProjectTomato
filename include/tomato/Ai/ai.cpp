@@ -87,9 +87,11 @@ void NavigationMgr::CalculateAllMeshes()
     std::vector<NavMeshObject> meshes;
     for (auto surface : surfaces)
     {
-        var meshs = surface->GetObjectsFromType<obj::MeshObject>();
-
-        meshes.push_back({mesh->mesh, mesh->GetTransform()});
+        var meshs = surface->GetObjectsFromTypeRecursive<obj::MeshObject>();
+        for (auto mesh : meshs)
+        {
+            meshes.push_back({mesh->mesh, mesh->GetTransform()});
+        }
     }
 
     navMesh = new NavMesh;
