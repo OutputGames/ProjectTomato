@@ -2674,7 +2674,7 @@ void tmt::render::update()
             {
                 dde.push();
 
-                //dde.setWireframe(true);
+                dde.setWireframe(true);
                 dde.setTransform(value_ptr(d.matrix));
 
                 for (int i = 0; i < static_cast<int>(d.radius); ++i)
@@ -2686,6 +2686,8 @@ void tmt::render::update()
 
                     dde.draw(angle);
                 }
+
+                delete[] d.triangles;
 
                 dde.pop();
 

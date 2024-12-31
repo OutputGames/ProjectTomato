@@ -144,6 +144,11 @@ void drawNavMeshPoly(const dtNavMesh* mesh, dtPolyRef ref)
                     tri[j] = tmt::math::convertVec3(pt);
                 }
             }
+
+            //tmt::debug::Gizmos::DrawSphere(tri.p1, 0.05f);
+            //tmt::debug::Gizmos::DrawSphere(tri.p2, 0.05f);
+            //tmt::debug::Gizmos::DrawSphere(tri.p3, 0.05f);
+
             tris[i] = tri;
 
         }
