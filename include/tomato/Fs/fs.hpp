@@ -148,15 +148,23 @@ namespace tmt::fs
 
         glm::vec3 ReadVec3()
         {
-
-            var vec = glm::vec3(ReadSingle(), ReadSingle(), ReadSingle());
-
-            //std::cout << "reading vec3: " << tellg() << " " << std::to_string(vec) << std::endl;
-
+            float x = ReadSingle();
+            float y = ReadSingle();
+            float z = ReadSingle();
+            var vec = glm::vec3(x, y, z);
             return vec;
         }
 
-        glm::vec4 ReadVec4() { return glm::vec4(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle()); }
+        glm::vec4 ReadVec4()
+        {
+            float x = ReadSingle();
+            float y = ReadSingle();
+            float z = ReadSingle();
+            float w = ReadSingle();
+            var vec = glm::vec4(x, y, z, w);
+            return vec;
+        }
+
         glm::vec2 ReadVec2() { return glm::vec2(ReadSingle(), ReadSingle()); }
 
         glm::quat ReadQuat()

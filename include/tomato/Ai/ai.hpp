@@ -30,6 +30,8 @@ namespace tmt::ai
 
         NavigationMgr();
 
+        void Update();
+
         void Calculate(NavMesh* navMesh);
     };
 
@@ -104,7 +106,7 @@ namespace tmt::ai
     {
         NavMeshSurface();
 
-
+        void Update() override;
     };
 
 

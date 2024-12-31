@@ -7,6 +7,7 @@
 #include "DetourNavMeshQuery.h"
 #include "Recast.h"
 #include "Recast.h"
+#include "Debug/debug.hpp"
 #include "Render/render.hpp"
 
 using namespace tmt::ai;
@@ -73,6 +74,11 @@ NavMeshSurface::NavMeshSurface()
 {
 }
 
+void NavMeshSurface::Update()
+{
+    Object::Update();
+}
+
 AgentInfo::AgentInfo()
 {
     id = NavigationMgr::pInstance->agentInfos.size();
@@ -105,6 +111,42 @@ NavigationMgr::NavigationMgr()
 {
     pInstance = this;
     ctx = new rcContext(true);
+}
+
+void drawNavMeshPoly(const dtNavMesh* mesh, dtPolyRef ref)
+{
+    const dtMeshTile* tile = nullptr;
+    const dtPoly* poly = nullptr;
+
+    const uint ip = poly - tile->polys;
+
+    if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
+    {
+
+    }
+    else
+    {
+        const dtPolyDetail* pd = &tile->detailMeshes[ip];
+
+    }
+}
+
+void NavigationMgr::Update()
+{
+    const dtNavMesh* mesh = navMesh->navMeshes[0];
+    for (int i = 0; i < mesh->getMaxTiles(); ++i)
+    {
+        var tile = mesh->getTile(i);
+        if (!tile->header)
+            continue;
+        dtPolyRef base = mesh->getPolyRefBase(tile);
+
+        for (int j = 0; j < tile->header->polyCount; ++j)
+        {
+            const dtPoly* p = &tile->polys[j];
+            drawNavMeshPoly(mesh, base | static_cast<dtPolyRef>(j));
+        }
+    }
 }
 
 void NavigationMgr::Calculate(NavMesh* navMesh)
@@ -172,6 +214,7 @@ void ConvertOBBToVerticesAndIndices(const glm::vec3& center, const glm::vec3& ex
 
 void NavMesh::Init(std::vector<NavMeshObject> meshes)
 {
+    int vertexOffset = 0;
     for (auto mesh : meshes)
     {
         for (int i = 0; i < mesh.mesh->vertexCount; ++i)
@@ -189,8 +232,10 @@ void NavMesh::Init(std::vector<NavMeshObject> meshes)
         {
             var idx = static_cast<int>(mesh.mesh->indices[i]);
 
-            indices.push_back(idx);
+            indices.push_back(idx + vertexOffset);
         }
+
+        vertexOffset += mesh.mesh->vertexCount;
     }
 }
 
