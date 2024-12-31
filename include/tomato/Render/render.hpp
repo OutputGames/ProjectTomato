@@ -496,7 +496,7 @@ namespace tmt::render
             glm::mat4 localTransform;
             int boneId;
 
-            glm::mat4 Update(float animationTime);
+            glm::mat4 Update(float animationTime, Object* obj);
 
             int GetPositionIndex(float animationTime);
             int GetRotationIndex(float animationTime);
@@ -505,9 +505,9 @@ namespace tmt::render
             float GetScaleFactor(float lasttime, float nexttime, float animationTime);
 
 
-            glm::mat4 InterpolatePosition(float animationTime);
-            glm::mat4 InterpolateRotation(float animationTime);
-            glm::mat4 InterpolateScaling(float animationTime);
+            glm::vec3 InterpolatePosition(float animationTime);
+            glm::quat InterpolateRotation(float animationTime);
+            glm::vec3 InterpolateScaling(float animationTime);
         };
 
         SkeletonObject* skeleton = nullptr;

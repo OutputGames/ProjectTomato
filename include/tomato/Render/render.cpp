@@ -951,12 +951,14 @@ Animator::Animator()
 
 }
 
-glm::mat4 Animator::AnimationBone::Update(float animationTime)
+glm::mat4 Animator::AnimationBone::Update(float animationTime, Object* obj)
 {
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    localTransform = translation * rotation * scale;
+    obj->position = translation;
+    obj->rotation = rotation;
+    obj->scale = scale;
 
     return localTransform;
 }
@@ -1000,12 +1002,12 @@ float Animator::AnimationBone::GetScaleFactor(float lasttime, float nexttime, fl
     return scaleFactor;
 }
 
-glm::mat4 Animator::AnimationBone::InterpolatePosition(float animationTime)
+glm::vec3 Animator::AnimationBone::InterpolatePosition(float animationTime)
 {
     if (1 == channel->positions.size())
     {
         var finalPosition = channel->positions[0]->value;
-        return translate(glm::mat4(1.0f), finalPosition);
+        return finalPosition;
     }
 
     int p0Index = GetPositionIndex(animationTime);
@@ -1014,15 +1016,15 @@ glm::mat4 Animator::AnimationBone::InterpolatePosition(float animationTime)
         GetScaleFactor(channel->positions[p0Index]->time, channel->positions[p1Index]->time, animationTime);
     glm::vec3 finalPosition =
         mix(channel->positions[p0Index]->value, channel->positions[p1Index]->value, scaleFactor);
-    return translate(glm::mat4(1.0f), finalPosition);
+    return finalPosition;
 }
 
-glm::mat4 Animator::AnimationBone::InterpolateRotation(float animationTime)
+glm::quat Animator::AnimationBone::InterpolateRotation(float animationTime)
 {
     if (1 == channel->rotations.size())
     {
         auto finalRotation = normalize(channel->rotations[0]->value);
-        return toMat4(finalRotation);
+        return finalRotation;
     }
 
     int p0Index = GetRotationIndex(animationTime);
@@ -1032,15 +1034,15 @@ glm::mat4 Animator::AnimationBone::InterpolateRotation(float animationTime)
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index]->value, channel->rotations[p1Index]->value, scaleFactor);
     finalRotation = normalize(finalRotation);
-    return toMat4(finalRotation);
+    return finalRotation;
 }
 
-glm::mat4 Animator::AnimationBone::InterpolateScaling(float animationTime)
+glm::vec3 Animator::AnimationBone::InterpolateScaling(float animationTime)
 {
     if (1 == channel->scales.size())
     {
         var finalScale = channel->scales[0]->value;
-        return glm::scale(glm::mat4(1.0f), finalScale);
+        return finalScale;
     }
 
     int p0Index = GetScaleIndex(animationTime);
@@ -1048,7 +1050,7 @@ glm::mat4 Animator::AnimationBone::InterpolateScaling(float animationTime)
     float scaleFactor =
         GetScaleFactor(channel->scales[p0Index]->time, channel->scales[p1Index]->time, animationTime);
     glm::vec3 finalScale = mix(channel->scales[p0Index]->value, channel->scales[p1Index]->value, scaleFactor);
-    return glm::scale(glm::mat4(1.0f), finalScale);
+    return finalScale;
 }
 
 Animator::AnimationBone* Animator::GetBone(string name)
@@ -1114,14 +1116,9 @@ void Animator::Update()
         if (animationBones.size() <= currentAnimation->nodeChannels.size())
             LoadAnimationBones();
 
-        pushBoneMatrices.clear();
-        pushBoneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
-
         for (auto animation_bone : animationBones)
         {
-            animation_bone->Update(time);
-
-            skeleton->bones[animation_bone->boneId]->SetTransform(animation_bone->localTransform);
+            animation_bone->Update(time, skeleton->bones[animation_bone->boneId]);
         }
 
         //CalculateBoneTransform(skeleton->skeleton->GetBone(skeleton->skeleton->rootName), glm::mat4(1.0));
@@ -1277,10 +1274,16 @@ Model::Model(string path)
 
 Skeleton::Bone* Skeleton::GetBone(string name)
 {
+    /*
     for (auto value : bones)
     {
         if (value->name == name)
             return value;
+    }
+    */
+    if (boneInfoMap.contains(name))
+    {
+        return bones[boneInfoMap[name].id];
     }
 
     return nullptr;
