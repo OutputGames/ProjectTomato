@@ -580,6 +580,7 @@ SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
         c->SetParent(this);
     }
 
+
 }
 
 SceneDescription::Node* SceneDescription::Node::GetNode(string name)
@@ -747,12 +748,14 @@ tmt::obj::Object* SceneDescription::Node::ToObject(int modelIndex)
 
 std::vector<SceneDescription::Node*> SceneDescription::Node::GetAllChildren()
 {
-    var c = std::vector<Node*>(children);
+    var c = std::vector<Node*>();
 
     for (auto child : children)
     {
+        c.push_back(child);
         var c2 = child->GetAllChildren();
-        c.insert(c.end(), c2.begin(), c2.end());
+        for (auto value : c2)
+            c.push_back(value);
     }
 
     return c;
@@ -812,6 +815,16 @@ SceneDescription::SceneDescription(string path)
 
         var realRoot = new Node(scene->mRootNode, this);
         realRoot->SetParent(rootNode);
+
+        var c = rootNode->GetAllChildren();
+
+        for (auto value : c)
+        {
+            if (value->meshIndices.size() > 0)
+            {
+                value->SetParent(rootNode);
+            }
+        }
 
         {
             var model = new Model(scene, this);
@@ -1172,38 +1185,30 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
     glm::mat4 nodeTransform = skeleBone->transformation;
     int idx = 0;
 
-    var boneInfoMap = skeleton->boneInfoMap;
-    if (boneInfoMap.contains(nodeName))
+    if (skeleton->boneInfoMap.contains(nodeName))
     {
-        idx = boneInfoMap[nodeName].id;
+        idx = skeleton->boneInfoMap[nodeName].id;
     }
 
     BoneObject* animBone = bones[idx];
 
     if (animBone)
     {
-        // animBone->Update(time);
         nodeTransform = bones[idx]->GetLocalTransform();
-
-        if (animBone->parent)
-        {
-
-        }
     }
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
-    if (boneInfoMap.contains(nodeName))
+    if (skeleton->boneInfoMap.contains(nodeName))
     {
-        var index = boneInfoMap[nodeName].id;
-        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        var index = skeleton->boneInfoMap[nodeName].id;
+        glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
     }
 
     for (string child : skeleBone->children)
     {
-        var cbone = skeleton->GetBone(child);
-        CalculateBoneTransform(cbone, globalTransform);
+        CalculateBoneTransform(skeleton->GetBone(child), globalTransform);
     }
 }
 
@@ -1307,6 +1312,30 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         modelNode->name = name;
         modelNode->scene = description;
         modelNode->SetParent(description->rootNode);
+
+        var armatureNode = description->GetNode("Armature");
+        var bones = armatureNode->GetAllChildren();
+
+        for (int i = 0; i < bones.size(); ++i)
+        {
+
+            var bnode = bones[i];
+
+            bnode->isBone = true;
+
+            var boneName = bnode->name;
+
+            BoneInfo boneInfo;
+            boneInfo.id = skeleton->boneInfoMap.size();
+            //boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
+            skeleton->boneInfoMap[boneName] = boneInfo;
+
+            var bone = new Skeleton::Bone;
+            bone->name = boneName;
+            bone->skeleton = skeleton;
+
+            skeleton->bones.push_back(bone);
+        }
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1359,6 +1388,8 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             else
             {
                 boneId = skeleton->boneInfoMap[boneName].id;
+
+                skeleton->boneInfoMap[boneName].offset = math::convertMat4(b->mOffsetMatrix);
             }
 
             if (skeleton->GetBone(b->mName.C_Str()) == nullptr)
