@@ -199,6 +199,7 @@ Shader::Shader(ShaderInitInfo info)
 
     subShaders.push_back(info.vertexProgram);
     subShaders.push_back(info.fragmentProgram);
+    name = info.name;
 
     ResMgr->loaded_shaders[info.name] = this;
 }
@@ -2212,12 +2213,19 @@ MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
 }
 
 Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 triSize,
-                              bgfx::VertexLayout layout, Model* model)
+                              bgfx::VertexLayout layout, Model* model, string name)
 {
     u32 stride = layout.getStride();
     u32 vertS = stride * vertCount;
 
     u32 indeS = sizeof(u16) * triSize;
+
+    if (name == "none")
+    {
+        name = std::generateRandomString(12);
+        name += std::to_string(vertCount);
+        name += std::to_string(triSize);
+    }
 
     var mesh = new Mesh();
     //memcpy(mesh->vertices, data, sizeof(data));
@@ -2225,6 +2233,7 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
     mesh->indices = indices;
     mesh->vertices = data;
     mesh->model = model;
+    mesh->name = name;
     if (model)
     {
         mesh->idx = model->meshes.size();
@@ -2329,6 +2338,8 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
 
         mesh->indexBuffer = createDynamicIndexBuffer(vmem, BGFX_BUFFER_COMPUTE_READ);
     }
+
+    ResMgr->loaded_meshes[name] = mesh;
 
     return mesh;
 }

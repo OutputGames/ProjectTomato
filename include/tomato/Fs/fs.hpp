@@ -5,6 +5,7 @@
 
 namespace tmt::render
 {
+    struct Mesh;
     struct Texture;
     struct ComputeShader;
     struct Shader;
@@ -28,13 +29,43 @@ namespace tmt::fs
         template <typename T>
         void Write(T value)
         {
-            write(reinterpret_cast<char*>(&value), sizeof(value));
+            write(reinterpret_cast<const char*>(&value), sizeof(value));
+        }
+
+        template <typename T>
+        void Write(T value, int size)
+        {
+            write(reinterpret_cast<const char*>(&value), size);
         }
 
         void WriteInt32(u32 i)
         {
             Write(i);
         }
+
+        void WriteVec3(glm::vec3 v)
+        {
+            Write(v.x);
+            Write(v.y);
+            Write(v.z);
+        }
+
+        void WriteQuat(glm::quat v)
+        {
+            Write(v.x);
+            Write(v.y);
+            Write(v.z);
+            Write(v.w);
+        }
+
+        void WriteVec4(glm::vec4 v)
+        {
+            Write(v.x);
+            Write(v.y);
+            Write(v.z);
+            Write(v.w);
+        }
+
 
         void WriteInt16(u16 i)
         {
@@ -49,7 +80,17 @@ namespace tmt::fs
         void WriteString(string s)
         {
             Write(s.size());
-            Write(s.c_str());
+            WriteSignature(s);
+        }
+
+        void WriteSignature(string s)
+        {
+            write(s.c_str(), s.size());
+        }
+
+        void WriteSingle(float f)
+        {
+            Write(f);
         }
 
 
@@ -233,6 +274,7 @@ namespace tmt::fs
         std::map<string, render::Shader*> loaded_shaders;
         std::map<string, render::ComputeShader*> loaded_compute_shaders;
         std::map<string, render::Texture*> loaded_textures;
+        std::map<string, render::Mesh*> loaded_meshes;
 
         void ReloadShaders();
 

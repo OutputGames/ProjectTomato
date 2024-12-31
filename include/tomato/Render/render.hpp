@@ -113,6 +113,7 @@ namespace tmt::render
     {
         bgfx::ProgramHandle program;
         std::vector<SubShader*> subShaders;
+        string name;
 
         void Push(int viewId = 0, MaterialOverride** overrides = nullptr, size_t overrideCount = 0);
 
@@ -271,6 +272,7 @@ namespace tmt::render
         u16* indices;
 
         std::vector<string> bones;
+        string name;
 
         Model* model = nullptr;
         int idx = -1;
@@ -647,7 +649,7 @@ namespace tmt::render
     MatrixArray GetMatrixArray(glm::mat4 m);
 
     Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl,
-                     Model* model = nullptr);
+                     Model* model = nullptr, string name = "none");
 
     void pushDrawCall(DrawCall d);
 
