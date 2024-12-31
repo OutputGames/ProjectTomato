@@ -360,6 +360,7 @@ u64 Material::GetMaterialState()
     v |= BGFX_STATE_WRITE_MASK;
     v |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
+
     return v;
 }
 
