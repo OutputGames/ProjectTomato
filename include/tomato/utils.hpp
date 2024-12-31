@@ -168,5 +168,6 @@ namespace std
 #define IN_VECTOR(vec, val) vec.find(val) != vec.end()
 #define STR_CONTAINS(str, chk) str.find(chk) != std::string::npos
 #define BIT(x) (1 << (x))
+#define toName(v) v, TO_STRING(v)
 
 #endif // TM_UTILS

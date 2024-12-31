@@ -206,7 +206,6 @@ namespace tmt::render
         } matrixMode = ViewProj;
 
 #ifdef TMT_EDITOR
-#define toName(v) v, TO_STRING(v)
 
         inline static std::map<DepthTest, const char*> depthNames = {
             {

@@ -269,15 +269,18 @@ int tmt::input::GetLastKey() { return lastKey; }
 
 static void joystick_cb(int jid, int event)
 {
-    if (event == GLFW_CONNECTED)
+    if (!forcedInputState)
     {
-        currentInputState = Gamepad;
-        std::cout << "Connected gamepad" << std::endl;
-    }
-    else if (event == GLFW_DISCONNECTED)
-    {
-        currentInputState = KeyboardMouse;
-        std::cout << "Disconnected gamepad" << std::endl;
+        if (event == GLFW_CONNECTED)
+        {
+            currentInputState = Gamepad;
+            std::cout << "Connected gamepad" << std::endl;
+        }
+        else if (event == GLFW_DISCONNECTED)
+        {
+            currentInputState = KeyboardMouse;
+            std::cout << "Disconnected gamepad" << std::endl;
+        }
     }
 }
 

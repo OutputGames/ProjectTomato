@@ -2443,6 +2443,9 @@ RendererInfo* tmt::render::init()
         }
     }
 
+    GetPrimitive(prim::Cube);
+    GetPrimitive(prim::Sphere);
+
     var white =
         new Texture(10, 10, bgfx::TextureFormat::RGB8, 0, bgfx::copy(whiteData.data(), whiteData.size()), "White");
 

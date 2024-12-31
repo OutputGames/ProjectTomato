@@ -138,7 +138,10 @@ namespace tmt::physics
     {
         ColliderInitInfo initInfo;
         bool scaleByObject = false;
-        ColliderObject(ColliderInitInfo info, Object* parent = nullptr);
+        ColliderObject(ColliderInitInfo info, Object* parent = nullptr, bool scaleByObject = false);
+
+        ColliderObject();
+        void Init(ColliderInitInfo info);
 
     private:
         friend struct PhysicsBody;

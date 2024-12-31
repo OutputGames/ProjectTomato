@@ -642,9 +642,21 @@ ColliderInitInfo ColliderInitInfo::ForMesh(render::Mesh* mesh)
     return info;
 }
 
-ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent)
+ColliderObject::ColliderObject(ColliderInitInfo i, Object* parent, bool scaleByObject)
 {
+    this->scaleByObject = scaleByObject;
     SetParent(parent);
+
+    Init(i);
+}
+
+ColliderObject::ColliderObject()
+{
+
+}
+
+void ColliderObject::Init(ColliderInitInfo i)
+{
     initInfo = i;
     var shape = ShapeFromInfo(i);
     if (i.s == Mesh || scaleByObject)

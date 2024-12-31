@@ -69,7 +69,16 @@ tmt::render::Mesh* tmt::prim::GetPrimitive(PrimitiveType type)
             break;
         }
 
-        var mesh = createMesh(vertices, indices, vertCount, indCount, render::Vertex::getVertexLayout());
+        std::map<PrimitiveType, string> primTypes = {
+            {toName(Quad)},
+            {toName(Cube)},
+            {toName(Sphere)},
+            {toName(Cylinder)},
+        };
+
+        var mesh =
+            createMesh(vertices, indices, vertCount, indCount, render::Vertex::getVertexLayout(), nullptr,
+                       primTypes[type]);
 
         primitives.insert(std::make_pair(type, mesh));
     }
