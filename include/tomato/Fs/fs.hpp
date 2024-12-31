@@ -2,8 +2,6 @@
 #define FS_H
 
 #include "utils.hpp"
-#include "Audio/audio.hpp"
-
 
 namespace tmt::render
 {
@@ -20,66 +18,41 @@ namespace tmt::audio
 
 namespace tmt::fs
 {
-
-    struct StringBinaryReader;
     struct BinaryReader;
+    struct BinaryWriter;
 
-    struct StringBinaryReader : std::stringstream
+    struct BinaryWriter : std::ofstream
     {
-        StringBinaryReader(string data);
-
-        READ_FUNC(u16, UInt16);
-        READ_FUNC(u32, UInt32);
-        READ_FUNC(u8, Byte);
+        BinaryWriter(std::string path);
 
         template <typename T>
-        T Read()
+        void Write(T value)
         {
-            T header;
-            read(reinterpret_cast<char*>(&header), sizeof(T));
-
-            return header;
+            write(reinterpret_cast<char*>(&value), sizeof(value));
         }
 
-        template <typename T>
-        T* ReadArray(int count)
+        void WriteInt32(u32 i)
         {
-            T* arr = new T[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                arr[i] = (Read<T>());
-            }
-
-            return arr;
+            Write(i);
         }
 
-        template <typename T>
-        std::vector<T> ReadArray(ulong offset, int count)
+        void WriteInt16(u16 i)
         {
-            long p = tellg();
-
-            SeekBegin(offset);
-            var list = ReadArray<T>(count);
-
-            SeekBegin(p);
-            return list;
+            Write(i);
         }
 
-        void SeekBegin(int pos)
+        void WriteByte(u8 i)
         {
-            seekg(pos, std::ios::_Seekbeg);
+            Write(i);
         }
 
-        void Align(int alignment)
+        void WriteString(string s)
         {
-            seekg((-tellg() % alignment + alignment) % alignment, _Seekcur);
+            Write(s.size());
+            Write(s.c_str());
         }
 
-        string fLoadString(u32 offset);
-        string ReadString();
-        string ReadUtf8();
-        string ReadString(int size);
+
     };
 
     struct BinaryReader : std::ifstream
@@ -254,7 +227,6 @@ namespace tmt::fs
         static ResourceManager* pInstance;
         ResourceManager();
 
-        RESFUNC(GetSound, (string path, audio::Sound::SoundInitInfo info = {}), (path, info), audio::Sound*);
 
         std::map<string, audio::Sound*> loaded_sounds;
         std::map<string, render::SubShader*> loaded_sub_shaders;

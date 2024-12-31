@@ -5,15 +5,15 @@
 
 #include <tomato/utils.hpp>
 
-#include <tomato/Obj/obj.hpp>
+#include "Obj/obj.hpp"
 
 namespace tmt::audio
 {
     struct SoundListener;
 
-    struct AudioDevice 
+    struct AudioDevice
     {
-        static tmt::audio::AudioDevice* GetInstance();
+        static AudioDevice* GetInstance();
 
         AudioDevice();
         ~AudioDevice();
@@ -23,7 +23,6 @@ namespace tmt::audio
         ma_engine engine;
 
     private:
-
         std::vector<SoundListener*> listeners;
 
     };
@@ -48,7 +47,7 @@ namespace tmt::audio
 
     };
 
-    struct SoundListener : tmt::obj::Object
+    struct SoundListener : obj::Object
     {
         int pId = -1;
         glm::vec3 velocity{0};
@@ -56,7 +55,7 @@ namespace tmt::audio
         SoundListener();
     };
 
-    struct AudioPlayer : tmt::obj::Object
+    struct AudioPlayer : obj::Object
     {
         AudioPlayer();
 
@@ -74,7 +73,6 @@ namespace tmt::audio
         bool use3dAudio = true;
 
     private:
-
         void formatSound(Sound* sound);
 
         bool isPlaying = false;

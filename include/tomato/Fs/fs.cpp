@@ -6,58 +6,12 @@
 
 using namespace tmt::fs;
 
-StringBinaryReader::StringBinaryReader(string data) :
-    std::stringstream(data)
+
+BinaryWriter::BinaryWriter(std::string path) :
+    std::ofstream(path, std::ios::binary)
 {
+
 }
-
-string StringBinaryReader::fLoadString(u32 offset)
-{
-    var p = tellg();
-    seekg(offset, _Seekbeg);
-
-    u16 size = ReadUInt16();
-
-    string s = ReadString();
-    seekg(p, _Seekbeg);
-
-    return s;
-}
-
-string StringBinaryReader::ReadString()
-{
-    // short size = ReadInt16();
-    return ReadUtf8();
-}
-
-string StringBinaryReader::ReadUtf8()
-{
-    long start = tellg();
-    int size = 0;
-
-    while (ReadByte() - 1 > 0 && size < INT_MAX)
-    {
-        size++;
-    }
-
-    seekg(start, _Seekbeg);
-    var text = ReadString(size);
-    seekg(1, _Seekcur);
-    return text;
-}
-
-string StringBinaryReader::ReadString(int size)
-{
-    string s = "";
-
-    for (int i = 0; i < size; ++i)
-    {
-        s += Read<char>();
-    }
-
-    return s;
-}
-
 
 BinaryReader::BinaryReader(std::string path) :
     std::ifstream(path, std::ios::binary)
@@ -148,17 +102,6 @@ string BinaryReader::ReadString()
 ResourceManager* ResourceManager::pInstance;
 
 ResourceManager::ResourceManager() { pInstance = this; }
-
-tmt::audio::Sound* ResourceManager::_GetSound(string path, audio::Sound::SoundInitInfo info)
-{
-    if (loaded_sounds.contains(path))
-    {
-        return loaded_sounds[path];
-    }
-    var sound = new audio::Sound(path, info);
-    loaded_sounds[path] = sound;
-    return sound;
-}
 
 void ResourceManager::ReloadShaders()
 {
