@@ -1,0 +1,57 @@
+$input v_color0, v_texcoord0, v_pos, v_normal
+
+#include <bgfx_shader.sh>
+
+SAMPLER2D(s_texColor,  0);
+uniform vec4 iu_time;
+uniform vec4 iu_viewPos;
+uniform vec4 u_color;
+
+void main()
+{
+	vec4 color = u_color;
+
+	vec4 splatMask = (texture2D(s_texColor, v_texcoord0) );
+
+	if (color.r == 0 && color.g == 0 && color.b == 0) {
+		color = u_color;
+	}
+
+	color.xyz = lerp(color.xyz, vec3(1,0,0), splatMask.x);
+
+	vec3 lightPos = vec3(0,10,0);
+
+	//lightPos.x = sin(iu_time.x*0.001f) * 25;
+	//lightPos.z = cos(iu_time.x*0.001f) * 25;
+
+	vec3 lightColor = vec3_splat(1.0f);
+
+	vec3 norm = normalize(v_normal);
+	vec3 lightDir = normalize(lightPos - v_pos);
+
+	vec3 viewDir = normalize(iu_viewPos.xyz - v_pos);
+	vec3 reflectDir = reflect(-lightDir, norm);  
+	
+	float specularStrength = 0.0;
+
+	specularStrength = lerp(specularStrength, 1, splatMask.x);
+
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+	vec3 specular = specularStrength * spec * lightColor;  
+
+	float ambientStrength = 0.5;
+    vec3 ambient = ambientStrength * lightColor;
+
+	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 diffuse = diff * lightColor;
+	
+	vec3 result = (ambient + diffuse + specular) * color.xyz;
+
+	gl_FragColor = vec4(result.xyz, 1.0);
+
+	if (gl_FrontFacing) {
+		//gl_FragColor = vec4(1.0,0,0,1.0);
+	} else {
+		//gl_FragColor = vec4(0,0,1.0,1.0);
+	}
+}

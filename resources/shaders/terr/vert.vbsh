@@ -1,0 +1,34 @@
+$input a_position, a_normal, a_texcoord0
+$output v_color0, v_texcoord0, v_pos, v_normal
+
+#include <bgfx_shader.sh>
+
+mat3 cofactor(mat4 _m)
+{
+	// Reference:
+	// Cofactor of matrix. Use to transform normals. The code assumes the last column of _m is [0,0,0,1].
+	// https://www.shadertoy.com/view/3s33zj
+	// https://github.com/graphitemaster/normals_revisited
+	return mat3(
+		_m[1][1]*_m[2][2]-_m[1][2]*_m[2][1],
+		_m[1][2]*_m[2][0]-_m[1][0]*_m[2][2],
+		_m[1][0]*_m[2][1]-_m[1][1]*_m[2][0],
+		_m[0][2]*_m[2][1]-_m[0][1]*_m[2][2],
+		_m[0][0]*_m[2][2]-_m[0][2]*_m[2][0],
+		_m[0][1]*_m[2][0]-_m[0][0]*_m[2][1],
+		_m[0][1]*_m[1][2]-_m[0][2]*_m[1][1],
+		_m[0][2]*_m[1][0]-_m[0][0]*_m[1][2],
+		_m[0][0]*_m[1][1]-_m[0][1]*_m[1][0]
+		);
+}
+
+SAMPLER2D(s_heightTexture, 0);
+
+void main()
+{
+	v_texcoord0 = a_texcoord0;
+	v_pos = a_position.xyz;
+	v_pos.y = texture2DLod(s_heightTexture, a_texcoord0, 0).x * 255.0;
+
+	gl_Position = mul(u_modelViewProj, vec4(v_pos.xyz, 1.0));
+}
