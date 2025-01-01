@@ -954,6 +954,19 @@ void PhysicsBody::Reset()
     pBody->setLinearVelocity({0, 0, 0});
 }
 
+void PhysicsBody::SetPosition(glm::vec3 p)
+{
+    if (pId >= physicalBodies.size())
+        return;
+    var pBody = physicalBodies[pId];
+
+    var tr = pBody->getWorldTransform();
+
+    tr.setOrigin(convertVec3(p));
+
+    pBody->setWorldTransform(tr);
+}
+
 PhysicsBody::~PhysicsBody()
 {
     mainScene->physicsWorld->RemoveBody(pId, cPID);

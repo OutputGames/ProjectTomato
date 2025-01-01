@@ -92,6 +92,25 @@ Sound::Sound(string path, SoundInitInfo info)
     //ma_sound_set_rolloff(&sound, 10.0f);
     ma_sound_set_volume(&sound, 0);
 
+    fs::ResourceManager::pInstance->loaded_sounds[info.name] = this;
+}
+
+Sound* Sound::CreateSound(string path, SoundInitInfo info)
+{
+    if (info.name == "NONEAUD")
+    {
+        info.name = std::generateRandomString(10) + (std::filesystem::path(path).filename().string());
+    }
+    if (fs::ResourceManager::pInstance->loaded_sounds.contains(info.name))
+    {
+        return fs::ResourceManager::pInstance->loaded_sounds[info.name];
+    }
+
+    var sound = new Sound(path, info);
+
+    return sound;
+
+
 }
 
 Sound::~Sound() { ma_sound_uninit(&sound); }

@@ -133,6 +133,16 @@ namespace std
     }
 }
 
+namespace glm
+{
+    inline bool isGreaterThan(vec3 v1, vec3 v2)
+    {
+        var g = greaterThan(v1, v2);
+
+        return g.x || g.y || g.z;
+    }
+}
+
 #include <stdio.h>
 #include <GLFW/glfw3.h>
 #include <bgfx/bgfx.h>

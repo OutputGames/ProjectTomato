@@ -31,10 +31,12 @@ namespace tmt::audio
     {
         struct SoundInitInfo
         {
+            string name = "NONEAUD";
             bool useSpatialization = true;
         };
 
-        Sound(string path, SoundInitInfo info = {});
+        static Sound* CreateSound(string path, SoundInitInfo info = {});
+
         ~Sound();
 
         void Play();
@@ -42,6 +44,7 @@ namespace tmt::audio
 
     private:
         friend struct AudioPlayer;
+        Sound(string path, SoundInitInfo info = {});
 
         ma_sound sound;
 

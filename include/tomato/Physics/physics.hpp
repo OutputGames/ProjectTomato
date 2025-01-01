@@ -190,6 +190,8 @@ namespace tmt::physics
         glm::vec3 GetBasisRow(float v);
         void Reset();
 
+        void SetPosition(glm::vec3 p);
+
         ~PhysicsBody() override;
 
     private:
