@@ -618,13 +618,19 @@ static void key_cb(GLFWwindow* window, int keycode, int scancode, int action, in
     io.SetKeyEventNativeData(imgui_key, keycode, scancode); // To support legacy indexing (<1.87 user code)
 }
 
-static void scrl_cb(GLFWwindow* window, float xoffset, float yoffset) { mousescrl = {xoffset, yoffset}; }
+static void scrl_cb(GLFWwindow* window, double xoffset, double yoffset)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseWheelEvent(xoffset, yoffset);
+    mousescrl = {xoffset, yoffset};
+}
 
 void tmt::input::init()
 {
     glfwSetJoystickCallback(joystick_cb);
     glfwSetCharCallback(renderer->window, char_cb);
     glfwSetKeyCallback(renderer->window, key_cb);
+    glfwSetScrollCallback(renderer->window, scrl_cb);
 }
 
 

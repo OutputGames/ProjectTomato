@@ -1349,9 +1349,12 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
         for (int j = 0; j < msh->mNumVertices; ++j)
         {
-            var pos = msh->mVertices[j];
-            var norm = msh->mNormals[j];
-            var uv = msh->mTextureCoords[0][j];
+            aiVector3D pos(0), norm(0), uv(0);
+            pos = msh->mVertices[j];
+            if (msh->HasNormals())
+                norm = msh->mNormals[j];
+            if (msh->HasTextureCoords(0))
+                uv = msh->mTextureCoords[0][j];
 
             var vertex = Vertex{};
 
@@ -1475,17 +1478,20 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         }
     }
 
-    var c = description->GetAllChildren();
-
-    for (auto value : c)
+    if (description)
     {
-        if (value->meshIndices.size() > 0 && !value->name.starts_with("TMSH_"))
+
+        var c = description->GetAllChildren();
+
+        for (auto value : c)
         {
-            value->SetParent(nullptr);
-            delete value;
+            if (value->meshIndices.size() > 0 && !value->name.starts_with("TMSH_"))
+            {
+                value->SetParent(nullptr);
+                delete value;
+            }
         }
     }
-
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
     {
