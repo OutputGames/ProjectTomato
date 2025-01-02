@@ -76,6 +76,7 @@ end
             "vendor/bimg/include/",
             "include/tomato/",
             IMGUI_DIR,
+            "vendor/enet/include/"
         }
 
         libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
@@ -108,8 +109,8 @@ end
             dependson {"miniaudio"}
             links {"miniaudio.lib"}
             characterset ("MBCS")
-        links {"miniaudio"}
-        libdirs {"./bin/%{cfg.buildcfg}"}
+        links {"miniaudio", "enet"}
+        libdirs {"./bin/%{cfg.buildcfg}", "vendor/enet/lib/%{cfg.buildcfg}/"}
 
         filter "configurations:Debug"
             defines { "DEBUG", "BX_CONFIG_DEBUG=1" }
@@ -204,3 +205,4 @@ end
             path.join(MINI_DIR, "extras/miniaudio_split/miniaudio.c"),
         }
     include(RECAST_DIR .. "premake5.lua")
+    include("vendor/enet/premake5.lua")
