@@ -1988,6 +1988,7 @@ Texture::Texture(string path, bool isCubemap)
                 rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
                 rgbaData[i * 4 + 3] = data[i * nrChannels + 3]; // Add alpha channel with value 1.0
             }
+            rgbaData = data;
         }
 
 
@@ -1995,7 +1996,7 @@ Texture::Texture(string path, bool isCubemap)
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
-                                 textureFlags, bgfx::copy(data, dataSize));
+                                 textureFlags, bgfx::copy(rgbaData, dataSize));
         format = textureFormat;
 
 

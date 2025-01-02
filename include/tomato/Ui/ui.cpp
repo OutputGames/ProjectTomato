@@ -13,10 +13,20 @@ bool tmt::ui::Rect::isPointInRect(glm::vec2 p)
     return false;
 }
 
+tmt::ui::SpriteObject::SpriteObject()
+{
+    var initInfo = render::ShaderInitInfo{
+        render::SubShader::CreateSubShader("sprite/vert", render::SubShader::Vertex),
+        render::SubShader::CreateSubShader("sprite/frag", render::SubShader::Fragment),
+    };
+
+    material = new render::Material(render::Shader::CreateShader(initInfo));
+}
+
 void tmt::ui::SpriteObject::Update()
 {
-    var tex = material->GetUniform("s_texColor");
-    var color = material->GetUniform("u_color");
+    var tex = material->GetUniform("s_texColor", true);
+    var color = material->GetUniform("u_color", true);
 
     color->v4 = mainColor.getData();
     tex->tex = mainTexture;

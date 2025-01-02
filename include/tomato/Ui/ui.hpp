@@ -1,60 +1,60 @@
 #ifndef UI_H
 #define UI_H
 
-#include "utils.hpp" 
+#include "utils.hpp"
+#include "tomato/Obj/obj.hpp"
 #include "tomato/Obj/obj.hpp"
 #include "tomato/Render/render.hpp"
-#include "tomato/Obj/obj.hpp"
 
 
-
-
-namespace tmt::ui {
-
-struct Rect;
-struct SpriteObject;
-struct ButtonObject;
-
-struct Rect
+namespace tmt::ui
 {
-    float x, y;
-    float width, height;
 
-    bool isPointInRect(glm::vec2 p);
-};
+    struct Rect;
+    struct SpriteObject;
+    struct ButtonObject;
 
-struct SpriteObject : obj::Object
-{
-    render::Texture *mainTexture;
-    render::Material *material;
-    render::Color mainColor;
-
-    void Update() override;
-
-    string GetDefaultName() override
+    struct Rect
     {
-        return "Sprite";
-    }
-};
+        float x, y;
+        float width, height;
 
-struct ButtonObject : obj::Object
-{
-    void Update() override;
+        bool isPointInRect(glm::vec2 p);
+    };
 
-    string GetDefaultName() override
+    struct SpriteObject : obj::Object
     {
-        return "Button";
-    }
+        render::Texture* mainTexture;
+        render::Material* material;
+        render::Color mainColor;
 
-    int AddHoverEvent(std::function<void()> f);
-    int AddClickEvent(std::function<void()> f);
+        SpriteObject();
+        void Update() override;
 
-  private:
-    std::vector<std::function<void()>> hovers, clicks;
+        string GetDefaultName() override
+        {
+            return "Sprite";
+        }
+    };
 
-    bool hoverLast, clickLast;
-};
-;
+    struct ButtonObject : obj::Object
+    {
+        void Update() override;
+
+        string GetDefaultName() override
+        {
+            return "Button";
+        }
+
+        int AddHoverEvent(std::function<void()> f);
+        int AddClickEvent(std::function<void()> f);
+
+    private:
+        std::vector<std::function<void()>> hovers, clicks;
+
+        bool hoverLast, clickLast;
+    };
+    ;
 
 }
 
