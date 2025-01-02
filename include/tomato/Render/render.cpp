@@ -847,7 +847,7 @@ tmt::obj::Object* SceneDescription::ToObject()
 
 SceneDescription::~SceneDescription()
 {
-    delete[] models.data();
+    models.clear();
 }
 
 int BoneObject::Load(SceneDescription::Node* node, int count)
