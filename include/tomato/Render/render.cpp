@@ -960,6 +960,8 @@ glm::mat4 Animator::AnimationBone::Update(float animationTime, Object* obj)
     obj->rotation = rotation;
     obj->scale = scale;
 
+
+
     return localTransform;
 }
 

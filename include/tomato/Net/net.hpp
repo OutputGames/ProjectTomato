@@ -1,9 +1,7 @@
 #if !defined(NET_HPP)
 #define NET_HPP
 
-extern "C" {
 #include <enet/enet.h>
-}
 
 #include "utils.hpp"
 

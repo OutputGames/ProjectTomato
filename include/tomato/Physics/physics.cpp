@@ -187,7 +187,7 @@ PhysicalWorld::PhysicalWorld()
 
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
-    SetLayerMask(0, {0, 1, 2, 3, 4, 5});
+    SetLayerMask(BIT(0), {BIT(0), BIT(1), BIT(2), BIT(3), BIT(4), BIT(5)});
 }
 
 PhysicalWorld::~PhysicalWorld()

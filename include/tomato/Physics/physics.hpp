@@ -153,7 +153,7 @@ namespace tmt::physics
     struct PhysicsBody : obj::Object
     {
         float mass = 1;
-        int layer = 0;
+        int layer = BIT(0);
 
         void Init(ColliderObject* collisionObj, float mass);
         PhysicsBody(ColliderObject* collisionObj, float mass = 1);
