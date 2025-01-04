@@ -106,11 +106,22 @@ namespace tmt::fs
 
         BinaryReader(std::string path);
 
+        template <class T>
+        void endswap(T* objp)
+        {
+            auto memp = reinterpret_cast<unsigned char*>(objp);
+            std::reverse(memp, memp + sizeof(T));
+        }
+
         template <typename T>
         T Read()
         {
             T header;
             read(reinterpret_cast<char*>(&header), sizeof(T));
+            if (byteOrder == BigEndian)
+            {
+                endswap(&header);
+            }
 
             return header;
         }

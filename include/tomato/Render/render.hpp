@@ -243,6 +243,7 @@ namespace tmt::render
         MaterialState state;
         Shader* shader;
         std::vector<MaterialOverride*> overrides;
+        string name = "Material";
 
         MaterialOverride* GetUniform(string name, bool force = false);
         u64 GetMaterialState();
