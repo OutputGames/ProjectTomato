@@ -12,14 +12,25 @@ RendererInfo* RendererInfo::GetRendererInfo()
     return renderer;
 }
 
-void ShaderUniform::Use()
+void ShaderUniform::Use(SubShader* shader)
 {
     switch (type)
     {
         case bgfx::UniformType::Sampler:
             if (tex)
             {
-                setTexture(0, handle, tex->handle);
+
+                var texSets = shader->texSets;
+                int texSet = 0;
+                for (auto set : texSets)
+                {
+                    if (set == name)
+                        break;
+
+                    texSet++;
+                }
+
+                setTexture(texSet, handle, tex->handle);
             }
             break;
         case bgfx::UniformType::End:
@@ -86,17 +97,8 @@ void SubShader::Reload()
         case bgfx::RendererType::Direct3D12:
             shaderPath = "runtime/shaders/dx/";
             break;
-        case bgfx::RendererType::Gnm:
-            shaderPath = "shaders/pssl/";
-            break;
-        case bgfx::RendererType::Metal:
-            shaderPath = "shaders/metal/";
-            break;
         case bgfx::RendererType::OpenGL:
             shaderPath = "runtime/shaders/gl/";
-            break;
-        case bgfx::RendererType::OpenGLES:
-            shaderPath = "shaders/essl/";
             break;
         case bgfx::RendererType::Vulkan:
             shaderPath = "runtime/shaders/spirv/";
@@ -165,6 +167,11 @@ void SubShader::Reload()
             uniform->name = info.name;
             uniform->type = info.type;
             uniform->handle = unis[i];
+
+            if (info.type == bgfx::UniformType::Sampler)
+            {
+                texSets.push_back(info.name);
+            }
 
             uniforms.push_back(uniform);
             uniNames.push_back(info.name);
@@ -235,7 +242,7 @@ void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
                 }
             }
 
-            uni->Use();
+            uni->Use(shader);
         }
     }
 
@@ -282,6 +289,27 @@ Shader* Shader::CreateShader(ShaderInitInfo info)
     return new Shader(info);
 }
 
+Shader* Shader::CreateShader(string vertex, string fragment)
+{
+    var info = ShaderInitInfo{};
+    info.vertexProgram = SubShader::CreateSubShader(vertex, SubShader::Vertex);
+    info.fragmentProgram = SubShader::CreateSubShader(fragment, SubShader::Fragment);
+
+
+    if (info.name == "UNDEFINED")
+    {
+        std::hash<string> hsh;
+        info.name = hsh(info.fragmentProgram->name + "_" + info.vertexProgram->name);
+    }
+
+    if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
+    {
+        return ResMgr->loaded_shaders[info.name];
+    }
+
+    return new Shader(info);
+}
+
 ComputeShader::ComputeShader(SubShader* shader)
 {
     program = createProgram(shader->handle, true);
@@ -312,7 +340,7 @@ void ComputeShader::Run(int vid, glm::vec3 groups)
 {
     for (var uni : internalShader->uniforms)
     {
-        uni->Use();
+        uni->Use(internalShader);
     }
 
     dispatch(vid, program, groups.x, groups.y, groups.z);
@@ -478,6 +506,7 @@ Material* Model::CreateMaterial(MaterialDescription* materialDesc, Shader* shade
 {
     var material = new Material(shader);
 
+    material->name = materialDesc->Name;
     material->GetUniform("u_color", true)->v4 = Color::White.getData();
 
     for (auto [uniform, texture] : materialDesc->Textures)
@@ -959,7 +988,6 @@ glm::mat4 Animator::AnimationBone::Update(float animationTime, Object* obj)
     obj->position = translation;
     obj->rotation = rotation;
     obj->scale = scale;
-
 
 
     return localTransform;

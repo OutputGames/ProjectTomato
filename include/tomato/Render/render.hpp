@@ -76,7 +76,7 @@ namespace tmt::render
         glm::mat4 m4 = glm::mat4(1.0);
         Texture* tex = nullptr;
 
-        void Use();
+        void Use(SubShader* shader);
 
         ~ShaderUniform();
     };
@@ -92,6 +92,7 @@ namespace tmt::render
 
         bgfx::ShaderHandle handle;
         std::vector<ShaderUniform*> uniforms;
+        std::vector<string> texSets;
         string name;
 
         ShaderUniform* GetUniform(string name);
@@ -122,6 +123,7 @@ namespace tmt::render
         void Reload();
 
         static Shader* CreateShader(ShaderInitInfo info);
+        static Shader* CreateShader(string vertex, string fragment);
 
     private:
         friend fs::ResourceManager;
