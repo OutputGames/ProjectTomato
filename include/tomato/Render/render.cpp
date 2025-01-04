@@ -81,7 +81,7 @@ ShaderUniform* SubShader::GetUniform(string name)
 
 void SubShader::Reload()
 {
-    if (isLoaded)
+    if (isLoaded && bgfx::isValid(handle))
     {
         destroy(handle);
         uniforms.clear();
@@ -146,6 +146,7 @@ void SubShader::Reload()
 
     std::vector<string> uniNames;
 
+    texSets.clear();
     for (int i = 0; i < uniformCount; i++)
     {
         bgfx::UniformInfo info = {};
@@ -202,7 +203,7 @@ SubShader* SubShader::CreateSubShader(string name, ShaderType type)
 
 Shader::Shader(ShaderInitInfo info)
 {
-    program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, true);
+    program = createProgram(info.vertexProgram->handle, info.fragmentProgram->handle, false);
 
     subShaders.push_back(info.vertexProgram);
     subShaders.push_back(info.fragmentProgram);
@@ -270,7 +271,10 @@ void Shader::Reload()
         sub_shader->Reload();
     }
 
-    program = createProgram(subShaders[0]->handle, subShaders[1]->handle, true);
+    program = createProgram(subShaders[0]->handle, subShaders[1]->handle, false);
+
+
+    std::cout << "Reloaded shader (" << name << ")" << std::endl;
 }
 
 Shader* Shader::CreateShader(ShaderInitInfo info)
@@ -278,7 +282,8 @@ Shader* Shader::CreateShader(ShaderInitInfo info)
     if (info.name == "UNDEFINED")
     {
         std::hash<string> hsh;
-        info.name = hsh(info.fragmentProgram->name + "_" + info.vertexProgram->name);
+        info.name = std::generateRandomString(10) + std::to_string(
+            hsh(info.fragmentProgram->name + info.vertexProgram->name));
     }
 
     if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
