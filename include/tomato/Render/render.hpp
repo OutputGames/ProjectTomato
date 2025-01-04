@@ -457,11 +457,14 @@ namespace tmt::render
     struct BoneObject : obj::Object
     {
         Skeleton::Bone* bone;
+        BoneObject* copyBone;
 
         int Load(SceneDescription::Node* node, int count);
 
         glm::mat4 GetGlobalOffsetMatrix();
         glm::mat4 GetOffsetMatrix();
+
+        void Update() override;
 
         void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
     };

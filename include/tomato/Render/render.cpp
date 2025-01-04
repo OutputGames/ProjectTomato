@@ -941,6 +941,16 @@ glm::mat4 BoneObject::GetOffsetMatrix()
     return offset;
 }
 
+void BoneObject::Update()
+{
+    if (copyBone)
+    {
+        position = copyBone->position;
+        rotation = copyBone->rotation;
+        scale = copyBone->scale;
+    }
+}
+
 void SkeletonObject::Load(SceneDescription::Node* node)
 {
     name = node->name;
