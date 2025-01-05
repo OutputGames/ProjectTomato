@@ -5,6 +5,7 @@
 
 namespace tmt::render
 {
+    struct SceneDescription;
     struct Mesh;
     struct Texture;
     struct ComputeShader;
@@ -102,7 +103,7 @@ namespace tmt::fs
         {
             BigEndian,
             LittleEndian
-        } byteOrder;
+        } byteOrder = LittleEndian;
 
         BinaryReader(std::string path);
 
@@ -294,6 +295,7 @@ namespace tmt::fs
         std::map<string, render::ComputeShader*> loaded_compute_shaders;
         std::map<string, render::Texture*> loaded_textures;
         std::map<string, render::Mesh*> loaded_meshes;
+        std::map<string, render::SceneDescription*> loaded_scene_descs;
 
         void ReloadShaders();
 

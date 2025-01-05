@@ -802,7 +802,6 @@ SceneDescription::SceneDescription(string path)
     if (!std::filesystem::exists(path))
     {
         std::cout << "Scene does not exist! " << path << std::endl;
-        return;
     }
 
     if (path.ends_with(".tmdl"))
@@ -858,6 +857,10 @@ SceneDescription::SceneDescription(string path)
             {
                 value->SetParent(rootNode);
             }
+            if (value->name.starts_with("Armature_"))
+            {
+                value->name.erase(value->name.find("Armature_"), strlen("Armature_"));
+            }
         }
 
         {
@@ -867,6 +870,8 @@ SceneDescription::SceneDescription(string path)
 
         import.FreeScene();
     }
+
+    ResMgr->loaded_scene_descs[path] = this;
 }
 
 tmt::obj::Object* SceneDescription::ToObject()
@@ -882,6 +887,16 @@ tmt::obj::Object* SceneDescription::ToObject()
 SceneDescription::~SceneDescription()
 {
     models.clear();
+}
+
+SceneDescription* SceneDescription::CreateSceneDescription(string path)
+{
+    if (ResMgr->loaded_scene_descs.contains(path))
+    {
+        return ResMgr->loaded_scene_descs[path];
+    }
+
+    return new SceneDescription(path);
 }
 
 int BoneObject::Load(SceneDescription::Node* node, int count)
@@ -1427,6 +1442,11 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             int boneId = -1;
             string boneName = b->mName.C_Str();
 
+            if (boneName.starts_with("Armature_"))
+            {
+                boneName.erase(boneName.find("Armature_"), strlen("Armature_"));
+            }
+
             if (!skeleton->boneInfoMap.contains(boneName))
             {
                 BoneInfo boneInfo;
@@ -1443,7 +1463,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                 skeleton->boneInfoMap[boneName].offset = math::convertMat4(b->mOffsetMatrix);
             }
 
-            if (skeleton->GetBone(b->mName.C_Str()) == nullptr)
+            if (skeleton->GetBone(boneName) == nullptr)
             {
 
                 bone = new Skeleton::Bone;
@@ -1454,7 +1474,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             }
             else
             {
-                bone = skeleton->GetBone(b->mName.C_Str());
+                bone = skeleton->GetBone(boneName);
             }
 
             for (int k = 0; k < b->mNumWeights; ++k)
@@ -1471,7 +1491,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                 {
                     var anode = description->GetNode(b->mArmature->mName.C_Str());
 
-                    skeleton->rootName = b->mName.C_Str();
+                    skeleton->rootName = boneName;
                     if (anode != description->rootNode)
                     {
                         anode->SetParent(modelNode);
@@ -2507,6 +2527,7 @@ RendererInfo* tmt::render::init()
     ShaderInitInfo info = {
         SubShader::CreateSubShader("test/vert", SubShader::Vertex),
         SubShader::CreateSubShader("test/frag", SubShader::Fragment),
+        "$defaultShader"
     };
 
     defaultShader = Shader::CreateShader(info);
@@ -2632,6 +2653,9 @@ void tmt::render::update()
     for (auto call : calls)
     {
         //bgfx::setTransform(call.transformMatrix);
+
+        if (!call.program)
+            continue;
 
         if (mainCamera)
         {
