@@ -2246,6 +2246,11 @@ glm::mat4 Camera::GetView_m4()
 
 glm::mat4 Camera::GetProjection_m4()
 {
+    if (renderer->windowWidth == 0 || renderer->windowHeight == 0)
+    {
+        return glm::mat4(1.0);
+    }
+
     return glm::perspective(glm::radians(FOV),
                             static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
                             NearPlane, FarPlane);
@@ -2662,7 +2667,7 @@ void tmt::render::update()
             switch (call.matrixMode)
             {
                 case MaterialState::ViewProj:
-                    bgfx::setViewTransform(0, mainCamera->GetView(), proj);
+                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), proj);
                     break;
                 case MaterialState::View:
                     // bgfx::setViewTransform(0, mainCamera->GetView(), oneMat);

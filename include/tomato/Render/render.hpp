@@ -446,11 +446,14 @@ namespace tmt::render
 
         std::vector<Node*> GetAllChildren();
 
-        SceneDescription(string path);
-
         obj::Object* ToObject();
 
         ~SceneDescription();
+
+        static SceneDescription* CreateSceneDescription(string path);
+
+    private:
+        SceneDescription(string path);
     };
 
 
@@ -467,7 +470,7 @@ namespace tmt::render
 
         void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
 
-                Skeleton::Bone* bone;
+        Skeleton::Bone* bone;
     };
 
     struct SkeletonObject : obj::Object
