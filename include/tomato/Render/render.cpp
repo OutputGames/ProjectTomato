@@ -1356,7 +1356,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
         maxBones = bones.size();
 
-        std::cout << "Max bones for " << description->name << "is " << maxBones;
+        std::cout << "Max bones for " << description->name << "is " << maxBones << std::endl;
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1452,7 +1452,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
                 if (j == 0)
                 {
-                    var anode = description->GetNode(b->mArmature->mName.C_Str());
+                    var anode = description->GetNode("Armature");
 
                     skeleton->rootName = boneName;
                     if (anode != description->rootNode)
@@ -1461,7 +1461,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     }
                 }
 
-                var bnode = description->GetNode(b->mNode);
+                var bnode = description->GetNode(boneName);
                 if (bnode)
                     bnode->isBone = true;
             }
@@ -2254,7 +2254,7 @@ bgfx::VertexLayout Vertex::getVertexLayout()
           .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
           .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
           .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
-          .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
+          .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float, true)
           .end();
 
     return layout;
@@ -2262,6 +2262,8 @@ bgfx::VertexLayout Vertex::getVertexLayout()
 
 void Vertex::SetBoneData(int boneId, float boneWeight)
 {
+    if (boneWeight <= 0.01)
+        return;
     for (int i = 0; i < 4; ++i)
     {
         if (boneIds[i] < 0)
@@ -2659,12 +2661,11 @@ void tmt::render::update()
             setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
         }
 
-        bgfx::setTransform(value_ptr(call.transformMatrix));
         if (call.animationMatrices.size() > 0)
         {
             //bgfx::setUniform(animHandle, call.animationMatrices);
 
-            var matrixCount = call.animationMatrices.size() + 1;
+            var matrixCount = call.animationMatrices.size() + 2;
 
             std::vector<float> matrixData;
             matrixData.reserve(matrixCount * 16);
@@ -2684,6 +2685,10 @@ void tmt::render::update()
             //bgfx::setTransform(glm::value_ptr(fullVec[0]));
             bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
 
+        }
+        else
+        {
+            bgfx::setTransform(value_ptr(call.transformMatrix));
         }
 
         lightUniforms->Apply(lights);
