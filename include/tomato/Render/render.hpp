@@ -69,11 +69,11 @@ namespace tmt::render
     {
         bgfx::UniformHandle handle = BGFX_INVALID_HANDLE;
         string name;
-        bgfx::UniformType::Enum type;
+        bgfx::UniformType::Enum type = bgfx::UniformType::Count;
 
-        glm::vec4 v4 = glm::vec4(0);
-        glm::mat3 m3 = glm::mat3(1.0);
-        glm::mat4 m4 = glm::mat4(1.0);
+        glm::vec4 v4 = glm::vec4(-1000);
+        glm::mat3 m3 = glm::mat3(-1000.0);
+        glm::mat4 m4 = glm::mat4(-1000.0);
         Texture* tex = nullptr;
 
         void Use(SubShader* shader);
@@ -95,7 +95,7 @@ namespace tmt::render
         std::vector<string> texSets;
         string name;
 
-        ShaderUniform* GetUniform(string name);
+        ShaderUniform* GetUniform(string name, bool force = false);
 
         void Reload();
 
@@ -468,8 +468,6 @@ namespace tmt::render
 
         void Update() override;
 
-        void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
-
         Skeleton::Bone* bone;
     };
 
@@ -533,8 +531,6 @@ namespace tmt::render
         void LoadAnimationBones();
 
         void SetAnimation(Animation* animation);
-
-        void CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform);;
 
         Animation* currentAnimation = nullptr;
 

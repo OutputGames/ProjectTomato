@@ -14,6 +14,20 @@ RendererInfo* RendererInfo::GetRendererInfo()
 
 void ShaderUniform::Use(SubShader* shader)
 {
+    /*
+    if (type == bgfx::UniformType::Count)
+    {
+        if (v4 != glm::vec4(-1000))
+            type = bgfx::UniformType::Vec4;
+        else if (m3 != glm::mat3(-1000))
+            type = bgfx::UniformType::Mat3;
+        else if (m4 != glm::mat4(-1000))
+            type = bgfx::UniformType::Mat4;
+        else if (tex != nullptr)
+            type = bgfx::UniformType::Sampler;
+    }
+    */
+
     switch (type)
     {
         case bgfx::UniformType::Sampler:
@@ -36,10 +50,10 @@ void ShaderUniform::Use(SubShader* shader)
         case bgfx::UniformType::End:
             break;
         case bgfx::UniformType::Vec4:
-            setUniform(handle, math::vec4toArray(v4));
+            setUniform(handle, value_ptr(v4));
             break;
         case bgfx::UniformType::Mat3:
-            setUniform(handle, math::mat3ToArray(m3));
+            setUniform(handle, value_ptr(m3));
             break;
         case bgfx::UniformType::Mat4:
         {
@@ -68,12 +82,20 @@ SubShader::SubShader(string name, ShaderType type)
     fs::ResourceManager::pInstance->loaded_sub_shaders[name] = this;
 }
 
-ShaderUniform* SubShader::GetUniform(string name)
+ShaderUniform* SubShader::GetUniform(string name, bool force)
 {
     for (var uni : uniforms)
     {
         if (uni->name == name)
             return uni;
+    }
+
+    if (force)
+    {
+        var ovr = new ShaderUniform();
+        ovr->name = name;
+
+        return ovr;
     }
 
     return {};
@@ -1010,9 +1032,9 @@ glm::mat4 Animator::AnimationBone::Update(float animationTime, Object* obj)
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    //obj->position = translation;
-    //obj->rotation = rotation;
-    //obj->scale = scale;
+    obj->position = translation;
+    obj->rotation = rotation;
+    obj->scale = scale;
 
 
     return localTransform;
@@ -1117,41 +1139,6 @@ Animator::AnimationBone* Animator::GetBone(string name)
     }
 
     return nullptr;
-}
-
-void BoneObject::CalculateBoneMatrix(SkeletonObject* skeleton, const glm::mat4 parentTransform)
-{
-    if (bone == nullptr)
-    {
-        if (skeleton->skeleton != nullptr)
-        {
-            bone = skeleton->skeleton->GetBone(name);
-        }
-    }
-
-    string nodeName = bone->name;
-    glm::mat4 nodeTransform = bone->transformation;
-
-    nodeTransform = GetLocalTransform();
-
-    glm::mat4 globalTransformation = parentTransform * nodeTransform;
-
-    auto boneInfoMap = skeleton->skeleton->boneInfoMap;
-    if (boneInfoMap.contains(nodeName))
-    {
-        int index = boneInfoMap[nodeName].id;
-        glm::mat4 offset = boneInfoMap[nodeName].offset;
-        skeleton->boneMatrices[index] = globalTransformation * offset;
-    }
-
-    //debug::Gizmos::matrix = globalTransformation;
-    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
-
-    for (Object* child : children)
-    {
-        var boneChild = child->Cast<BoneObject>();
-        boneChild->CalculateBoneMatrix(skeleton, globalTransformation);
-    }
 }
 
 void Animator::Update()
@@ -1264,39 +1251,6 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
     }
 }
 
-void Animator::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm::mat4 parentTransform)
-{
-    string nodeName = skeleBone->name;
-    glm::mat4 nodeTransform = skeleBone->transformation;
-
-    AnimationBone* animBone = GetBone(nodeName);
-
-    if (animBone)
-    {
-        //animBone->Update(time);
-        nodeTransform = skeleton->bones[animBone->boneId]->GetLocalTransform();
-    }
-
-    glm::mat4 globalTransform = parentTransform * nodeTransform;
-
-    var boneInfoMap = skeleton->skeleton->boneInfoMap;
-    if (boneInfoMap.contains(nodeName))
-    {
-        var index = boneInfoMap[nodeName].id;
-        glm::mat4 offset = boneInfoMap[nodeName].offset;
-        pushBoneMatrices[index] = globalTransform * offset;
-    }
-
-    //debug::Gizmos::matrix = globalTransform;
-    //debug::Gizmos::DrawSphere(glm::vec3{0}, 0.1f);
-
-    for (string child : skeleBone->children)
-    {
-        var cbone = skeleton->skeleton->GetBone(child);
-        CalculateBoneTransform(cbone, globalTransform);
-    }
-}
-
 
 Model::Model(string path)
 {
@@ -1362,6 +1316,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     skeleton->inverseTransform = math::convertMat4(scene->mRootNode->mTransformation.Inverse());
 
 
+    int maxBones = 0;
     SceneDescription::Node* modelNode;
     if (description)
     {
@@ -1374,6 +1329,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         var armatureNode = description->GetNode("Armature");
         var bones = armatureNode->GetAllChildren();
 
+
         for (int i = 0; i < bones.size(); ++i)
         {
 
@@ -1385,7 +1341,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
             BoneInfo boneInfo;
             boneInfo.id = skeleton->boneInfoMap.size();
-            //boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
+            // boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
             skeleton->boneInfoMap[boneName] = boneInfo;
 
             var bone = new Skeleton::Bone;
@@ -1397,6 +1353,10 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
             skeleton->bones.push_back(bone);
         }
+
+        maxBones = bones.size();
+
+        std::cout << "Max bones for " << description->name << "is " << maxBones;
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1480,6 +1440,11 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                 var weight = b->mWeights[k];
                 bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
                 vertices[weight.mVertexId].SetBoneData(boneId, weight.mWeight);
+            }
+
+            if (boneId >= maxBones)
+            {
+                std::cout << "Null bone data found: " << boneName << std::endl;
             }
 
             if (description)
@@ -2493,11 +2458,11 @@ RendererInfo* tmt::render::init()
     init.resolution.width = static_cast<uint32_t>(width);
     init.resolution.height = static_cast<uint32_t>(height);
     init.resolution.reset = BGFX_RESET_VSYNC;
-    // init.debug = true;
+    init.debug = true;
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    // init.type = bgfx::RendererType::OpenGL;
+    //init.type = bgfx::RendererType::OpenGL;
 
     if (!bgfx::init(init))
         return nullptr;
