@@ -2667,7 +2667,8 @@ void tmt::render::update()
             switch (call.matrixMode)
             {
                 case MaterialState::ViewProj:
-                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), proj);
+                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                                           value_ptr(mainCamera->GetProjection_m4()));
                     break;
                 case MaterialState::View:
                     // bgfx::setViewTransform(0, mainCamera->GetView(), oneMat);
@@ -2734,7 +2735,7 @@ void tmt::render::update()
     }
     calls.clear();
 
-    bgfx::setViewTransform(0, mainCamera->GetView(), proj);
+    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), value_ptr(mainCamera->GetProjection_m4()));
 
     auto dde = DebugDrawEncoder();
 
