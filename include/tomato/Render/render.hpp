@@ -461,7 +461,7 @@ namespace tmt::render
     {
         BoneObject* copyBone;
 
-        int Load(SceneDescription::Node* node, int count);
+        void Load(SceneDescription::Node* node);
 
         glm::mat4 GetGlobalOffsetMatrix();
         glm::mat4 GetOffsetMatrix();

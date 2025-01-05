@@ -899,7 +899,7 @@ SceneDescription* SceneDescription::CreateSceneDescription(string path)
     return new SceneDescription(path);
 }
 
-int BoneObject::Load(SceneDescription::Node* node, int count)
+void BoneObject::Load(SceneDescription::Node* node)
 {
     for (auto child : node->children)
     {
@@ -910,13 +910,10 @@ int BoneObject::Load(SceneDescription::Node* node, int count)
             bone->position = child->position;
             bone->rotation = (child->rotation);
             bone->scale = child->scale;
-            count++;
-            count = bone->Load(child, count);
+            bone->Load(child);
             bone->SetParent(this);
         }
     }
-
-    return count;
 }
 
 glm::mat4 BoneObject::GetGlobalOffsetMatrix()
@@ -969,7 +966,6 @@ void BoneObject::Update()
 void SkeletonObject::Load(SceneDescription::Node* node)
 {
     name = node->name;
-    var ct = -1;
     for (auto child : node->children)
     {
         if (child->isBone)
@@ -979,8 +975,7 @@ void SkeletonObject::Load(SceneDescription::Node* node)
             bone->position = child->position;
             bone->rotation = (child->rotation);
             bone->scale = child->scale;
-            ct++;
-            ct = bone->Load(child, ct);
+            bone->Load(child);
             bone->SetParent(this);
         }
     }
@@ -1015,9 +1010,9 @@ glm::mat4 Animator::AnimationBone::Update(float animationTime, Object* obj)
     var translation = InterpolatePosition(animationTime);
     var rotation = InterpolateRotation(animationTime);
     var scale = InterpolateScaling(animationTime);
-    obj->position = translation;
-    obj->rotation = rotation;
-    obj->scale = scale;
+    //obj->position = translation;
+    //obj->rotation = rotation;
+    //obj->scale = scale;
 
 
     return localTransform;
@@ -1396,6 +1391,9 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             var bone = new Skeleton::Bone;
             bone->name = boneName;
             bone->skeleton = skeleton;
+            bone->position = bnode->position;
+            bone->rotation = bnode->rotation;
+            bone->scale = bnode->scale;
 
             skeleton->bones.push_back(bone);
         }
