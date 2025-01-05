@@ -456,7 +456,6 @@ namespace tmt::render
 
     struct BoneObject : obj::Object
     {
-        Skeleton::Bone* bone;
         BoneObject* copyBone;
 
         int Load(SceneDescription::Node* node, int count);
@@ -467,6 +466,8 @@ namespace tmt::render
         void Update() override;
 
         void CalculateBoneMatrix(SkeletonObject* skeleton, glm::mat4 parentMatrix);
+
+                Skeleton::Bone* bone;
     };
 
     struct SkeletonObject : obj::Object
