@@ -1110,7 +1110,7 @@ glm::quat Animator::AnimationBone::InterpolateRotation(float animationTime)
         GetScaleFactor(channel->rotations[p0Index]->time, channel->rotations[p1Index]->time, animationTime);
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index]->value, channel->rotations[p1Index]->value, scaleFactor);
-    finalRotation = normalize(finalRotation);
+    //finalRotation = normalize(finalRotation);
     return finalRotation;
 }
 
@@ -1243,6 +1243,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
+        //boneMatrices[index] = transpose(boneMatrices[index]);
     }
 
     for (string child : skeleBone->children)
