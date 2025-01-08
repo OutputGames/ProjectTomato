@@ -122,6 +122,12 @@ namespace tmt::fs
             T value;
             std::memcpy(&value, data + position_, sizeof(T));
             position_ += sizeof(T);
+
+            if (byteOrder == BigEndian)
+            {
+                endswap(&value);
+            }
+
             return value;
         }
 
@@ -238,7 +244,7 @@ namespace tmt::fs
 
         void Align(int alignment) { seekg((-tellg() % alignment + alignment) % alignment, std::ios::_Seekcur); }
 
-        BinaryDataReader(byte* data)
+        BinaryDataReader(char* data)
         {
             this->data = data;
 
@@ -311,7 +317,7 @@ namespace tmt::fs
             }
         }
 
-        const byte* data;
+        const char* data;
         size_t size_;
         size_t position_ = 0;
     };
@@ -462,6 +468,7 @@ namespace tmt::fs
         {
             return Read<s8>();
         }
+
 
         size_t fileSize;
 
