@@ -1,7 +1,25 @@
 #include "ui.hpp"
 #include "globals.hpp"
 
-bool tmt::ui::Rect::isPointInRect(glm::vec2 p)
+using namespace tmt::ui;
+
+glm::vec2 Rect::getMin()
+{
+    return glm::vec2(x - (width / 2), y - (height / 2));
+}
+
+glm::vec2 Rect::getMax() { return glm::vec2(x + (width / 2), y + (height / 2)); }
+
+void Rect::CopyMinMax(glm::vec2 min, glm::vec2 max)
+{
+    x = glm::lerp(min.x, max.x, 0.5f);
+    y = glm::lerp(min.y, max.y, 0.5f);
+
+    width = (max.x - x) * 2;
+    height = (max.y - y) * 2;
+}
+
+bool Rect::isPointInRect(glm::vec2 p)
 {
     if (p.x >= x && p.x <= x + width)
     {
@@ -13,7 +31,72 @@ bool tmt::ui::Rect::isPointInRect(glm::vec2 p)
     return false;
 }
 
-tmt::ui::SpriteObject::SpriteObject()
+void Rect::resolveCollision(Rect o, glm::vec2 masses)
+{
+    var aMax = getMax();
+    var aMin = getMin();
+    var bMax = o.getMax();
+    var bMin = o.getMin();
+
+    glm::vec2 overlap(std::min(aMax.x, bMax.x) - std::max(aMin.x, bMin.x),
+                      std::min(aMax.y, bMax.y) - std::max(aMin.y, bMin.y));
+
+    if (overlap.x < overlap.y)
+    {
+        float totalMass = masses.x + masses.y;
+        float aMove = overlap.x * (masses.y / totalMass);
+        float bMove = overlap.x * (masses.x / totalMass);
+
+        if (aMin.x < bMin.x)
+        {
+            aMax.x -= aMove;
+            bMin.x += bMove;
+        }
+        else
+        {
+            aMin.x += aMove;
+            bMax.x -= bMove;
+        }
+    }
+    else
+    {
+        float totalMass = masses.x + masses.y;
+        float aMove = overlap.y * (masses.y / totalMass);
+        float bMove = overlap.y * (masses.x / totalMass);
+
+        if (aMin.y < bMin.y)
+        {
+            aMax.y -= aMove;
+            bMin.y += bMove;
+        }
+        else
+        {
+            aMin.y += aMove;
+            bMax.y -= bMove;
+        }
+    }
+
+    CopyMinMax(aMin, aMax);
+    o.CopyMinMax(bMin, bMax);
+}
+
+bool Rect::isRectColliding(Rect r)
+{
+    var aMax = getMax();
+    var aMin = getMin();
+
+    var bMax = r.getMax();
+    var bMin = r.getMin();
+
+    if (aMax.x < bMin.x || aMin.x > bMax.x)
+        return false;
+    if (aMax.y < bMin.y || aMin.y > bMax.y)
+        return false;
+
+    return true;
+}
+
+SpriteObject::SpriteObject()
 {
     var initInfo = render::ShaderInitInfo{
         render::SubShader::CreateSubShader("sprite/vert", render::SubShader::Vertex),
@@ -24,7 +107,7 @@ tmt::ui::SpriteObject::SpriteObject()
     mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
 }
 
-void tmt::ui::SpriteObject::Update()
+void SpriteObject::Update()
 {
     var tex = material->GetUniform("s_texColor", true);
     var color = material->GetUniform("u_color", true);
@@ -78,7 +161,7 @@ void tmt::ui::SpriteObject::Update()
     Object::Update();
 }
 
-void tmt::ui::ButtonObject::Update()
+void ButtonObject::Update()
 {
     var pos = input::Mouse::GetMousePosition();
 
@@ -135,7 +218,7 @@ void tmt::ui::ButtonObject::Update()
     clickLast = click;
 }
 
-int tmt::ui::ButtonObject::AddHoverEvent(std::function<void()> f)
+int ButtonObject::AddHoverEvent(std::function<void()> f)
 
 {
 
@@ -144,7 +227,7 @@ int tmt::ui::ButtonObject::AddHoverEvent(std::function<void()> f)
     return hovers.size();
 }
 
-int tmt::ui::ButtonObject::AddClickEvent(std::function<void()> f)
+int ButtonObject::AddClickEvent(std::function<void()> f)
 
 {
 

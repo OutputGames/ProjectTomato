@@ -18,8 +18,16 @@ namespace tmt::ui
         float x, y;
         float width, height;
 
+        glm::vec2 getMin();
+        glm::vec2 getMax();
+
+        void CopyMinMax(glm::vec2 min, glm::vec2 max);
+
         bool isPointInRect(glm::vec2 p);
+        bool isRectColliding(Rect r);
+        void resolveCollision(Rect o, glm::vec2 masses = glm::vec2(0));
     };
+
 
     struct SpriteObject : obj::Object
     {

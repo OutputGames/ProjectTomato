@@ -1,8 +1,9 @@
 #if !defined(_2D_HPP)
 #define _2D_HPP
-#include "Obj/obj.hpp"
-#include "Physics/physics.hpp"
-#include "Ui/ui.hpp"
+
+#include "tomato/Obj/obj.hpp"
+#include "tomato/Physics/physics.hpp"
+#include "tomato/Ui/ui.hpp"
 
 namespace tmt::physics
 {
@@ -11,6 +12,7 @@ namespace tmt::physics
 
 namespace tmt::engine2D::physics
 {
+    struct PhysicsBody2D;
     struct PhysicsCollider2D;
 
     struct PhysicsCollision
@@ -23,19 +25,32 @@ namespace tmt::engine2D::physics
     {
         PhysicsCollider2D();
 
-        void OnCollision(PhysicsCollider2D* other);
+        void OnCollision(PhysicsCollision* col);
+
+    private:
+        friend PhysicsBody2D;
+        friend PhysicsWorld2D;
+
+        PhysicsBody2D* body;
     };
 
     struct BoxCollider2D : PhysicsCollider2D
     {
+
+    private:
+        friend PhysicsWorld2D;
         ui::Rect rect;
     };
 
     struct PhysicsBody2D : obj::Object
     {
-        tmt::physics::PhysicsBody::TransformRelationship Relationship;
+        tmt::physics::PhysicsBody::TransformRelationship Relationship = tmt::physics::PhysicsBody::Parent;
 
-        PhysicsBody2D();
+        glm::vec3 virtualPosition;
+        glm::vec3 velocity;
+        float mass = 1;
+
+        PhysicsBody2D(PhysicsCollider2D* collider);
 
         void Update() override;
 
@@ -62,7 +77,6 @@ namespace tmt::engine2D::physics
     void init();
     void update();
     void shutdown();
-    bool setup();
 
 }
 
