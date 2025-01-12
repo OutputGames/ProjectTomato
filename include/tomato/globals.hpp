@@ -30,6 +30,7 @@ extern int lastKey;
 extern tmt::render::Camera* mainCamera;
 extern tmt::obj::Scene* mainScene;
 extern tmt::render::Shader* defaultShader;
+extern tmt::engine::Application* application;
 extern int counterTime;
 extern float deltaTime;
 extern float lastTime;

@@ -21,6 +21,7 @@ tmt::ui::SpriteObject::SpriteObject()
     };
 
     material = new render::Material(render::Shader::CreateShader(initInfo));
+    mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
 }
 
 void tmt::ui::SpriteObject::Update()
@@ -40,7 +41,27 @@ void tmt::ui::SpriteObject::Update()
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;
 
-    var transform = GetTransform();
+    var og_pos = position;
+
+    if (!isUI)
+    {
+
+        position = GetGlobalPosition() - mainCameraObject->position;
+        position.x -= renderer->windowWidth / 2.0f;
+        position.y += renderer->windowHeight / 2.0f;
+
+        position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
+    }
+
+    var transform = GetLocalTransform();
+
+    if (isUI)
+    {
+        transform = GetTransform();
+    }
+
+    position = og_pos;
+
     drawCall.transformMatrix = transform;
 
     drawCall.program = material->shader;

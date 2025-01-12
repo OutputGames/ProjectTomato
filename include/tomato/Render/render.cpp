@@ -2220,6 +2220,16 @@ glm::mat4 Camera::GetProjection_m4()
                             NearPlane, FarPlane);
 }
 
+glm::mat4 Camera::GetOrthoProjection_m4()
+{
+    if (renderer->windowWidth == 0 || renderer->windowHeight == 0)
+    {
+        return glm::mat4(1.0);
+    }
+
+    return glm::ortho(0, renderer->windowWidth, renderer->windowHeight, 0, -1, 1);
+}
+
 glm::vec3 Camera::GetFront()
 {
     return rotation * glm::vec3{0, 0, 1};
@@ -2432,13 +2442,13 @@ void tmt::render::pushLight(light::Light* light)
     lights.push_back(light);
 }
 
-RendererInfo* tmt::render::init()
+RendererInfo* tmt::render::init(int width, int height)
 {
     glfwSetErrorCallback(glfw_errorCallback);
     if (!glfwInit())
         return nullptr;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "helloworld", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(width, height, application->name.c_str(), nullptr, nullptr);
     if (!window)
         return nullptr;
     // glfwSetKeyCallback(window, glfw_keyCallback);
@@ -2456,8 +2466,6 @@ RendererInfo* tmt::render::init()
     init.platformData.nwh = glfwGetWin32Window(window);
 #endif
 
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
     init.resolution.width = static_cast<uint32_t>(width);
     init.resolution.height = static_cast<uint32_t>(height);
     init.resolution.reset = BGFX_RESET_VSYNC;
@@ -2471,7 +2479,7 @@ RendererInfo* tmt::render::init()
         return nullptr;
     // Set view 0 to the same dimensions as the window and to clear the color buffer.
     constexpr bgfx::ViewId kClearView = 0;
-    bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0);
+    bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Color(0, 0, 0, 1).getHex(), 1.0f, 0);
     setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
 
@@ -2600,8 +2608,9 @@ void tmt::render::update()
         bx::mtxProj(proj, mainCamera->FOV,
                     static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight), 0.01f,
                     100.0f, bgfx::getCaps()->homogeneousDepth);
-        bx::mtxOrtho(ortho, 0, static_cast<float>(renderer->windowWidth), static_cast<float>(renderer->windowHeight),
-                     0.0f, -1, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
+        bx::mtxOrtho(ortho, 0, -static_cast<float>(renderer->windowWidth), 0,
+                     static_cast<float>(renderer->windowHeight),
+                     -1, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
         bgfx::setViewTransform(0, mainCamera->GetView(), proj);
     }
 
@@ -2650,9 +2659,11 @@ void tmt::render::update()
                     setUniform(orthoHandle, ortho);
                     break;
                 case MaterialState::OrthoProj:
+                {
                     // bgfx::setViewTransform(0, oneMat, ortho);
                     setUniform(orthoHandle, ortho);
-                    break;
+                }
+                break;
             }
         }
 
@@ -2689,7 +2700,12 @@ void tmt::render::update()
         }
         else
         {
-            bgfx::setTransform(value_ptr(call.transformMatrix));
+            var matrix = call.transformMatrix;
+            if (call.matrixMode == MaterialState::OrthoProj)
+            {
+
+            }
+            bgfx::setTransform(value_ptr(matrix));
         }
 
         lightUniforms->Apply(lights);

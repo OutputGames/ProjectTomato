@@ -76,7 +76,8 @@ end
             "vendor/bimg/include/",
             "include/tomato/",
             IMGUI_DIR,
-            "vendor/enet/include/"
+            "vendor/enet/include/",
+            "vendor/box2d/include/"
         }
 
         libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
@@ -110,7 +111,7 @@ end
             links {"miniaudio.lib"}
             characterset ("MBCS")
         links {"miniaudio", "enet"}
-        libdirs {"./bin/%{cfg.buildcfg}", "vendor/enet/lib/%{cfg.buildcfg}/"}
+        libdirs {"./bin/%{cfg.buildcfg}", "vendor/enet/lib/%{cfg.buildcfg}/", "vendor/box2d/src/%{cfg.buildcfg}/"}
 
         filter "configurations:Debug"
             defines { "DEBUG", "BX_CONFIG_DEBUG=1" }
@@ -118,7 +119,7 @@ end
             debugdir "./"
             runtime "Debug"
             optimize "Off"
-            links { "bgfxDebug", "bimgDebug", "bxDebug", "assimp-vc143-mtd" }
+            links { "bgfxDebug", "bimgDebug", "bxDebug", "assimp-vc143-mtd", "box2dd" }
             libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
             
             for _, lib in ipairs(BULLET_LIBS) do
@@ -129,7 +130,7 @@ end
             defines { "NDEBUG", "BX_CONFIG_DEBUG=0" }
             optimize "On"
             runtime "Release"
-            links { "bgfxRelease", "bimgRelease", "bxRelease", "assimp-vc143-mt" }
+            links { "bgfxRelease", "bimgRelease", "bxRelease", "assimp-vc143-mt", "box2d" }
             libdirs {"vendor/assimp/lib/Release/", "vendor/bullet3/lib/Release/"}
             for _, lib in ipairs(BULLET_LIBS) do
                 links { lib }

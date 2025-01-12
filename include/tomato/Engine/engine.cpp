@@ -1,17 +1,18 @@
 #include "engine.hpp"
 #include "globals.hpp"
 
-tmt::engine::EngineInfo* tmt::engine::init()
+tmt::engine::EngineInfo* tmt::engine::init(Application* app, glm::vec2 ws)
 {
-
+    application = app;
     var resourceManager = new fs::ResourceManager();
 
-    var rendererInfo = render::init();
+    var rendererInfo = render::init(ws.x, ws.y);
 
     input::init();
 
     var engineInfo = new EngineInfo();
     engineInfo->renderer = rendererInfo;
+    engineInfo->app = app;
 
     obj::init();
     audio::init();
@@ -48,4 +49,13 @@ void tmt::engine::update()
 void tmt::engine::shutdown()
 {
     render::shutdown();
+}
+
+tmt::engine::Application::Application(string name, int width, int height, bool _2d)
+{
+    this->name = name;
+    this->is2D = _2d;
+
+    info = init(this, glm::vec2(width, height));
+    info->app = this;
 }

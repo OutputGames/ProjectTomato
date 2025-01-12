@@ -27,6 +27,7 @@ namespace tmt::ui
         render::Texture* mainTexture;
         render::Material* material;
         render::Color mainColor;
+        bool isUI = true;
 
         SpriteObject();
         void Update() override;

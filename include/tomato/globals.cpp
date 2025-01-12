@@ -25,6 +25,7 @@ int lastKey;
 tmt::render::Camera* mainCamera;
 tmt::obj::Scene* mainScene;
 tmt::render::Shader* defaultShader;
+tmt::engine::Application* application;
 int counterTime = 0;
 float deltaTime = 1.0f / 60.0f;
 float lastTime = 0;

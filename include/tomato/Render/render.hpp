@@ -582,6 +582,7 @@ namespace tmt::render
 
         glm::mat4 GetView_m4();
         glm::mat4 GetProjection_m4();
+        glm::mat4 GetOrthoProjection_m4();
 
         glm::vec3 GetFront();
         glm::vec3 GetUp();
@@ -627,7 +628,7 @@ namespace tmt::render
             uint32_t alpha = static_cast<uint32_t>(a * 255) & 0xFF;
 
             // Combine into a single 32-bit integer in RGBA order
-            return (alpha << 24) | (blue << 16) | (green << 8) | red;
+            return (red << 24) | (green << 16) | (blue << 8) | alpha;
         }
 
         static Color White, Red, Blue, Green;
@@ -660,7 +661,7 @@ namespace tmt::render
 
     void pushLight(light::Light* light);
 
-    RendererInfo* init();
+    RendererInfo* init(int width, int height);
 
     void update();
 
