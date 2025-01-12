@@ -2,8 +2,7 @@
 #define UI_H
 
 #include "utils.hpp"
-#include "tomato/Obj/obj.hpp"
-#include "tomato/Obj/obj.hpp"
+#include "Obj/obj.hpp"
 #include "tomato/Render/render.hpp"
 
 
