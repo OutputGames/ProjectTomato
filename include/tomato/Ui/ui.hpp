@@ -24,8 +24,7 @@ namespace tmt::ui
         void CopyMinMax(glm::vec2 min, glm::vec2 max);
 
         bool isPointInRect(glm::vec2 p);
-        bool isRectColliding(Rect r);
-        void resolveCollision(Rect o, glm::vec2 masses = glm::vec2(0));
+        bool isRectColliding(Rect r);;
     };
 
 

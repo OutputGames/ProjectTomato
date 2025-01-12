@@ -36,6 +36,7 @@ namespace tmt::engine2D::physics
 
     struct BoxCollider2D : PhysicsCollider2D
     {
+        glm::vec2 size;
 
     private:
         friend PhysicsWorld2D;
@@ -46,8 +47,8 @@ namespace tmt::engine2D::physics
     {
         tmt::physics::PhysicsBody::TransformRelationship Relationship = tmt::physics::PhysicsBody::Parent;
 
-        glm::vec3 virtualPosition;
-        glm::vec3 velocity;
+        glm::vec2 virtualPosition = glm::vec2(0);
+        glm::vec2 velocity = glm::vec2(0);
         float mass = 1;
 
         PhysicsBody2D(PhysicsCollider2D* collider);

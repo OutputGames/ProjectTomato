@@ -10,7 +10,10 @@ physics::PhysicsCollider2D::PhysicsCollider2D()
 {
 }
 
-void physics::PhysicsCollider2D::OnCollision(PhysicsCollision* col) { std::cout << "Collision!" << std::endl; }
+void physics::PhysicsCollider2D::OnCollision(PhysicsCollision* col)
+{
+    //std::cout << "Collision!" << std::endl;
+}
 
 physics::PhysicsBody2D::PhysicsBody2D(PhysicsCollider2D* collider)
 {
@@ -31,12 +34,21 @@ void physics::PhysicsBody2D::Update()
     {
         if (parent)
         {
-            parent->position = virtualPosition;
+            var p = glm::vec2(parent->position);
+
+            parent->position = glm::vec3(virtualPosition, 0);
+
+            var diff = p - virtualPosition;
+            float tolerance = 1;
+            if (glm::length(diff) > tolerance)
+            {
+                virtualPosition = p;
+            }
         }
     }
     else
     {
-        position = virtualPosition;
+        position = glm::vec3(virtualPosition, 0);
     }
 
     Object::Update();
@@ -51,12 +63,85 @@ physics::PhysicsWorld2D::~PhysicsWorld2D()
 
 }
 
+void resolveCollision(tmt::ui::Rect& a, tmt::ui::Rect& b, glm::vec2 masses, glm::vec4 velocities)
+{
+    var aMax = a.getMax();
+    var aMin = a.getMin();
+    var bMax = b.getMax();
+    var bMin = b.getMin();
+
+    var aVelocity = glm::vec2{velocities.x, velocities.y};
+    var bVelocity = glm::vec2{velocities.z, velocities.w};
+
+    glm::vec2 overlap(std::min(aMax.x, bMax.x) - std::max(aMin.x, bMin.x),
+                      std::min(aMax.y, bMax.y) - std::max(aMin.y, bMin.y));
+
+    if (overlap.x < overlap.y)
+    {
+        float totalMass = masses.x + masses.y;
+        float aMove = overlap.x * (masses.y / totalMass);
+        float bMove = overlap.x * (masses.x / totalMass);
+
+        if (aMin.x < bMin.x)
+        {
+            aMax.x -= aMove;
+            bMin.x += bMove;
+        }
+        else
+        {
+            aMin.x += aMove;
+            bMax.x -= bMove;
+        }
+
+        if (aVelocity.y != 0.0f)
+        {
+            aMin.y += aVelocity.y;
+            aMax.y += aVelocity.y;
+        }
+        if (bVelocity.y != 0.0f)
+        {
+            bMin.y += bVelocity.y;
+            bMax.y += bVelocity.y;
+        }
+    }
+    else
+    {
+        float totalMass = masses.x + masses.y;
+        float aMove = overlap.y * (masses.y / totalMass);
+        float bMove = overlap.y * (masses.x / totalMass);
+
+        if (aMin.y < bMin.y)
+        {
+            aMax.y -= aMove;
+            bMin.y += bMove;
+        }
+        else
+        {
+            aMin.y += aMove;
+            bMax.y -= bMove;
+        }
+
+        if (aVelocity.x != 0.0f)
+        {
+            aMin.x += aVelocity.x;
+            aMax.x += aVelocity.x;
+        }
+        if (bVelocity.x != 0.0f)
+        {
+            bMin.x += bVelocity.x;
+            bMax.x += bVelocity.x;
+        }
+    }
+
+    a.CopyMinMax(aMin, aMax);
+    b.CopyMinMax(bMin, bMax);
+}
 
 void physics::PhysicsWorld2D::Update()
 {
 
     float timeStep = 1.0f / 60.0f;
-    auto gravity = glm::vec3(0, -9.81, 0);
+    auto gravity = glm::vec2(0, -9.81);
 
     for (auto physicsBody2D : bodies)
     {
@@ -76,8 +161,8 @@ void physics::PhysicsWorld2D::Update()
             rect.x = box->body->virtualPosition.x;
             rect.y = box->body->virtualPosition.y;
 
-            rect.width = box->GetGlobalScale().x;
-            rect.height = box->GetGlobalScale().y;
+            rect.width = box->size.x;
+            rect.height = box->size.y;
             box->rect = rect;
         }
     }
@@ -103,7 +188,11 @@ void physics::PhysicsWorld2D::Update()
                             var col = box->rect.isRectColliding(_box->rect);
                             if (col)
                             {
-                                box->rect.resolveCollision(_box->rect, glm::vec2(box->body->mass, _box->body->mass));
+                                resolveCollision(box->rect, _box->rect, glm::vec2(box->body->mass, _box->body->mass),
+                                                 glm::vec4(box->body->velocity, _box->body->velocity));
+
+                                box->body->velocity = glm::vec2(0);
+                                _box->body->velocity = glm::vec2(0);
                                 box->OnCollision(new PhysicsCollision{_box});
                                 _box->OnCollision(new PhysicsCollision{box});
                             }
@@ -116,13 +205,16 @@ void physics::PhysicsWorld2D::Update()
 
     for (auto physicsCollider2D : colliders)
     {
+        if (physicsCollider2D->body->mass <= 0)
+            continue;
+
         var box = physicsCollider2D->Cast<BoxCollider2D>();
         if (box)
         {
             var rect = box->rect;
 
 
-            physicsCollider2D->body->virtualPosition = glm::vec3(rect.x, rect.y, 0);
+            physicsCollider2D->body->virtualPosition = glm::vec2(rect.x, rect.y);
         }
     }
 }

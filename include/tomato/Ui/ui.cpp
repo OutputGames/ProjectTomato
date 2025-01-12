@@ -31,55 +31,6 @@ bool Rect::isPointInRect(glm::vec2 p)
     return false;
 }
 
-void Rect::resolveCollision(Rect o, glm::vec2 masses)
-{
-    var aMax = getMax();
-    var aMin = getMin();
-    var bMax = o.getMax();
-    var bMin = o.getMin();
-
-    glm::vec2 overlap(std::min(aMax.x, bMax.x) - std::max(aMin.x, bMin.x),
-                      std::min(aMax.y, bMax.y) - std::max(aMin.y, bMin.y));
-
-    if (overlap.x < overlap.y)
-    {
-        float totalMass = masses.x + masses.y;
-        float aMove = overlap.x * (masses.y / totalMass);
-        float bMove = overlap.x * (masses.x / totalMass);
-
-        if (aMin.x < bMin.x)
-        {
-            aMax.x -= aMove;
-            bMin.x += bMove;
-        }
-        else
-        {
-            aMin.x += aMove;
-            bMax.x -= bMove;
-        }
-    }
-    else
-    {
-        float totalMass = masses.x + masses.y;
-        float aMove = overlap.y * (masses.y / totalMass);
-        float bMove = overlap.y * (masses.x / totalMass);
-
-        if (aMin.y < bMin.y)
-        {
-            aMax.y -= aMove;
-            bMin.y += bMove;
-        }
-        else
-        {
-            aMin.y += aMove;
-            bMax.y -= bMove;
-        }
-    }
-
-    CopyMinMax(aMin, aMax);
-    o.CopyMinMax(bMin, bMax);
-}
-
 bool Rect::isRectColliding(Rect r)
 {
     var aMax = getMax();
