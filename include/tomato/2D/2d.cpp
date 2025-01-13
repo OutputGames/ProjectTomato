@@ -6,6 +6,8 @@
 
 using namespace tmt::engine2D;
 
+static float timeStep = 1.0f / 60.0f;
+
 physics::PhysicsCollider2D::PhysicsCollider2D()
 {
 }
@@ -42,7 +44,7 @@ void physics::PhysicsBody2D::Update()
             float tolerance = 1;
             if (glm::length(diff) > tolerance)
             {
-                virtualPosition = p;
+                //virtualPosition = p;
             }
         }
     }
@@ -139,12 +141,11 @@ void resolveCollision(tmt::ui::Rect& a, tmt::ui::Rect& b, glm::vec2 masses, glm:
 
 void physics::PhysicsWorld2D::Update()
 {
-
-    float timeStep = 1.0f / 60.0f;
-    auto gravity = glm::vec2(0, -9.81);
+    auto gravity = glm::vec2(0, -25);
 
     for (auto physicsBody2D : bodies)
     {
+        //physicsBody2D->velocity = glm::vec2(0);
         if (physicsBody2D->mass > 0)
         {
             physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
@@ -185,11 +186,12 @@ void physics::PhysicsWorld2D::Update()
                     {
                         if (_box)
                         {
-                            var col = box->rect.isRectColliding(_box->rect);
-                            if (col)
+                            var _col = box->rect.isRectColliding(_box->rect);
+                            if (_col)
                             {
                                 resolveCollision(box->rect, _box->rect, glm::vec2(box->body->mass, _box->body->mass),
-                                                 glm::vec4(box->body->velocity, _box->body->velocity));
+                                                 glm::vec4(box->body->velocity * timeStep,
+                                                           _box->body->velocity * timeStep));
 
                                 box->body->velocity = glm::vec2(0);
                                 _box->body->velocity = glm::vec2(0);
