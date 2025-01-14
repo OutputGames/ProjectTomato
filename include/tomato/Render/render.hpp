@@ -560,7 +560,19 @@ namespace tmt::render
         ~Texture();
 
     private:
+        friend struct TextureAtlas;
         Texture(string path, bool isCubemap = false);
+        Texture();
+    };
+
+    struct TextureAtlas : Texture
+    {
+        static TextureAtlas* CreateTexture(string path);
+
+        ~TextureAtlas();
+
+    private:
+        TextureAtlas(string path);
     };
 
     struct RenderTexture

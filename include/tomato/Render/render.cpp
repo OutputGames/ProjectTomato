@@ -2132,6 +2132,75 @@ Texture::Texture(string path, bool isCubemap)
 
 }
 
+Texture::Texture()
+{
+}
+
+TextureAtlas* TextureAtlas::CreateTexture(string dirPath) { return new TextureAtlas(dirPath); }
+
+TextureAtlas::~TextureAtlas()
+{
+}
+
+TextureAtlas::TextureAtlas(string dirPath) :
+    Texture()
+{
+
+    std::vector<u8> pixels;
+    u16 imageCount = 0;
+
+    for (const auto& entry : std::filesystem::directory_iterator(dirPath))
+    {
+        if (entry.is_regular_file())
+        {
+            string path = entry.path().generic_string();
+
+            int nrChannels;
+            u8* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+            var dataSize = width * height * nrChannels;
+            auto rgbaData = new unsigned char[dataSize];
+
+            if (nrChannels == 3)
+            {
+                delete[] rgbaData;
+                dataSize = width * height * 4;
+                rgbaData = new unsigned char[dataSize];
+                for (int i = 0; i < width * height; ++i)
+                {
+                    rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+                    rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+                    rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+                    rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
+                }
+                nrChannels = 4;
+            }
+            else if (nrChannels == 4)
+            {
+                rgbaData = data;
+            }
+
+            for (int i = 0; i < dataSize; ++i)
+            {
+                pixels.push_back(rgbaData[i]);
+            }
+
+            imageCount++;
+        }
+    }
+
+    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+
+    // Create the texture in bgfx, passing the image data directly
+    handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, imageCount, textureFormat,
+                             textureFlags,
+                             bgfx::copy(pixels.data(),
+                                        (static_cast<u32>(pixels.size()) * static_cast<u32>(sizeof(u8)))));
+    format = textureFormat;
+    setName(handle, "atlas");
+}
+
 Texture* Texture::CreateTexture(string path, bool isCubemap)
 {
     if (IN_VECTOR(ResMgr->loaded_textures, path))
