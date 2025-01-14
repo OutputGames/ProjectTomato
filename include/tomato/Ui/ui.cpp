@@ -31,6 +31,36 @@ bool Rect::isPointInRect(glm::vec2 p)
     return false;
 }
 
+bool checkLineLine(glm::vec2 s1, glm::vec2 e1, glm::vec2 s2, glm::vec2 e2) {
+
+}
+
+bool Rect::isLineOnRect(glm::vec2 s, glm::vec2 e)
+{
+    var min = getMin();
+    var max = getMax;
+
+    var x1 = min.x;
+    var x2 = max.x;
+
+    var y1 = min.y;
+    var y2 = max.y;
+
+    var c1 = glm::vec2(x1,y1);
+    var c2 = glm::vec2(x2,y1);
+    var c3 = glm::vec2(x2,y2);
+    var c4 = glm::vec2(x1,y2);    
+
+    var left = checkLineLine(s,e,c1,c4);
+    var right = checkLineLine(s,e,c2,c3);
+
+    var top = checkLineLine(s,e,c1,c2);
+    var bottom = checkLineLine(s,e,c4,c3);    
+
+    return (left || right || top || bottom);
+}
+
+
 bool Rect::isRectColliding(Rect r)
 {
     var aMax = getMax();

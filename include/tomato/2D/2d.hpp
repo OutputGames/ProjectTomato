@@ -43,6 +43,17 @@ namespace tmt::engine2D::physics
         ui::Rect rect;
     };
 
+    struct PolygonCollider2D : PhysicsCollider2D
+    {
+        std::vector<glm::vec2> points;
+
+        bool CheckCollision(ui::Rect rect);
+
+    private:
+        friend PhysicsWorld2D;
+
+    };
+
     struct PhysicsBody2D : obj::Object
     {
         tmt::physics::PhysicsBody::TransformRelationship Relationship = tmt::physics::PhysicsBody::Parent;
