@@ -290,8 +290,9 @@ namespace tmt::render
 
         void use();
 
-        void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+        virtual void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
     };
+
 
     struct BoneInfo
     {

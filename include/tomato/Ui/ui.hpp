@@ -33,6 +33,7 @@ namespace tmt::ui
         render::Texture* mainTexture;
         render::Material* material;
         render::Color mainColor;
+        render::Mesh* spriteMesh = GetPrimitive(prim::Quad);
         bool isUI = true;
 
         SpriteObject();

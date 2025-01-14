@@ -71,7 +71,7 @@ void SpriteObject::Update()
 
     var drawCall = render::DrawCall();
 
-    drawCall.mesh = GetPrimitive(prim::Quad);
+    drawCall.mesh = spriteMesh;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;
 
@@ -84,8 +84,8 @@ void SpriteObject::Update()
         position.x -= renderer->windowWidth / 2.0f;
         position.y += renderer->windowHeight / 2.0f;
 
-        position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
     }
+    position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
 
     var transform = GetLocalTransform();
 
