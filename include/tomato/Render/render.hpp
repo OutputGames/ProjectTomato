@@ -263,6 +263,12 @@ namespace tmt::render
         std::map<string, string> Textures;
     };
 
+    enum MeshOrigin
+    {
+        mo_loaded,
+        mo_generated
+    };
+
     struct Mesh
     {
         bgfx::IndexBufferHandle ibh;
@@ -272,6 +278,7 @@ namespace tmt::render
         size_t vertexCount, indexCount;
         Vertex* vertices;
         u16* indices;
+        MeshOrigin origin;
 
         std::vector<string> bones;
         string name;

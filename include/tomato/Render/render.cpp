@@ -466,8 +466,16 @@ Mesh::~Mesh()
 
 void Mesh::use()
 {
-    setVertexBuffer(0, vertexBuffers[0], 0, vertexCount);
-    setIndexBuffer(indexBuffer, 0, indexCount);
+    if (origin == mo_loaded)
+    {
+        setVertexBuffer(0, vbh, 0, vertexCount);
+        setIndexBuffer(ibh, 0, indexCount);
+    }
+    else
+    {
+        setVertexBuffer(0, vertexBuffers[0], 0, vertexCount);
+        setIndexBuffer(indexBuffer, 0, indexCount);
+    }
 }
 
 void Mesh::draw(glm::mat4 transform, Material* material, std::vector<glm::mat4> anims)
@@ -2335,76 +2343,6 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
         bgfx::VertexBufferHandle vbh = createVertexBuffer(mem, layout);
         mesh->vbh = vbh;
         mesh->vertexCount = vertCount;
-
-        if (vertCount == 4055)
-        {
-            var mtest = 4055 * 32;
-            if (vertS != mtest)
-            {
-                std::cout << "multiplication error" << std::endl;
-            }
-
-            setName(vbh, "test");
-        }
-
-        auto positions = new glm::vec3[vertCount];
-        auto normals = new glm::vec3[vertCount];
-        auto uvs = new glm::vec2[vertCount];
-
-        for (int i = 0; i < vertCount; ++i)
-        {
-            var vertex = data[i];
-            positions[i] = vertex.position;
-            normals[i] = vertex.normal;
-            uvs[i] = vertex.uv0;
-        }
-
-        bgfx::VertexLayout playout;
-        playout.begin();
-        playout.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);
-        playout.end();
-
-        bgfx::VertexLayout nlayout;
-        nlayout.begin();
-        nlayout.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float);
-        nlayout.end();
-        bgfx::VertexLayout ulayout;
-        ulayout.begin();
-        ulayout.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float);
-        ulayout.end();
-
-        u16 flags = BGFX_BUFFER_COMPUTE_READ | BGFX_BUFFER_ALLOW_RESIZE;
-        {
-
-            bgfx::DynamicVertexBufferHandle vertexBuffer = createDynamicVertexBuffer(mem, layout, flags);
-
-            mesh->vertexBuffers.push_back(vertexBuffer);
-        }
-
-        /*
-        {
-            var vsz = sizeof(glm::vec3) * vertCount;
-
-            const bgfx::Memory* vmem = bgfx::alloc(vsz);
-
-            bx::memCopy(vmem->data, normals, vsz);
-
-            bgfx::DynamicVertexBufferHandle vertexBuffer = createDynamicVertexBuffer(vmem, nlayout, flags);
-
-            mesh->vertexBuffers.push_back(vertexBuffer);
-        }
-        {
-            var vsz = sizeof(glm::vec2) * vertCount;
-
-            const bgfx::Memory* vmem = bgfx::alloc(vsz);
-
-            bx::memCopy(vmem->data, uvs, vsz);
-
-            bgfx::DynamicVertexBufferHandle vertexBuffer = createDynamicVertexBuffer(vmem, ulayout, flags);
-
-            mesh->vertexBuffers.push_back(vertexBuffer);
-        }
-        */
     }
 
     {
@@ -2416,12 +2354,6 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
 
         mesh->ibh = ibh;
         mesh->indexCount = triSize;
-
-        const bgfx::Memory* vmem = bgfx::alloc(indeS);
-
-        bx::memCopy(vmem->data, indices, indeS);
-
-        mesh->indexBuffer = createDynamicIndexBuffer(vmem, BGFX_BUFFER_COMPUTE_READ | BGFX_BUFFER_ALLOW_RESIZE);
     }
 
     ResMgr->loaded_meshes[name] = mesh;
