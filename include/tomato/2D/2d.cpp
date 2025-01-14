@@ -65,44 +65,52 @@ physics::PhysicsWorld2D::~PhysicsWorld2D()
 
 }
 
-std::vector<glm::vec2> findAxes(const physics::PolygonCollider2D* poly) {
+std::vector<glm::vec2> findAxes(const physics::PolygonCollider2D* poly)
+{
     std::vector<glm::vec2> axes;
-    const var& vertices = poly.points;
+    const var& vertices = poly->points;
 
-    for (int i =0; i < vertices.size(); i++) {
-        var edge = vertices[(i+1) % vertices.size()] - vertices[i];
-        axes.push_back({-edge.y,edge.x});
+    for (int i = 0; i < vertices.size(); i++)
+    {
+        var edge = vertices[(i + 1) % vertices.size()] - vertices[i];
+        axes.push_back({-edge.y, edge.x});
     }
 
     return axes;
 }
 
-std::pair<float,float> projectPolygon(const glm::vec2& axis, const std::vector<glm::vec2>& vertices) {
+std::pair<float, float> projectPolygon(const glm::vec2& axis, const std::vector<glm::vec2>& vertices)
+{
     float min = std::numeric_limits<float>::infinity();
     float max = -std::numeric_limits<float>::infinity();
 
-    for (const auto& vertex : vertices) {
-        float projection = glm::dot(vertex,axis);
-        min = std::min(min,projection);
-        max = std::max(max,projection);
+    for (const auto& vertex : vertices)
+    {
+        float projection = glm::dot(vertex, axis);
+        min = std::min(min, projection);
+        max = std::max(max, projection);
     }
 
     return {min, max};
 }
 
-bool physics::PolygonCollider2D::CheckCollision(tmt::ui::Rect r) {
+bool physics::PolygonCollider2D::CheckCollision(ui::Rect r)
+{
     int next = 0;
 
-    for (int i = 0; i < points.size(); i++) {
-        next = i+1;
-        if (next == points.size()) next = 0;
+    for (int i = 0; i < points.size(); i++)
+    {
+        next = i + 1;
+        if (next == points.size())
+            next = 0;
 
         glm::vec2 c = points[i];
         var n = points[next];
 
-        bool collision = r.isLineOnRect(c,n);
+        bool collision = r.isLineOnRect(c, n);
 
-        if (collision) return true;
+        if (collision)
+            return true;
     }
 
     return false;
@@ -182,31 +190,29 @@ void resolveCollision(tmt::ui::Rect& a, tmt::ui::Rect& b, glm::vec2 masses, glm:
     b.CopyMinMax(bMin, bMax);
 }
 
-void resolveCollision(tmt::ui::Rect& a, physics::PolygonCollider2D* poly, glm::vec2 masses, glm::vec4 velocities) {
+void resolveCollision(tmt::ui::Rect& a, physics::PolygonCollider2D* poly, glm::vec2 masses, glm::vec4 velocities)
+{
     var min = a.getMin();
     var max = a.getMax();
 
-    std::vector<glm::vec2> vertices = {
-        min,
-        {max.x, min.y},
-        max,
-        {min.x, max.y}
-    }    
+    std::vector<glm::vec2> vertices = {min, {max.x, min.y}, max, {min.x, max.y}};
 
-    std::vector<glm::vec2> axes = {{1,0},{0,1}};
+    std::vector<glm::vec2> axes = {{1, 0}, {0, 1}};
 
     var polyAxes = findAxes(poly);
-    axes.insert(axes.end(), polyAxes.begin(), polyAges.end());
+    axes.insert(axes.end(), polyAxes.begin(), polyAxes.end());
 
     float minOverlap = std::numeric_limits<float>::infinity();
     glm::vec2 mtvAxis;
 
-    for (const auto& axis : axes) {
+    for (const auto& axis : axes)
+    {
         var [minA, maxA] = projectPolygon(axis, vertices);
-        var [minB, maxB] = projectPolygon(axis, poly.points);
+        var [minB, maxB] = projectPolygon(axis, poly->points);
 
-        float overlapValue = std::min(maxA,maxB) - std;:max(minA,minB);
-        if (overlapValue < minOverlap) {
+        float overlapValue = std::min(maxA, maxB) - std::max(minA, minB);
+        if (overlapValue < minOverlap)
+        {
             minOverlap = overlapValue;
             mtvAxis = axis;
         }
@@ -220,11 +226,11 @@ void resolveCollision(tmt::ui::Rect& a, physics::PolygonCollider2D* poly, glm::v
     var bVelocity = glm::vec2{velocities.z, velocities.w};
 
     min += (mtvAxis * (masses.x / totalMass)) + aVelocity;
-    max += (mtvAxis * (masses.x / totalMass)) + aVelocity; 
+    max += (mtvAxis * (masses.x / totalMass)) + aVelocity;
 
-    poly.position += glm::vec3((mtvAxis * (masses.y / totalMass)) + bVelocity,0);
+    poly->position += glm::vec3((mtvAxis * (masses.y / totalMass)) + bVelocity, 0);
 
-    a.CopyMinMax(min,max);
+    a.CopyMinMax(min, max);
 }
 
 void physics::PhysicsWorld2D::Update()
@@ -290,10 +296,14 @@ void physics::PhysicsWorld2D::Update()
                             }
                         }
 
-                        if (_poly) {
-                            var _col = _poly.CheckCollision(box->rect);
-                            if (_col) {
-                                resolveCollision(box->rect, _poly, glm::vec2(box->body->mass, _poly->body->mass), glm::vec4(box->body->velocity*timeStep, _poly->body->velocity * timeStep));
+                        if (_poly)
+                        {
+                            var _col = _poly->CheckCollision(box->rect);
+                            if (_col)
+                            {
+                                resolveCollision(box->rect, _poly, glm::vec2(box->body->mass, _poly->body->mass),
+                                                 glm::vec4(box->body->velocity * timeStep,
+                                                           _poly->body->velocity * timeStep));
 
                                 box->body->velocity = glm::vec2(0);
                                 _poly->body->velocity = glm::vec2(0);

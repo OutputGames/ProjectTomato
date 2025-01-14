@@ -31,14 +31,26 @@ bool Rect::isPointInRect(glm::vec2 p)
     return false;
 }
 
-bool checkLineLine(glm::vec2 s1, glm::vec2 e1, glm::vec2 s2, glm::vec2 e2) {
+bool checkLineLine(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4)
+{
+    // calculate the direction of the lines
+    float uA = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x
+        - p3.x) * (p2.y - p1.y));
+    float uB = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / ((p4.x - p3.y) * (p2.x - p1.x) - (p4.x
+        - p3.x) * (p2.y - p1.y));
 
+    // if uA and uB are between 0-1, lines are colliding
+    if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool Rect::isLineOnRect(glm::vec2 s, glm::vec2 e)
 {
     var min = getMin();
-    var max = getMax;
+    var max = getMax();
 
     var x1 = min.x;
     var x2 = max.x;
@@ -46,16 +58,16 @@ bool Rect::isLineOnRect(glm::vec2 s, glm::vec2 e)
     var y1 = min.y;
     var y2 = max.y;
 
-    var c1 = glm::vec2(x1,y1);
-    var c2 = glm::vec2(x2,y1);
-    var c3 = glm::vec2(x2,y2);
-    var c4 = glm::vec2(x1,y2);    
+    var c1 = glm::vec2(x1, y1);
+    var c2 = glm::vec2(x2, y1);
+    var c3 = glm::vec2(x2, y2);
+    var c4 = glm::vec2(x1, y2);
 
-    var left = checkLineLine(s,e,c1,c4);
-    var right = checkLineLine(s,e,c2,c3);
+    var left = checkLineLine(s, e, c1, c4);
+    var right = checkLineLine(s, e, c2, c3);
 
-    var top = checkLineLine(s,e,c1,c2);
-    var bottom = checkLineLine(s,e,c4,c3);    
+    var top = checkLineLine(s, e, c1, c2);
+    var bottom = checkLineLine(s, e, c4, c3);
 
     return (left || right || top || bottom);
 }
