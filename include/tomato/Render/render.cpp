@@ -2718,7 +2718,7 @@ void tmt::render::update()
     }
     calls.clear();
 
-    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), value_ptr(mainCamera->GetProjection_m4()));
+    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
 
     auto dde = DebugDrawEncoder();
 

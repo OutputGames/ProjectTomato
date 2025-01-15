@@ -96,6 +96,9 @@ std::pair<float, float> projectPolygon(const glm::vec2& axis, const std::vector<
 
 bool physics::PolygonCollider2D::CheckCollision(ui::Rect r)
 {
+    if (points.size() == 0)
+        return false;
+
     int next = 0;
 
     for (int i = 0; i < points.size(); i++)
@@ -104,8 +107,8 @@ bool physics::PolygonCollider2D::CheckCollision(ui::Rect r)
         if (next == points.size())
             next = 0;
 
-        glm::vec2 c = points[i];
-        var n = points[next];
+        glm::vec2 c = points[i] + glm::vec2(GetGlobalPosition());
+        var n = points[next] + glm::vec2(GetGlobalPosition());
 
         bool collision = r.isLineOnRect(c, n);
 
