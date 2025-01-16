@@ -1,6 +1,8 @@
 #if !defined(_2D_HPP)
 #define _2D_HPP
 
+#include <box2d/box2d.h>
+
 #include "tomato/Obj/obj.hpp"
 #include "tomato/Physics/physics.hpp"
 #include "tomato/Ui/ui.hpp"
@@ -25,7 +27,9 @@ namespace tmt::engine2D::physics
     {
         PhysicsCollider2D();
 
-        void OnCollision(PhysicsCollision* col);
+        void OnCollision(PhysicsCollision col);
+        virtual void BindToBody(b2BodyId id);
+        virtual void DestroyShape();
 
     private:
         friend PhysicsBody2D;
@@ -36,23 +40,31 @@ namespace tmt::engine2D::physics
 
     struct BoxCollider2D : PhysicsCollider2D
     {
+        BoxCollider2D();
         glm::vec2 size;
+        void BindToBody(b2BodyId id) override;
+        void DestroyShape() override;
+
+        void Update() override;
 
     private:
         friend PhysicsWorld2D;
         ui::Rect rect;
+        b2Polygon box;
     };
 
     struct PolygonCollider2D : PhysicsCollider2D
     {
         std::vector<glm::vec2> points;
-
-        bool CheckCollision(ui::Rect rect);
+        void BindToBody(b2BodyId id) override;
 
     private:
         friend PhysicsWorld2D;
 
     };
+
+    inline b2Vec2 cvtv2(glm::vec2 v) { return b2Vec2(v.x, v.y); }
+    inline glm::vec2 cvtv2(b2Vec2 v) { return glm::vec2(v.x, v.y); }
 
     struct PhysicsBody2D : obj::Object
     {
@@ -71,6 +83,7 @@ namespace tmt::engine2D::physics
         friend struct PhysicsWorld2D;
 
         PhysicsCollider2D* collider;
+        b2BodyId id;
     };
 
     struct PhysicsWorld2D
@@ -79,6 +92,8 @@ namespace tmt::engine2D::physics
         ~PhysicsWorld2D();
 
         void Update();
+
+        b2WorldId id;
 
     private:
         friend PhysicsBody2D;
