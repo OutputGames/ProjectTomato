@@ -63,6 +63,7 @@ namespace tmt::engine2D::physics
         float mass = 1;
 
         PhysicsBody2D(PhysicsCollider2D* collider);
+        ~PhysicsBody2D() override;
 
         void Update() override;
 

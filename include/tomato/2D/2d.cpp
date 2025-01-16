@@ -28,6 +28,14 @@ physics::PhysicsBody2D::PhysicsBody2D(PhysicsCollider2D* collider)
     mainScene->physicsWorld2D->colliders.push_back(collider);
 }
 
+physics::PhysicsBody2D::~PhysicsBody2D()
+{
+    mainScene->physicsWorld2D->bodies.erase(std::find(mainScene->physicsWorld2D->bodies.begin(),
+                                                      mainScene->physicsWorld2D->bodies.end(), this));
+    mainScene->physicsWorld2D->colliders.erase(std::find(mainScene->physicsWorld2D->colliders.begin(),
+                                                         mainScene->physicsWorld2D->colliders.end(), collider));
+}
+
 void physics::PhysicsBody2D::Update()
 {
 
