@@ -88,6 +88,7 @@ void physics::PhysicsBody2D::Update()
     }
 
     b2Body_SetType(id, mass > 0 ? b2_dynamicBody : b2_staticBody);
+    b2Body_SetLinearVelocity(id, cvtv2(velocity));
     virtualPosition = cvtv2(b2Body_GetPosition(id));
     if (Relationship == tmt::physics::PhysicsBody::Parent)
     {
