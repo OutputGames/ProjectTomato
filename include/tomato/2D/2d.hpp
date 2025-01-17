@@ -77,6 +77,8 @@ namespace tmt::engine2D::physics
         PhysicsBody2D(PhysicsCollider2D* collider);
         ~PhysicsBody2D() override;
 
+        void ApplyImpulse(glm::vec2 i);
+
         void Update() override;
 
     private:
