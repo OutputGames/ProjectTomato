@@ -347,7 +347,7 @@ void physics::PhysicsWorld2D::Update()
         // physicsBody2D->velocity = glm::vec2(0);
         if (physicsBody2D->mass > 0 && physicsBody2D->GetActive())
         {
-            physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
+            //physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
             if (physicsBody2D->doGravity)
                 physicsBody2D->velocity += gravity * timeStep;
         }
