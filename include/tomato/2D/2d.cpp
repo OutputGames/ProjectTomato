@@ -8,58 +8,13 @@ using namespace tmt::engine2D;
 
 static float timeStep = 1.0f / 60.0f;
 
-#define P2M_RATIO 100.0f
-
 physics::PhysicsCollider2D::PhysicsCollider2D()
 {
 }
 
-void physics::PhysicsCollider2D::OnCollision(PhysicsCollision col)
+void physics::PhysicsCollider2D::OnCollision(PhysicsCollision* col)
 {
-    //std::cout << "Collision!" << std::endl;
-}
-
-void physics::PhysicsCollider2D::BindToBody(b2BodyId id)
-{
-
-}
-
-void physics::PhysicsCollider2D::DestroyShape()
-{
-}
-
-physics::BoxCollider2D::BoxCollider2D()
-{
-
-}
-
-void physics::BoxCollider2D::BindToBody(b2BodyId id)
-{
-    var box = b2MakeBox((size.x / 2) / P2M_RATIO, (size.y / 2) / P2M_RATIO);
-    var shape = b2DefaultShapeDef();
-    shape.density = 1.0f;
-    shape.friction = 0.3f;
-
-    b2CreatePolygonShape(id, &shape, &box);
-
-    PhysicsCollider2D::BindToBody(id);
-}
-
-void physics::BoxCollider2D::DestroyShape()
-{
-
-    PhysicsCollider2D::DestroyShape();
-}
-
-void physics::BoxCollider2D::Update()
-{
-
-    PhysicsCollider2D::Update();
-}
-
-void physics::PolygonCollider2D::BindToBody(b2BodyId id)
-{
-    PhysicsCollider2D::BindToBody(id);
+    // std::cout << "Collision!" << std::endl;
 }
 
 physics::PhysicsBody2D::PhysicsBody2D(PhysicsCollider2D* collider)
@@ -68,35 +23,23 @@ physics::PhysicsBody2D::PhysicsBody2D(PhysicsCollider2D* collider)
     collider->body = this;
 
     this->collider = collider;
+
+    mainScene->physicsWorld2D->bodies.push_back(this);
+    mainScene->physicsWorld2D->colliders.push_back(collider);
 }
 
 physics::PhysicsBody2D::~PhysicsBody2D()
 {
-    b2DestroyBody(id);
-}
-
-void physics::PhysicsBody2D::ApplyImpulse(glm::vec2 i)
-{
-    b2Body_ApplyLinearImpulseToCenter(id, cvtv2(i / P2M_RATIO), true);
+    mainScene->physicsWorld2D->bodies.erase(
+        std::find(mainScene->physicsWorld2D->bodies.begin(), mainScene->physicsWorld2D->bodies.end(), this));
+    mainScene->physicsWorld2D->colliders.erase(
+        std::find(mainScene->physicsWorld2D->colliders.begin(), mainScene->physicsWorld2D->colliders.end(), collider));
 }
 
 void physics::PhysicsBody2D::Update()
 {
-    if (!b2Body_IsValid(id))
-    {
-        var def = b2DefaultBodyDef();
 
-        def.position = cvtv2(virtualPosition / P2M_RATIO);
 
-        id = b2CreateBody(mainScene->physicsWorld2D->id, &def);
-
-        collider->BindToBody(id);
-    }
-
-    b2Body_SetType(id, mass > 0 ? b2_dynamicBody : b2_staticBody);
-    b2Body_SetLinearVelocity(id, cvtv2(velocity / P2M_RATIO));
-
-    virtualPosition = cvtv2(b2Body_GetPosition(id)) * P2M_RATIO;
     if (Relationship == tmt::physics::PhysicsBody::Parent)
     {
         if (parent)
@@ -109,8 +52,7 @@ void physics::PhysicsBody2D::Update()
             float tolerance = 1;
             if (glm::length(diff) > tolerance)
             {
-                virtualPosition = p;
-                b2Body_SetTransform(id, cvtv2(virtualPosition / P2M_RATIO), b2Body_GetRotation(id));
+                // virtualPosition = p;
             }
         }
     }
@@ -118,48 +60,288 @@ void physics::PhysicsBody2D::Update()
     {
         position = glm::vec3(virtualPosition, 0);
     }
+
     Object::Update();
 }
 
 physics::PhysicsWorld2D::PhysicsWorld2D()
 {
-    var def = b2DefaultWorldDef();
-    id = b2CreateWorld(&def);
 }
 
 physics::PhysicsWorld2D::~PhysicsWorld2D()
 {
-    b2DestroyWorld(id);
+}
+
+std::vector<glm::vec2> findAxes(const physics::PolygonCollider2D* poly)
+{
+    std::vector<glm::vec2> axes;
+    const var& vertices = poly->points;
+
+    for (int i = 0; i < vertices.size(); i++)
+    {
+        var edge = vertices[(i + 1) % vertices.size()] - vertices[i];
+        axes.push_back({-edge.y, edge.x});
+    }
+
+    return axes;
+}
+
+std::pair<float, float> projectPolygon(const glm::vec2& axis, const std::vector<glm::vec2>& vertices)
+{
+    float min = std::numeric_limits<float>::infinity();
+    float max = -std::numeric_limits<float>::infinity();
+
+    for (const auto& vertex : vertices)
+    {
+        float projection = glm::dot(vertex, axis);
+        min = std::min(min, projection);
+        max = std::max(max, projection);
+    }
+
+    return {min, max};
+}
+
+bool physics::PolygonCollider2D::CheckCollision(ui::Rect r)
+{
+    if (points.size() == 0)
+        return false;
+
+    int next = 0;
+
+    for (int i = 0; i < points.size(); i++)
+    {
+        next = i + 1;
+        if (next == points.size())
+            next = 0;
+
+        glm::vec2 c = points[i] + glm::vec2(GetGlobalPosition());
+        var n = points[next] + glm::vec2(GetGlobalPosition());
+
+        bool collision = r.isLineOnRect(c, n);
+
+        if (collision)
+            return true;
+    }
+
+    return false;
+}
+
+void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2D* boxB,
+                                               BoxCollider2D::PreCollsiionData& data)
+{
+    var a = boxA->rect;
+    var b = boxB->rect;
+
+    //var aMax = a.getMax();
+    //var aMin = a.getMin();
+    //var bMax = b.getMax();
+    //var bMin = b.getMin();
+
+    var aVelocity = boxA->body->velocity;
+    //var bVelocity = boxB->body->velocity;
+
+    //var aMass = boxA->body->mass;
+    //var bMass = boxB->body->mass;
+
+    //if (!motion)
+    //return;
+
+    // check the X axis
+    float oldRight = a.x + a.width;
+    float oldBottom = a.y + a.height;
+
+    var motion = aVelocity;
+    bool hitSide = data.hitSide, hitTop = data.hitTop, hitBottom = data.hitBottom;
+
+    ui::Rect newrect = a;
+    newrect.x += motion.x;
+    newrect.y += motion.y;
+
+    if (!a.isRectColliding(b))
+        return;
+
+    bool canHitX = true;
+    if (newrect.y > b.y + b.height) // our top is below wall bottom
+        canHitX = false;
+    else if (newrect.y + newrect.height < b.y) // our bottom is over the wall top
+        canHitX = false;
+
+    if (canHitX)
+    {
+        float newRight = newrect.x + newrect.width;
+        float objectRight = b.x + b.width;
+
+        // check the box moving to the right
+        // if we were outside the left wall before, and are not now, we hit something
+        if (motion.x > 0)
+        {
+            if (oldRight <= b.x)
+            {
+                if (newRight > b.x)
+                {
+                    // we hit moving right, so set us back to where we hit the wall
+                    newrect.x = b.x - a.width;
+                    hitSide = true;
+                }
+            }
+        }
+
+        if (motion.x < 0)
+        {
+            // check the box moving to the left
+            // if we were outside the right wall before, and are not now, we hit something
+            if (a.x >= objectRight)
+            {
+                if (newrect.x < objectRight)
+                {
+                    // we hit moving left, so set us back to where we hit the wall
+                    newrect.x = objectRight;
+                    hitSide = true;
+                }
+            }
+        }
+    }
+
+    // do the same for Y
+    bool canHitY = true;
+    if (newrect.x > b.x + b.width) // our left is past wall right
+        canHitY = false;
+    else if (newrect.x + newrect.width < b.x) // our right is past wall left
+        canHitY = false;
+
+    if (canHitY)
+    {
+        float newBottom = newrect.y + newrect.height;
+        float objectBottom = b.y + b.height;
+
+        // check the box moving to the down
+        // if we were outside the top wall before, and are not now, we hit something
+        if (motion.y >= 0)
+        {
+            if (oldBottom <= b.y)
+            {
+                if (newBottom > b.y)
+                {
+                    // we hit moving down, so set us back to where we hit the wall
+                    newrect.y = b.y - a.height;
+                    hitBottom = true;
+                }
+                else if (newBottom == b.y)
+                {
+                    hitBottom = true;
+                }
+            }
+        }
+        else if (motion.y < 0)
+        {
+            // check the box moving up
+            // if we were outside the bottom wall before, and are not now, we hit something
+            if (a.y >= objectBottom)
+            {
+                if (newrect.y < objectBottom)
+                {
+                    // we hit moving up, so set us back to where we hit the wall
+                    newrect.y = objectBottom;
+                    hitTop = true;
+                }
+            }
+        }
+    }
+
+    data.hitBottom = hitBottom;
+    data.hitSide = hitSide;
+    data.hitTop = hitTop;
+
+    a.CopyMinMax(newrect.getMin(), newrect.getMax());
 }
 
 void physics::PhysicsWorld2D::Update()
 {
-    auto gravity = glm::vec2(0, -15);
+    auto gravity = glm::vec2(0, -25);
 
-    b2World_SetGravity(id, cvtv2(gravity));
-    b2World_Step(id, timeStep, 4);
+    for (auto physicsBody2D : bodies)
+    {
+        // physicsBody2D->velocity = glm::vec2(0);
+        if (physicsBody2D->mass > 0 && physicsBody2D->GetActive())
+        {
+            physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
+            physicsBody2D->velocity += gravity * timeStep;
+        }
+    }
+
+    for (auto physicsCollider2D : colliders)
+    {
+        var box = physicsCollider2D->Cast<BoxCollider2D>();
+        if (box)
+        {
+            var rect = ui::Rect{};
+            rect.x = box->body->virtualPosition.x;
+            rect.y = box->body->virtualPosition.y;
+
+            rect.width = box->size.x;
+            rect.height = box->size.y;
+            box->rect = rect;
+        }
+    }
 
     for (auto body : bodies)
     {
-        if (body->GetActive())
+        var col = body->collider;
+
+        if (col && body->mass > 0 && body->GetActive())
         {
-            //b2Body_Enable(body->id);
+            var box = col->Cast<BoxCollider2D>();
+            var pcd = BoxCollider2D::PreCollsiionData();
+
+            for (auto collider : colliders)
+            {
+                if (collider != col && collider->GetActive())
+                {
+                    var _box = collider->Cast<BoxCollider2D>();
+
+                    if (box)
+                    {
+                        if (_box)
+                        {
+                            var _col = box->rect.isRectColliding(_box->rect);
+                            if (_col)
+                            {
+                                resolveCollision(box, _box, pcd);
+
+                                box->body->velocity = glm::vec2(0);
+                                _box->body->velocity = glm::vec2(0);
+                                box->OnCollision(new PhysicsCollision{_box});
+                                _box->OnCollision(new PhysicsCollision{box});
+                            }
+                        }
+                    }
+                }
+            }
         }
-        else
+    }
+
+    for (auto physicsCollider2D : colliders)
+    {
+        if (physicsCollider2D->body->mass <= 0)
+            continue;
+
+        var box = physicsCollider2D->Cast<BoxCollider2D>();
+        if (box)
         {
-            //b2Body_Disable(body->id);
+            var rect = box->rect;
+
+
+            physicsCollider2D->body->virtualPosition = glm::vec2(rect.x, rect.y);
         }
     }
 }
 
 void physics::init()
 {
-
 }
 
 void physics::update()
 {
-
 }
 
 void physics::shutdown()

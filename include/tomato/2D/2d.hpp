@@ -1,8 +1,6 @@
 #if !defined(_2D_HPP)
 #define _2D_HPP
 
-#include <box2d/box2d.h>
-
 #include "tomato/Obj/obj.hpp"
 #include "tomato/Physics/physics.hpp"
 #include "tomato/Ui/ui.hpp"
@@ -20,16 +18,14 @@ namespace tmt::engine2D::physics
     struct PhysicsCollision
     {
         PhysicsCollider2D* other;
-
     };
+
 
     struct PhysicsCollider2D : obj::Object
     {
         PhysicsCollider2D();
 
-        void OnCollision(PhysicsCollision col);
-        virtual void BindToBody(b2BodyId id);
-        virtual void DestroyShape();
+        void OnCollision(PhysicsCollision* col);
 
     private:
         friend PhysicsBody2D;
@@ -40,31 +36,27 @@ namespace tmt::engine2D::physics
 
     struct BoxCollider2D : PhysicsCollider2D
     {
-        BoxCollider2D();
         glm::vec2 size;
-        void BindToBody(b2BodyId id) override;
-        void DestroyShape() override;
 
-        void Update() override;
+        struct PreCollsiionData
+        {
+            bool hitSide = false, hitTop = false, hitBottom = false;
+        };
 
     private:
         friend PhysicsWorld2D;
         ui::Rect rect;
-        b2Polygon box;
     };
 
     struct PolygonCollider2D : PhysicsCollider2D
     {
         std::vector<glm::vec2> points;
-        void BindToBody(b2BodyId id) override;
+
+        bool CheckCollision(ui::Rect rect);
 
     private:
         friend PhysicsWorld2D;
-
     };
-
-    inline b2Vec2 cvtv2(glm::vec2 v) { return b2Vec2(v.x, v.y); }
-    inline glm::vec2 cvtv2(b2Vec2 v) { return glm::vec2(v.x, v.y); }
 
     struct PhysicsBody2D : obj::Object
     {
@@ -77,15 +69,12 @@ namespace tmt::engine2D::physics
         PhysicsBody2D(PhysicsCollider2D* collider);
         ~PhysicsBody2D() override;
 
-        void ApplyImpulse(glm::vec2 i);
-
         void Update() override;
 
     private:
         friend struct PhysicsWorld2D;
 
         PhysicsCollider2D* collider;
-        b2BodyId id;
     };
 
     struct PhysicsWorld2D
@@ -95,20 +84,20 @@ namespace tmt::engine2D::physics
 
         void Update();
 
-        b2WorldId id;
-
     private:
         friend PhysicsBody2D;
 
         std::vector<PhysicsBody2D*> bodies;
         std::vector<PhysicsCollider2D*> colliders;
+
+        void resolveCollision(BoxCollider2D* boxA, BoxCollider2D* boxB, BoxCollider2D::PreCollsiionData& data);
     };
 
     void init();
     void update();
     void shutdown();
 
-}
+} // namespace tmt::engine2D::physics
 
 
 #endif // 2D_HPP
