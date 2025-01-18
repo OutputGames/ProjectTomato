@@ -5,10 +5,10 @@ using namespace tmt::ui;
 
 glm::vec2 Rect::getMin()
 {
-    return glm::vec2(x - (width / 2), y - (height / 2));
+    return glm::vec2(x + (width / 2), y + (height / 2));
 }
 
-glm::vec2 Rect::getMax() { return glm::vec2(x + (width / 2), y + (height / 2)); }
+glm::vec2 Rect::getMax() { return glm::vec2(x - (width / 2), y - (height / 2)); }
 
 void Rect::CopyMinMax(glm::vec2 min, glm::vec2 max)
 {
@@ -108,9 +108,9 @@ bool Rect::isRectColliding(Rect r)
     var bMax = r.getMax();
     var bMin = r.getMin();
 
-    if (aMax.x < bMin.x || aMin.x > bMax.x)
+    if (aMax.x > bMin.x || aMin.x < bMax.x)
         return false;
-    if (aMax.y < bMin.y || aMin.y > bMax.y)
+    if (aMax.y > bMin.y || aMin.y < bMax.y)
         return false;
 
     return true;

@@ -137,7 +137,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     var bMax = b.getMax();
     var bMin = b.getMin();
 
-    var aVelocity = data.preVelo;
+    var aVelocity = boxA->body->velocity;
     //var bVelocity = boxB->body->velocity;
 
     //var aMass = boxA->body->mass;
@@ -150,7 +150,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     float oldRight = aMax.x;
     float oldBottom = aMax.y;
 
-    var motion = aVelocity;
+    var motion = aVelocity * timeStep;
     bool hitSide = data.hitSide, hitTop = data.hitTop, hitBottom = data.hitBottom;
 
     ui::Rect newrect = a;
@@ -164,9 +164,9 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     var newMax = newrect.getMax();
 
     bool canHitX = true;
-    if (newMin.y > bMax.y) // our top is below wall bottom
+    if (newMin.y < bMax.y) // our top is below wall bottom
         canHitX = false;
-    else if (newMax.y < bMin.y) // our bottom is over the wall top
+    else if (newMax.y > bMin.y) // our bottom is over the wall top
         canHitX = false;
 
     if (canHitX)
@@ -183,7 +183,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
                 if (newRight < bMin.x)
                 {
                     // we hit moving right, so set us back to where we hit the wall
-                    newrect.x = bMin.x + (a.width * 2);
+                    newrect.x = bMin.x + (a.width);
                     hitSide = true;
                 }
             }
@@ -224,7 +224,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
         {
             if (oldBottom >= bMin.y)
             {
-                if (newBottom > bMin.y)
+                if (newBottom < bMin.y)
                 {
                     // we hit moving down, so set us back to where we hit the wall
                     newrect.y = bMin.y + a.height;
@@ -252,30 +252,23 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
         }
     }
 
+    newMin = newrect.getMin();
+    newMax = newrect.getMax();
+    aMax = a.getMax();
+    aMin = a.getMin();
+
+
     data.hitBottom = hitBottom;
     data.hitSide = hitSide;
     data.hitTop = hitTop;
 
-    boxA->body->velocity.x = newrect.x - a.x;
-    boxA->body->velocity.y = newrect.y - a.y;
+    boxA->body->velocity = (newMin - aMin) * 1.0f;
 
     //a.CopyMinMax(newrect.getMin(), newrect.getMax());
 }
 
 void physics::PhysicsWorld2D::Update()
 {
-    auto gravity = glm::vec2(0, -25);
-
-    for (auto physicsBody2D : bodies)
-    {
-        // physicsBody2D->velocity = glm::vec2(0);
-        if (physicsBody2D->mass > 0 && physicsBody2D->GetActive())
-        {
-            physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
-            if (physicsBody2D->doGravity)
-                physicsBody2D->velocity += gravity * timeStep;
-        }
-    }
 
     for (auto physicsCollider2D : colliders)
     {
@@ -327,6 +320,7 @@ void physics::PhysicsWorld2D::Update()
 
 
             body->doGravity = !pcd.hitBottom;
+            pcd.preVelo = glm::vec2(0);
             box->lastCollisionData = pcd;
         }
     }
@@ -343,6 +337,19 @@ void physics::PhysicsWorld2D::Update()
 
 
             physicsCollider2D->body->virtualPosition = glm::vec2(rect.x, rect.y);
+        }
+    }
+
+    auto gravity = glm::vec2(0, -25);
+
+    for (auto physicsBody2D : bodies)
+    {
+        // physicsBody2D->velocity = glm::vec2(0);
+        if (physicsBody2D->mass > 0 && physicsBody2D->GetActive())
+        {
+            physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
+            if (physicsBody2D->doGravity)
+                physicsBody2D->velocity += gravity * timeStep;
         }
     }
 }
