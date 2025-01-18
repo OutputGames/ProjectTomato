@@ -139,6 +139,7 @@ namespace tmt::render
         void SetUniform(string name, bgfx::UniformType::Enum type, const void* data);
 
         void SetMat4(string name, glm::mat4 m);
+        void SetVec4(string name, glm::vec4 v);
 
         void Run(int viewId, glm::vec3 groups = {1, 1, 1});
 
@@ -568,11 +569,13 @@ namespace tmt::render
     struct TextureAtlas : Texture
     {
         static TextureAtlas* CreateTexture(string path);
+        static TextureAtlas* CreateTexture(std::vector<string> paths);
 
         ~TextureAtlas();
 
     private:
         TextureAtlas(string path);
+        TextureAtlas(std::vector<string> paths);
     };
 
     struct RenderTexture
