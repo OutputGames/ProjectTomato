@@ -137,7 +137,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     var bMax = b.getMax();
     var bMin = b.getMin();
 
-    var aVelocity = boxA->body->velocity;
+    var aVelocity = data.preVelo;
     //var bVelocity = boxB->body->velocity;
 
     //var aMass = boxA->body->mass;
@@ -157,7 +157,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     newrect.x += motion.x;
     newrect.y += motion.y;
 
-    if (!a.isRectColliding(b))
+    if (!newrect.isRectColliding(b))
         return;
 
     var newMin = newrect.getMin();
@@ -180,10 +180,10 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
         {
             if (oldRight >= bMin.x)
             {
-                if (newRight > bMin.x)
+                if (newRight < bMin.x)
                 {
                     // we hit moving right, so set us back to where we hit the wall
-                    newrect.x = bMin.x - (a.width * 2);
+                    newrect.x = bMin.x + (a.width * 2);
                     hitSide = true;
                 }
             }
@@ -195,7 +195,7 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
             // if we were outside the right wall before, and are not now, we hit something
             if (aMin.x <= objectRight)
             {
-                if (newMin.x < objectRight)
+                if (newMin.x > objectRight)
                 {
                     // we hit moving left, so set us back to where we hit the wall
                     newrect.x = objectRight - (a.width * 2);
@@ -205,11 +205,14 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
         }
     }
 
+    newMin = newrect.getMin();
+    newMax = newrect.getMax();
+
     // do the same for Y
     bool canHitY = true;
-    if (newrect.x > bMax.x) // our left is past wall right
+    if (newMin.x < bMax.x) // our left is past wall right
         canHitY = false;
-    else if (newMax.x < b.x) // our right is past wall left
+    else if (newMax.x > bMin.x) // our right is past wall left
         canHitY = false;
 
     if (canHitY)
@@ -297,6 +300,7 @@ void physics::PhysicsWorld2D::Update()
         {
             var box = col->Cast<BoxCollider2D>();
             var pcd = BoxCollider2D::PreCollsiionData();
+            pcd.preVelo = body->velocity;
 
             for (auto collider : colliders)
             {

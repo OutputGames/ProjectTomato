@@ -41,6 +41,7 @@ namespace tmt::engine2D::physics
         struct PreCollsiionData
         {
             bool hitSide = false, hitTop = false, hitBottom = false;
+            glm::vec2 preVelo;
         };
 
         PreCollsiionData lastCollisionData;
