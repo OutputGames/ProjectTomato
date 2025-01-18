@@ -12,7 +12,7 @@ physics::PhysicsCollider2D::PhysicsCollider2D()
 {
 }
 
-void physics::PhysicsCollider2D::OnCollision(PhysicsCollision* col)
+void physics::PhysicsCollider2D::OnCollision(PhysicsCollision col)
 {
     // std::cout << "Collision!" << std::endl;
 }
@@ -129,13 +129,13 @@ bool physics::PolygonCollider2D::CheckCollision(ui::Rect r)
 void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2D* boxB,
                                                BoxCollider2D::PreCollsiionData& data)
 {
-    var a = boxA->rect;
-    var b = boxB->rect;
+    ui::Rect& a = boxA->rect;
+    ui::Rect& b = boxB->rect;
 
-    //var aMax = a.getMax();
-    //var aMin = a.getMin();
-    //var bMax = b.getMax();
-    //var bMin = b.getMin();
+    var aMax = a.getMax();
+    var aMin = a.getMin();
+    var bMax = b.getMax();
+    var bMin = b.getMin();
 
     var aVelocity = boxA->body->velocity;
     //var bVelocity = boxB->body->velocity;
@@ -147,8 +147,8 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     //return;
 
     // check the X axis
-    float oldRight = a.x + a.width;
-    float oldBottom = a.y + a.height;
+    float oldRight = aMax.x;
+    float oldBottom = aMax.y;
 
     var motion = aVelocity;
     bool hitSide = data.hitSide, hitTop = data.hitTop, hitBottom = data.hitBottom;
@@ -160,42 +160,45 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     if (!a.isRectColliding(b))
         return;
 
+    var newMin = newrect.getMin();
+    var newMax = newrect.getMax();
+
     bool canHitX = true;
-    if (newrect.y > b.y + b.height) // our top is below wall bottom
+    if (newMin.y > bMax.y) // our top is below wall bottom
         canHitX = false;
-    else if (newrect.y + newrect.height < b.y) // our bottom is over the wall top
+    else if (newMax.y < bMin.y) // our bottom is over the wall top
         canHitX = false;
 
     if (canHitX)
     {
-        float newRight = newrect.x + newrect.width;
-        float objectRight = b.x + b.width;
+        float newRight = newMax.x;
+        float objectRight = bMax.x;
 
         // check the box moving to the right
         // if we were outside the left wall before, and are not now, we hit something
-        if (motion.x > 0)
+        if (motion.x < 0)
         {
-            if (oldRight <= b.x)
+            if (oldRight >= bMin.x)
             {
-                if (newRight > b.x)
+                if (newRight > bMin.x)
                 {
                     // we hit moving right, so set us back to where we hit the wall
-                    newrect.x = b.x - a.width;
+                    newrect.x = bMin.x - (a.width * 2);
                     hitSide = true;
                 }
             }
         }
 
-        if (motion.x < 0)
+        if (motion.x > 0)
         {
             // check the box moving to the left
             // if we were outside the right wall before, and are not now, we hit something
-            if (a.x >= objectRight)
+            if (aMin.x <= objectRight)
             {
-                if (newrect.x < objectRight)
+                if (newMin.x < objectRight)
                 {
                     // we hit moving left, so set us back to where we hit the wall
-                    newrect.x = objectRight;
+                    newrect.x = objectRight - (a.width * 2);
                     hitSide = true;
                 }
             }
@@ -204,41 +207,39 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
 
     // do the same for Y
     bool canHitY = true;
-    if (newrect.x > b.x + b.width) // our left is past wall right
+    if (newrect.x > bMax.x) // our left is past wall right
         canHitY = false;
-    else if (newrect.x + newrect.width < b.x) // our right is past wall left
+    else if (newMax.x < b.x) // our right is past wall left
         canHitY = false;
 
     if (canHitY)
     {
-        float newBottom = newrect.y + newrect.height;
-        float objectBottom = b.y + b.height;
+        float newBottom = newMax.y;
+        float objectBottom = bMax.y;
 
-        // check the box moving to the down
-        // if we were outside the top wall before, and are not now, we hit something
-        if (motion.y >= 0)
+        if (motion.y <= 0)
         {
-            if (oldBottom <= b.y)
+            if (oldBottom >= bMin.y)
             {
-                if (newBottom > b.y)
+                if (newBottom > bMin.y)
                 {
                     // we hit moving down, so set us back to where we hit the wall
-                    newrect.y = b.y - a.height;
+                    newrect.y = bMin.y + a.height;
                     hitBottom = true;
                 }
-                else if (newBottom == b.y)
+                else if (newBottom == bMin.y)
                 {
                     hitBottom = true;
                 }
             }
         }
-        else if (motion.y < 0)
+        else if (motion.y > 0)
         {
             // check the box moving up
             // if we were outside the bottom wall before, and are not now, we hit something
-            if (a.y >= objectBottom)
+            if (a.y <= objectBottom)
             {
-                if (newrect.y < objectBottom)
+                if (newrect.y > objectBottom)
                 {
                     // we hit moving up, so set us back to where we hit the wall
                     newrect.y = objectBottom;
@@ -252,7 +253,10 @@ void physics::PhysicsWorld2D::resolveCollision(BoxCollider2D* boxA, BoxCollider2
     data.hitSide = hitSide;
     data.hitTop = hitTop;
 
-    a.CopyMinMax(newrect.getMin(), newrect.getMax());
+    boxA->body->velocity.x = newrect.x - a.x;
+    boxA->body->velocity.y = newrect.y - a.y;
+
+    //a.CopyMinMax(newrect.getMin(), newrect.getMax());
 }
 
 void physics::PhysicsWorld2D::Update()
@@ -265,7 +269,8 @@ void physics::PhysicsWorld2D::Update()
         if (physicsBody2D->mass > 0 && physicsBody2D->GetActive())
         {
             physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
-            physicsBody2D->velocity += gravity * timeStep;
+            if (physicsBody2D->doGravity)
+                physicsBody2D->velocity += gravity * timeStep;
         }
     }
 
@@ -303,20 +308,22 @@ void physics::PhysicsWorld2D::Update()
                     {
                         if (_box)
                         {
-                            var _col = box->rect.isRectColliding(_box->rect);
-                            if (_col)
-                            {
-                                resolveCollision(box, _box, pcd);
+                            resolveCollision(box, _box, pcd);
 
-                                box->body->velocity = glm::vec2(0);
-                                _box->body->velocity = glm::vec2(0);
-                                box->OnCollision(new PhysicsCollision{_box});
-                                _box->OnCollision(new PhysicsCollision{box});
+                            if (pcd.hitBottom || pcd.hitSide || pcd.hitTop)
+                            {
+
+                                box->OnCollision(PhysicsCollision{_box});
+                                _box->OnCollision(PhysicsCollision{box});
                             }
                         }
                     }
                 }
             }
+
+
+            body->doGravity = !pcd.hitBottom;
+            box->lastCollisionData = pcd;
         }
     }
 

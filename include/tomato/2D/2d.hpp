@@ -25,7 +25,7 @@ namespace tmt::engine2D::physics
     {
         PhysicsCollider2D();
 
-        void OnCollision(PhysicsCollision* col);
+        void OnCollision(PhysicsCollision col);
 
     private:
         friend PhysicsBody2D;
@@ -42,6 +42,8 @@ namespace tmt::engine2D::physics
         {
             bool hitSide = false, hitTop = false, hitBottom = false;
         };
+
+        PreCollsiionData lastCollisionData;
 
     private:
         friend PhysicsWorld2D;
@@ -74,6 +76,7 @@ namespace tmt::engine2D::physics
     private:
         friend struct PhysicsWorld2D;
 
+        bool doGravity = true;
         PhysicsCollider2D* collider;
     };
 
