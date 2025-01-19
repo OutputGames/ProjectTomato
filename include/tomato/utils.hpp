@@ -178,7 +178,8 @@ namespace glm
 #define TO_ARGS(v) v.x, v.y, v.z
 
 #define VEC_FIND(vec,val) std::find(vec.begin(), vec.end(), val)
-#define IN_VECTOR(vec, val) VEC_FIND(vec,val) != vec.end()
+#define IN_VECTOR(vec, val) VEC_FIND(vec, val) != vec.end()
+#define IN_MAP(vec, val) vec.find(val) != vec.end()
 
 
 #define STR_CONTAINS(str, chk) str.find(chk) != std::string::npos

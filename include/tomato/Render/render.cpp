@@ -215,7 +215,7 @@ SubShader::~SubShader()
 
 SubShader* SubShader::CreateSubShader(string name, ShaderType type)
 {
-    if (IN_VECTOR(fs::ResourceManager::pInstance->loaded_sub_shaders, name))
+    if (IN_MAP(fs::ResourceManager::pInstance->loaded_sub_shaders, name))
     {
         return ResMgr->loaded_sub_shaders[name];
     }
@@ -308,7 +308,7 @@ Shader* Shader::CreateShader(ShaderInitInfo info)
             hsh(info.fragmentProgram->name + info.vertexProgram->name));
     }
 
-    if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
+    if (IN_MAP(ResMgr->loaded_shaders, info.name))
     {
         return ResMgr->loaded_shaders[info.name];
     }
@@ -329,7 +329,7 @@ Shader* Shader::CreateShader(string vertex, string fragment)
         info.name = hsh(info.fragmentProgram->name + "_" + info.vertexProgram->name);
     }
 
-    if (IN_VECTOR(ResMgr->loaded_shaders, info.name))
+    if (IN_MAP(ResMgr->loaded_shaders, info.name))
     {
         return ResMgr->loaded_shaders[info.name];
     }
@@ -386,7 +386,7 @@ ComputeShader::~ComputeShader()
 
 ComputeShader* ComputeShader::CreateComputeShader(SubShader* shader)
 {
-    if (IN_VECTOR(ResMgr->loaded_compute_shaders, shader->name+"_CMP"))
+    if (IN_MAP(ResMgr->loaded_compute_shaders, shader->name+"_CMP"))
     {
         return ResMgr->loaded_compute_shaders[shader->name + "_CMP"];
     }
@@ -2292,7 +2292,7 @@ TextureAtlas::TextureAtlas(std::vector<string> paths)
 
 Texture* Texture::CreateTexture(string path, bool isCubemap)
 {
-    if (IN_VECTOR(ResMgr->loaded_textures, path))
+    if (IN_MAP(ResMgr->loaded_textures, path))
     {
         return ResMgr->loaded_textures[path];
     }
