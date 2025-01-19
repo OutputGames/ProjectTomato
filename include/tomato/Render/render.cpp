@@ -417,9 +417,8 @@ u64 Material::GetMaterialState()
 {
     u64 v = state.cull;
     v |= state.depth;
-    v |= BGFX_STATE_WRITE_MASK;
+    v |= state.write;
     v |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-
 
     return v;
 }
@@ -2688,7 +2687,7 @@ void tmt::render::update()
                   static_cast<float>(glm::cos(counterTime)), static_cast<float>(renderer->usePosAnim)};
     float d[4] = {static_cast<float>(lights.size()), 0, 0, 0};
 
-    std::sort(calls.begin(), calls.end(), [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
+    std::sort(calls.begin(), calls.end(), [](const DrawCall& a, const DrawCall& b) { return a.layer > b.layer; });
 
 
     for (const auto& call : calls)

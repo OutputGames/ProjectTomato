@@ -196,7 +196,7 @@ namespace tmt::render
             All   = BGFX_STATE_WRITE_MASK
         };
 
-        u64 write = All;
+        u64 write = BGFX_STATE_WRITE_R;
 
         enum MatrixMode
         {
