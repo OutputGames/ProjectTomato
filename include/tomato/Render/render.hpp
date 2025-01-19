@@ -184,19 +184,14 @@ namespace tmt::render
             Counterclockwise = BGFX_STATE_CULL_CCW
         } cull = Counterclockwise;
 
-        enum WriteMode
-        {
-            Red   = BGFX_STATE_WRITE_R,
-            Green = BGFX_STATE_WRITE_G,
-            Blue  = BGFX_STATE_WRITE_B,
-            Alpha = BGFX_STATE_WRITE_A,
-            Depth = BGFX_STATE_WRITE_Z,
-            RGB   = Red | Green | Blue,
-            RGBA  = RGB | Alpha,
-            All   = BGFX_STATE_WRITE_MASK
-        };
+        bool writeR = true;
+        bool writeG = true;
+        bool writeB = true;
+        bool writeA = true;
 
-        u64 write = BGFX_STATE_WRITE_R;
+        bool writeZ = true;
+
+        void SetWrite(u64 flag);
 
         enum MatrixMode
         {

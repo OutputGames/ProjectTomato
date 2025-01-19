@@ -394,6 +394,26 @@ ComputeShader* ComputeShader::CreateComputeShader(SubShader* shader)
     return new ComputeShader(shader);
 }
 
+void MaterialState::SetWrite(u64 flag)
+{
+    writeR = false;
+    writeG = false;
+    writeB = false;
+    writeA = false;
+    writeZ = false;
+
+    if (flag & BGFX_STATE_WRITE_R)
+        writeR = true;
+    if (flag & BGFX_STATE_WRITE_G)
+        writeG = true;
+    if (flag & BGFX_STATE_WRITE_B)
+        writeB = true;
+    if (flag & BGFX_STATE_WRITE_A)
+        writeA = true;
+    if (flag & BGFX_STATE_WRITE_Z)
+        writeZ = true;
+}
+
 MaterialOverride* Material::GetUniform(string name, bool force)
 {
     for (auto override : overrides)
@@ -417,7 +437,18 @@ u64 Material::GetMaterialState()
 {
     u64 v = state.cull;
     v |= state.depth;
-    v |= state.write;
+
+    if (state.writeR)
+        v |= BGFX_STATE_WRITE_R;
+    if (state.writeG)
+        v |= BGFX_STATE_WRITE_G;
+    if (state.writeB)
+        v |= BGFX_STATE_WRITE_B;
+    if (state.writeA)
+        v |= BGFX_STATE_WRITE_A;
+    if (state.writeZ)
+        v |= BGFX_STATE_WRITE_Z;
+
     v |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
     return v;
@@ -2666,7 +2697,7 @@ void tmt::render::update()
                     100.0f, bgfx::getCaps()->homogeneousDepth);
         bx::mtxOrtho(ortho, 0, -static_cast<float>(renderer->windowWidth), 0,
                      static_cast<float>(renderer->windowHeight),
-                     -1, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
+                     -100, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
         bgfx::setViewTransform(0, mainCamera->GetView(), proj);
     }
 

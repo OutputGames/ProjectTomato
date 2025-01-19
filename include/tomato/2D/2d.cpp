@@ -342,7 +342,7 @@ void physics::PhysicsWorld2D::Update()
         }
     }
 
-    auto gravity = glm::vec2(0, -25);
+    auto gravity = glm::vec2(0, -50);
 
     for (auto physicsBody2D : bodies)
     {
@@ -351,7 +351,7 @@ void physics::PhysicsWorld2D::Update()
         {
             physicsBody2D->virtualPosition += physicsBody2D->velocity * timeStep;
             if (physicsBody2D->doGravity)
-                physicsBody2D->velocity += gravity * timeStep;
+                physicsBody2D->velocity += gravity * (timeStep * 2);
         }
     }
 }

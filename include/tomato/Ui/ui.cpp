@@ -135,8 +135,8 @@ void SpriteObject::Update()
     color->v4 = mainColor.getData();
     tex->tex = mainTexture;
 
-    material->state.write = BGFX_STATE_WRITE_RGB;
-    material->state.depth = render::MaterialState::Always;
+    //material->state.write = BGFX_STATE_WRITE_RGB;
+    //material->state.depth = render::MaterialState::Always;
 
     var drawCall = render::DrawCall();
 
