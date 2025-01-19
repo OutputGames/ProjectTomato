@@ -2695,9 +2695,16 @@ void tmt::render::update()
         bx::mtxProj(proj, mainCamera->FOV,
                     static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight), 0.01f,
                     100.0f, bgfx::getCaps()->homogeneousDepth);
-        bx::mtxOrtho(ortho, 0, -static_cast<float>(renderer->windowWidth), 0,
-                     static_cast<float>(renderer->windowHeight),
+
+        float rad = glm::radians(mainCamera->FOV);
+
+        float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
+        float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
+
+        bx::mtxOrtho(ortho, left, -left, bottom, -bottom,
                      -100, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
+
+
         bgfx::setViewTransform(0, mainCamera->GetView(), proj);
     }
 

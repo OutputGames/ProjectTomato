@@ -155,8 +155,8 @@ void SpriteObject::Update()
     {
 
         position = GetGlobalPosition() - mainCameraObject->position;
-        position.x -= renderer->windowWidth / 2.0f;
-        position.y += renderer->windowHeight / 2.0f;
+        //position.x -= renderer->windowWidth / 2.0f;
+        //position.y += renderer->windowHeight / 2.0f;
 
     }
     position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
