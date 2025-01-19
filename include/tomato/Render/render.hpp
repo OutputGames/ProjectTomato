@@ -662,6 +662,7 @@ namespace tmt::render
     struct DrawCall
     {
         u64 state;
+        u32 layer = 0;
 
         MaterialOverride** overrides;
         size_t overrideCt = 0;

@@ -2687,7 +2687,11 @@ void tmt::render::update()
     float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
                   static_cast<float>(glm::cos(counterTime)), static_cast<float>(renderer->usePosAnim)};
     float d[4] = {static_cast<float>(lights.size()), 0, 0, 0};
-    for (auto call : calls)
+
+    std::sort(calls.begin(), calls.end(), [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
+
+
+    for (const auto& call : calls)
     {
         //bgfx::setTransform(call.transformMatrix);
 

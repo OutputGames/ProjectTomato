@@ -36,6 +36,7 @@ namespace tmt::ui
         render::Color mainColor;
         render::Mesh* spriteMesh = GetPrimitive(prim::Quad);
         bool isUI = true;
+        int layer = 0;
 
         SpriteObject();
         void Update() override;
