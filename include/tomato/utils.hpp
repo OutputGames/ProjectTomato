@@ -131,6 +131,7 @@ namespace std
 
         return random_string;
     }
+
 }
 
 namespace glm
@@ -175,7 +176,11 @@ namespace glm
 #define READ_FUNC(type,name) type Read##name() { return Read<##type>(); };
 #define MAX_BONE_MATRICES 128
 #define TO_ARGS(v) v.x, v.y, v.z
-#define IN_VECTOR(vec, val) vec.find(val) != vec.end()
+
+#define VEC_FIND(vec,val) std::find(vec.begin(), vec.end(), val)
+#define IN_VECTOR(vec, val) VEC_FIND(vec,val) != vec.end()
+
+
 #define STR_CONTAINS(str, chk) str.find(chk) != std::string::npos
 #define BIT(x) (1 << (x))
 #define toName(v) v, TO_STRING(v)
