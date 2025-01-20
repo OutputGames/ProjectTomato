@@ -211,12 +211,12 @@ void ButtonObject::Start()
     var min = rect.getMin();
     var max = rect.getMax();
 
-    var corner1 = MakeCorner(glm::vec2(min.x, min.y));
-    var corner2 = MakeCorner(glm::vec2(max.x, min.y));
-    var corner3 = MakeCorner(glm::vec2(max.x, max.y));
-    var corner4 = MakeCorner(glm::vec2(min.x, max.y));
+    //var corner1 = MakeCorner(glm::vec2(min.x, min.y));
+    //var corner2 = MakeCorner(glm::vec2(max.x, min.y));
+    //var corner3 = MakeCorner(glm::vec2(max.x, max.y));
+    //var corner4 = MakeCorner(glm::vec2(min.x, max.y));
 
-    cursor = MakeCorner(glm::vec2(0));
+    //cursor = MakeCorner(glm::vec2(0));
 
     Object::Start();
 }
@@ -229,20 +229,24 @@ void ButtonObject::Update()
     float width = renderer->windowWidth;
     float height = renderer->windowHeight;
 
-    float halfWidth = (width / 2.0f);
-    float halfHeight = (height / 2.0f);
+    // Adjust the mouse position to NDC (-1 to 1 range).
+    glm::vec2 ndcMouse;
+    ndcMouse.x = (1.0 - (wmp.x / width)) * 2.0f - 1.0f; // Normalize to [-1, 1]
+    ndcMouse.y = (1.0f - (wmp.y / height)) * 2.0f - 1.0f; // Flip Y and normalize to [-1, 1]
 
+    // Apply orthographic projection scaling based on FOV and screen dimensions.
+    float rad = glm::radians(mainCamera->FOV);
+    float halfWidth = (width / 2.0f) * rad;
+    float halfHeight = (height / 2.0f) * rad;
 
     // Map NDC coordinates to world space using the orthographic bounds.
     glm::vec2 worldMouse;
-    worldMouse.x = wmp.x - halfWidth;
-    worldMouse.y = wmp.y - halfHeight;
-
-    worldMouse.x = -worldMouse.x;
+    worldMouse.x = ndcMouse.x * halfWidth;
+    worldMouse.y = ndcMouse.y * halfHeight;
 
     var pos = worldMouse;
 
-    cursor->position = glm::vec3(pos, 0);
+    //cursor->position = glm::vec3(pos, 0);
 
     var gpos = GetGlobalPosition();
     var gscl = GetGlobalScale();
