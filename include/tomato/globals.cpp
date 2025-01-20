@@ -23,7 +23,7 @@ glm::vec2 mousedelta;
 glm::vec2 mousescrl;
 int lastKey;
 tmt::render::Camera* mainCamera;
-tmt::obj::Scene* mainScene;
+tmt::obj::Scene* mainScene = nullptr;
 tmt::render::Shader* defaultShader;
 tmt::engine::Application* application;
 int counterTime = 0;

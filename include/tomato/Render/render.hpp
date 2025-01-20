@@ -619,6 +619,15 @@ namespace tmt::render
 
         Color(float r = 1, float g = 1, float b = 1, float a = 1)
         {
+            if (r > 1)
+                r /= 255;
+            if (g > 1)
+                g /= 255;
+            if (b > 1)
+                b /= 255;
+            if (a > 1)
+                a /= 255;
+
             this->r = r;
             this->g = g;
             this->b = b;

@@ -239,6 +239,8 @@ void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
 
 void PhysicalWorld::Update()
 {
+    if (!dynamicsWorld)
+        return;
     dynamicsWorld->stepSimulation(1.0 / 6.0f, 1);
 
     dynamicsWorld->performDiscreteCollisionDetection();
