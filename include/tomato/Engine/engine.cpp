@@ -14,8 +14,8 @@ tmt::engine::EngineInfo* tmt::engine::init(Application* app, glm::vec2 ws)
     engineInfo->renderer = rendererInfo;
     engineInfo->app = app;
 
-    obj::init();
     audio::init();
+    obj::init();
 
     return engineInfo;
 }
@@ -48,6 +48,7 @@ void tmt::engine::update()
 
 void tmt::engine::shutdown()
 {
+    delete mainScene;
     render::shutdown();
 }
 
