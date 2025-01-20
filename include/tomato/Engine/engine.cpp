@@ -26,12 +26,6 @@ void tmt::engine::update()
     debug::DebugUi::Update();
 #endif
 
-
-    obj::update();
-    render::update();
-    input::Update();
-    audio::update();
-
     double xpos = 0;
     double ypos = 0;
 
@@ -41,6 +35,12 @@ void tmt::engine::update()
 
     mousedelta = mousep - p;
     mousep = p;
+
+    obj::update();
+    render::update();
+    input::Update();
+    audio::update();
+
 
     deltaTime = glfwGetTime() - lastTime;
     lastTime = glfwGetTime();

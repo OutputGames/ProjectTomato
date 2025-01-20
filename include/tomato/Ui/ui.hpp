@@ -49,6 +49,7 @@ namespace tmt::ui
 
     struct ButtonObject : obj::Object
     {
+        void Start() override;
         void Update() override;
 
         string GetDefaultName() override
@@ -61,6 +62,7 @@ namespace tmt::ui
 
     private:
         std::vector<std::function<void()>> hovers, clicks;
+        SpriteObject* cursor;
 
         bool hoverLast, clickLast;
     };

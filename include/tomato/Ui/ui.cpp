@@ -38,13 +38,19 @@ bool onSegment(const glm::vec2& p, const glm::vec2& q, const glm::vec2& r)
 
 bool Rect::isPointInRect(glm::vec2 p)
 {
-    if (p.x >= x && p.x <= x + width)
+    var min = getMin();
+    var max = getMax();
+
+    bool r = p.x > max.x;
+    bool l = p.x < min.x;
+    bool t = p.y < min.y;
+    bool b = p.y > max.y;
+
+    if (r && l && t && b)
     {
-        if (p.y >= y && p.y <= y + height)
-        {
-            return true;
-        }
+        return true;
     }
+
     return false;
 }
 
@@ -186,9 +192,57 @@ void SpriteObject::Update()
     Object::Update();
 }
 
+SpriteObject* MakeCorner(glm::vec2 pos)
+{
+    var sprite = new SpriteObject();
+    sprite->scale = glm::vec3(10);
+    sprite->position = glm::vec3(pos, 0);
+    sprite->mainColor = tmt::render::Color::Red;
+
+    return sprite;
+}
+
+void ButtonObject::Start()
+{
+    var gpos = GetGlobalPosition();
+    var gscl = GetGlobalScale();
+    var rect = Rect{gpos.x, gpos.y, gscl.x, gscl.y};
+
+    var min = rect.getMin();
+    var max = rect.getMax();
+
+    var corner1 = MakeCorner(glm::vec2(min.x, min.y));
+    var corner2 = MakeCorner(glm::vec2(max.x, min.y));
+    var corner3 = MakeCorner(glm::vec2(max.x, max.y));
+    var corner4 = MakeCorner(glm::vec2(min.x, max.y));
+
+    cursor = MakeCorner(glm::vec2(0));
+
+    Object::Start();
+}
+
 void ButtonObject::Update()
 {
-    var pos = input::Mouse::GetMousePosition();
+    auto wmp = input::Mouse::GetMousePosition();
+
+    // Retrieve the window dimensions.
+    float width = renderer->windowWidth;
+    float height = renderer->windowHeight;
+
+    float halfWidth = (width / 2.0f);
+    float halfHeight = (height / 2.0f);
+
+
+    // Map NDC coordinates to world space using the orthographic bounds.
+    glm::vec2 worldMouse;
+    worldMouse.x = wmp.x - halfWidth;
+    worldMouse.y = wmp.y - halfHeight;
+
+    worldMouse.x = -worldMouse.x;
+
+    var pos = worldMouse;
+
+    cursor->position = glm::vec3(pos, 0);
 
     var gpos = GetGlobalPosition();
     var gscl = GetGlobalScale();
@@ -237,6 +291,10 @@ void ButtonObject::Update()
                 sprite->mainColor.darken(darkenAmt);
             }
         }
+
+        var min = rect.getMin();
+        var max = rect.getMax();
+        var p = pos;
     }
 
     hoverLast = hover;
