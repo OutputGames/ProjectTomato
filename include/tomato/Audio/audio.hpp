@@ -20,6 +20,7 @@ namespace tmt::audio
         void Update();
 
         void AddListener(SoundListener* listener);
+        void RemoveListener(SoundListener* listener);
         ma_engine engine;
 
     private:
@@ -56,6 +57,7 @@ namespace tmt::audio
         glm::vec3 velocity{0};
 
         SoundListener();
+        ~SoundListener() override;
     };
 
     struct AudioPlayer : obj::Object

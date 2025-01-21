@@ -236,33 +236,28 @@ Shader::Shader(ShaderInitInfo info)
 
 void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
 {
-    std::map<std::string, MaterialOverride> m_overrides;
+    std::unordered_map<std::string, MaterialOverride> m_overrides;
 
     if (overrides != nullptr)
     {
-        for (int i = 0; i < oc; ++i)
+        m_overrides.reserve(oc); // Reserve space to avoid reallocation
+        for (size_t i = 0; i < oc; ++i)
         {
-            var name = overrides[i]->name;
-
-            var pair = std::make_pair(name, *overrides[i]);
-            m_overrides.insert(pair);
+            m_overrides.emplace(overrides[i]->name, *overrides[i]);
         }
     }
 
-    for (var shader : subShaders)
+    for (auto& shader : subShaders)
     {
-        for (var uni : shader->uniforms)
+        for (auto& uni : shader->uniforms)
         {
-            if (overrides != nullptr)
+            if (overrides != nullptr && m_overrides.contains(uni->name))
             {
-                if (m_overrides.contains(uni->name))
-                {
-                    var ovr = m_overrides.find(uni->name)->second;
-                    uni->v4 = ovr.v4;
-                    uni->m3 = ovr.m3;
-                    uni->m4 = ovr.m4;
-                    uni->tex = ovr.tex;
-                }
+                const auto& ovr = m_overrides.at(uni->name);
+                uni->v4 = ovr.v4;
+                uni->m3 = ovr.m3;
+                uni->m4 = ovr.m4;
+                uni->tex = ovr.tex;
             }
 
             uni->Use(shader);
@@ -271,6 +266,7 @@ void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
 
     submit(viewId, program);
 }
+
 
 Shader::~Shader()
 {
@@ -2806,7 +2802,8 @@ void tmt::render::update()
             bgfx::setTransform(value_ptr(matrix));
         }
 
-        lightUniforms->Apply(lights);
+        if (lights.size() > 0)
+            lightUniforms->Apply(lights);
 
         call.mesh->use();
 

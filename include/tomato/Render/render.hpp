@@ -176,7 +176,7 @@ namespace tmt::render
             NotEqual     = BGFX_STATE_DEPTH_TEST_NOTEQUAL,
             Never        = BGFX_STATE_DEPTH_TEST_NEVER,
             Always       = BGFX_STATE_DEPTH_TEST_ALWAYS,
-        } depth = Less;
+        } depth = LessEqual;
 
         enum CullMode
         {

@@ -75,6 +75,17 @@ void AudioDevice::AddListener(SoundListener* listener)
     listeners.push_back(listener);
 }
 
+void AudioDevice::RemoveListener(SoundListener* _listener)
+{
+    for (auto listener : listeners)
+    {
+        if (listener->pId >= _listener->pId)
+            listener->pId--;
+    }
+
+    listeners.erase(VEC_FIND(listeners, _listener));
+}
+
 Sound::Sound(string path, SoundInitInfo info)
 {
     var result = ma_sound_init_from_file(&mInstance->engine, path.c_str(),
@@ -127,6 +138,11 @@ void Sound::Stop()
 }
 
 SoundListener::SoundListener() { mInstance->AddListener(this); }
+
+SoundListener::~SoundListener()
+{
+    mInstance->RemoveListener(this);
+}
 
 AudioPlayer::AudioPlayer()
 {
