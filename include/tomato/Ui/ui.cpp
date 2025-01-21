@@ -134,7 +134,14 @@ SpriteObject::SpriteObject()
     material->state.SetWrite(BGFX_STATE_WRITE_RGB);
     material->state.depth = render::MaterialState::LessEqual;
 
-    mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
+    if (mainTexture)
+        mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
+}
+
+SpriteObject::SpriteObject(string path) :
+    SpriteObject()
+{
+    mainTexture = render::Texture::CreateTexture(path);
 }
 
 void SpriteObject::Update()

@@ -31,7 +31,7 @@ namespace tmt::ui
 
     struct SpriteObject : obj::Object
     {
-        render::Texture* mainTexture;
+        render::Texture* mainTexture = nullptr;
         render::Material* material;
         render::Color mainColor;
         render::Mesh* spriteMesh = GetPrimitive(prim::Quad);
@@ -39,6 +39,7 @@ namespace tmt::ui
         int layer = 0;
 
         SpriteObject();
+        SpriteObject(string path);
         void Update() override;
 
         string GetDefaultName() override
