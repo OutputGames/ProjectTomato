@@ -69,8 +69,10 @@ namespace tmt::engine2D::physics
         glm::vec2 velocity = glm::vec2(0);
         float mass = 1;
 
-        int layer = BIT(0);
-
+        void SetLayer(int l)
+        {
+            layer = BIT(l);
+        }
 
         PhysicsBody2D(PhysicsCollider2D* collider);
         ~PhysicsBody2D() override;
@@ -81,6 +83,8 @@ namespace tmt::engine2D::physics
         friend struct PhysicsWorld2D;
 
         bool doGravity = true;
+
+        int layer = BIT(0);
         PhysicsCollider2D* collider;
     };
 
