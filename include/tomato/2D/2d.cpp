@@ -66,6 +66,14 @@ void physics::PhysicsBody2D::Update()
 
 physics::PhysicsWorld2D::PhysicsWorld2D()
 {
+    std::vector<int> mask;
+
+    for (int i = 0; i < 64; ++i)
+    {
+        mask.push_back(BIT(i));
+    }
+
+    SetLayerMask(BIT(0), mask);
 }
 
 physics::PhysicsWorld2D::~PhysicsWorld2D()
@@ -296,9 +304,12 @@ void physics::PhysicsWorld2D::Update()
             pcd.preVelo = body->velocity;
 
             body->velocity *= timeStep;
+
+            var layerMask = layerMasks[body->layer];
+
             for (auto collider : colliders)
             {
-                if (collider != col && collider->GetActive())
+                if (collider != col && collider->GetActive() && layerMask & collider->body->layer)
                 {
                     var _box = collider->Cast<BoxCollider2D>();
 
@@ -354,6 +365,23 @@ void physics::PhysicsWorld2D::Update()
                 physicsBody2D->velocity += gravity * (timeStep * 2);
         }
     }
+}
+
+void physics::PhysicsWorld2D::SetLayerMask(int layer, std::vector<int> mask)
+{
+    if (layerMasks.size() <= layer)
+    {
+        layerMasks.resize(layer + 1);
+    }
+
+    int m = 0;
+
+    for (int value : mask)
+    {
+        m |= (value);
+    }
+
+    layerMasks[layer] = m;
 }
 
 void physics::init()

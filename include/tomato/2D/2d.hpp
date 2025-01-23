@@ -69,6 +69,9 @@ namespace tmt::engine2D::physics
         glm::vec2 velocity = glm::vec2(0);
         float mass = 1;
 
+        int layer = BIT(0);
+
+
         PhysicsBody2D(PhysicsCollider2D* collider);
         ~PhysicsBody2D() override;
 
@@ -88,11 +91,14 @@ namespace tmt::engine2D::physics
 
         void Update();
 
+        void SetLayerMask(int layer, std::vector<int> mask);
+
     private:
         friend PhysicsBody2D;
 
         std::vector<PhysicsBody2D*> bodies;
         std::vector<PhysicsCollider2D*> colliders;
+        std::vector<int> layerMasks;
 
         void resolveCollision(BoxCollider2D* boxA, BoxCollider2D* boxB, BoxCollider2D::PreCollsiionData& data);
     };
