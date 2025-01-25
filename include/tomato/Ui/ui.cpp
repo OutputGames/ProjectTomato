@@ -188,7 +188,11 @@ void SpriteObject::Update()
     drawCall.program = material->shader;
     if (material->overrides.size() > 0)
     {
-        drawCall.overrides = material->overrides.data();
+        auto _overrides = new render::MaterialOverride[material->overrides.size()];
+
+        std::copy(material->overrides.begin(), material->overrides.end(), _overrides);
+
+        drawCall.overrides = _overrides;
         drawCall.overrideCt = material->overrides.size();
     }
     else
@@ -339,6 +343,15 @@ TextObject::TextObject()
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
+
+    mainColor = render::Color::Black;
+}
+
+void TextObject::Start()
+{
+    spacing = font->spacing;
+
+    SpriteObject::Start();
 }
 
 void TextObject::Update()
@@ -373,7 +386,9 @@ void TextObject::Update()
     position = og_pos;
 
     float x = 0;
+    var textSize = font->CalculateTextSize(text, size, spacing);
 
+    //x += textSize / 4;
 
     for (char value : text)
     {
@@ -396,14 +411,18 @@ void TextObject::Update()
         drawCall.vertexCount = 4;
         drawCall.indexCount = 6;
 
-        mainTexture = c.handle;
-
-        material->GetUniform("s_fontTex", true)->tex = c.handle;
+        var uni = material->GetUniform("s_fontTex", true);
+        uni->tex = c.handle;
 
         drawCall.program = material->shader;
         if (material->overrides.size() > 0)
         {
-            drawCall.overrides = material->overrides.data();
+
+            auto _overrides = new render::MaterialOverride[material->overrides.size()];
+
+            std::copy(material->overrides.begin(), material->overrides.end(), _overrides);
+
+            drawCall.overrides = _overrides;
             drawCall.overrideCt = material->overrides.size();
         }
         else
@@ -411,7 +430,7 @@ void TextObject::Update()
 
         pushDrawCall(drawCall);
 
-        x -= c.size.x;
+        x -= (c.advance * (size / 2)) * spacing;
     }
 
     Object::Update();

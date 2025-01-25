@@ -10,6 +10,12 @@
 
 using namespace tmt::render;
 
+Color Color::White = {1, 1, 1, 1};
+Color Color::Blue = {0, 0, 1, 1};
+Color Color::Green = {0, 1, 0, 1};
+Color Color::Red = {1, 0, 0, 1};
+Color Color::Black = {0, 0, 0, 1};
+
 RendererInfo* RendererInfo::GetRendererInfo()
 {
     return renderer;
@@ -45,6 +51,11 @@ void ShaderUniform::Use(SubShader* shader)
                         break;
 
                     texSet++;
+                }
+
+                if (forcedSamplerIndex > -1)
+                {
+                    texSet = forcedSamplerIndex;
                 }
 
                 setTexture(texSet, handle, tex->handle);
@@ -261,6 +272,7 @@ void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
                 uni->m3 = ovr.m3;
                 uni->m4 = ovr.m4;
                 uni->tex = ovr.tex;
+                uni->forcedSamplerIndex = ovr.forcedSamplerIndex;
             }
 
             uni->Use(shader);
@@ -268,6 +280,8 @@ void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
     }
 
     submit(viewId, program);
+
+    delete[] overrides;
 }
 
 
@@ -545,7 +559,11 @@ void Mesh::draw(glm::mat4 transform, Material* material, std::vector<glm::mat4> 
     drawCall.program = material->shader;
     if (material->overrides.size() > 0)
     {
-        drawCall.overrides = material->overrides.data();
+        auto _overrides = new MaterialOverride[material->overrides.size()];
+
+        std::copy(material->overrides.begin(), material->overrides.end(), _overrides);
+
+        drawCall.overrides = _overrides;
         drawCall.overrideCt = material->overrides.size();
     }
     else
@@ -2361,6 +2379,23 @@ Font* Font::Create(string path)
     return new Font(path);
 }
 
+float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
+{
+    float size = 0;
+
+    if (forcedSpacing == FLT_MAX)
+        forcedSpacing = spacing;
+
+    for (char value : text)
+    {
+        var c = characters[value];
+
+        size += (c.advance * (fontSize / 2)) * forcedSpacing;
+    }
+
+    return size;
+}
+
 Font::Font(string path)
 {
 
@@ -2436,10 +2471,12 @@ Font::Font(string path)
         vertices.emplace_back(0, v_height, v_width, v_height);
         vertices.emplace_back(v_width, v_height, v_width, v_height);
 
-        var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec2))), layout);
+        var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
+
+        float advance = static_cast<float>(face->glyph->advance.x) / static_cast<float>(face->max_advance_width);
 
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
+                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), advance,
                                tex, vbh};
         characters.insert(std::pair<char, Character>(c, character));
     }

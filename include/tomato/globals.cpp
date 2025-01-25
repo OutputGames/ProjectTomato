@@ -9,10 +9,7 @@ void glfw_errorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW error %d: %s\n", error, description);
 };
-tmt::render::Color tmt::render::Color::White = {1, 1, 1, 1};
-tmt::render::Color tmt::render::Color::Blue = {0, 0, 1, 1};
-tmt::render::Color tmt::render::Color::Green = {0, 1, 0, 1};
-tmt::render::Color tmt::render::Color::Red = {1, 0, 0, 1};
+
 tmt::render::RendererInfo* renderer;
 std::vector<tmt::render::DrawCall> calls;
 std::vector<tmt::debug::DebugCall> debugCalls;

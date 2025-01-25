@@ -75,6 +75,7 @@ namespace tmt::render
         glm::mat3 m3 = glm::mat3(-1000.0);
         glm::mat4 m4 = glm::mat4(-1000.0);
         Texture* tex = nullptr;
+        int forcedSamplerIndex = -1;
 
         void Use(SubShader* shader);
 
@@ -159,6 +160,8 @@ namespace tmt::render
         glm::mat3 m3 = glm::mat3(1.0);
         glm::mat4 m4 = glm::mat4(1.0);
         Texture* tex = nullptr;
+
+        int forcedSamplerIndex = -1;
 
         SubShader::ShaderType shaderType;
         bgfx::UniformType::Enum type;
@@ -596,7 +599,7 @@ namespace tmt::render
         {
             glm::ivec2 size;
             glm::ivec2 bearing;
-            uint advance;
+            float advance;
             Texture* handle;
             bgfx::VertexBufferHandle vbh;
         };
@@ -605,8 +608,10 @@ namespace tmt::render
 
         static Font* Create(string path);
 
-
+        float spacing = 1.0;
         bgfx::IndexBufferHandle ibh;
+
+        float CalculateTextSize(string text, float fontSize, float forcedSpacing = FLT_MAX);
 
     private:
         Font(string path);
@@ -684,7 +689,7 @@ namespace tmt::render
             return (red << 24) | (green << 16) | (blue << 8) | alpha;
         }
 
-        static Color White, Red, Blue, Green;
+        static Color White, Red, Blue, Green, Black;
     };
 
     using MatrixArray = std::vector<float>;

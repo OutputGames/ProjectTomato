@@ -72,8 +72,10 @@ namespace tmt::ui
         string text;
         render::Font* font;
         float size = 48;
+        float spacing = 1.0f;
 
         TextObject();
+        void Start() override;
 
         void Update() override;
         string GetDefaultName() override { return "Text"; }
