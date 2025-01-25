@@ -596,12 +596,14 @@ namespace tmt::render
             uint advance;
             bgfx::TextureHandle handle;
             bgfx::VertexBufferHandle vbh;
-            bgfx::IndexBufferHandle ibh;
         };
 
         std::map<char, Character> characters;
 
         static Font* Create(string path);
+
+
+        bgfx::IndexBufferHandle ibh;
 
     private:
         Font(string path);
@@ -693,6 +695,12 @@ namespace tmt::render
         size_t overrideCt = 0;
 
         Mesh* mesh;
+
+        bgfx::VertexBufferHandle vbh;
+        bgfx::IndexBufferHandle ibh;
+
+        u32 vertexCount, indexCount;
+
         glm::mat4 transformMatrix;
         std::vector<glm::mat4> animationMatrices;
         //float animationMatrices[4][4][MAX_BONE_MATRICES];

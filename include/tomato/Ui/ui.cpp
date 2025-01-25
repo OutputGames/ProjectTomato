@@ -330,7 +330,88 @@ int ButtonObject::AddClickEvent(std::function<void()> f)
     return clicks.size();
 }
 
+TextObject::TextObject()
+{
+    material->shader = render::Shader::CreateShader("text/vert", "text/frag");
+
+    material->state.SetWrite(BGFX_STATE_WRITE_RGB);
+    material->state.depth = render::MaterialState::LessEqual;
+
+    if (!mainTexture)
+        mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
+}
+
 void TextObject::Update()
 {
+    var tex = material->GetUniform("s_texColor", true);
+    var color = material->GetUniform("u_color", true);
+
+    color->v4 = mainColor.getData();
+    tex->tex = mainTexture;
+
+    // material->state.write = BGFX_STATE_WRITE_RGB;
+    // material->state.depth = render::MaterialState::Always;
+
+    var og_pos = position;
+
+    if (!isUI)
+    {
+
+        position = GetGlobalPosition() - mainCameraObject->position;
+        // position.x -= renderer->windowWidth / 2.0f;
+        // position.y += renderer->windowHeight / 2.0f;
+    }
+    position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
+
+    var transform = GetLocalTransform();
+
+    if (isUI)
+    {
+        transform = GetTransform();
+    }
+
+    position = og_pos;
+
+    float x = 0;
+
+    for (char value : text)
+    {
+        var c = font->characters[value];
+
+        var drawCall = render::DrawCall();
+
+        drawCall.layer = layer;
+        drawCall.state = material->GetMaterialState();
+        drawCall.matrixMode = render::MaterialState::OrthoProj;
+
+        drawCall.transformMatrix = transform;
+
+        drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(x, 0, 0));
+        drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(size));
+
+        drawCall.vbh = c.vbh;
+        drawCall.ibh = font->ibh;
+
+        drawCall.vertexCount = 4;
+        drawCall.indexCount = 6;
+
+        std::vector<render::MaterialOverride*> overrides;
+
+        overrides.insert(overrides.end(), material->overrides.begin(), material->overrides.end());
+
+        drawCall.program = material->shader;
+        if (overrides.size() > 0)
+        {
+            drawCall.overrides = overrides.data();
+            drawCall.overrideCt = overrides.size();
+        }
+        else
+            drawCall.overrides = nullptr;
+
+        pushDrawCall(drawCall);
+
+        x -= c.size.x;
+    }
+
     Object::Update();
 }

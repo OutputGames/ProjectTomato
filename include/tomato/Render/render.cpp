@@ -2377,8 +2377,13 @@ Font::Font(string path)
 
     bgfx::VertexLayout layout;
     layout.begin();
-    layout.add()
+    layout.add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float);
     layout.end();
+
+
+    std::vector<u16> indices = {0, 1, 2, 1, 3, 2};
+
+    ibh = createIndexBuffer(bgfx::copy(indices.data(), indices.size() * sizeof(u16)));
 
     for (unsigned char c = 0; c < 128; c++)
     {
@@ -2413,21 +2418,19 @@ Font::Font(string path)
 
         std::vector<glm::vec2> vertices;
 
-        vertices.push_back(glm::vec2(0, 0));
-        vertices.push_back(glm::vec2(width, 0));
-        vertices.push_back(glm::vec2(width, height));
-        vertices.push_back(glm::vec2(0, height));
+        var v_width = static_cast<float>(width) / face->size->metrics.x_ppem;
+        var v_height = static_cast<float>(height) / face->size->metrics.y_ppem;
 
-        std::vector<u16> indices = {
-            0,1,2,
-            1,3,2
-        };
+        vertices.emplace_back(0, 0);
+        vertices.emplace_back(v_width, 0);
+        vertices.emplace_back(0, v_height);
+        vertices.emplace_back(v_width, v_height);
 
-        bgfx::createVertexBuffer(bgfx::copy(vertices, (vertices.size() * sizeof(glm::vec2))))
+        var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec2))), layout);
 
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
-                               handle};
+                               handle, vbh};
         characters.insert(std::pair<char, Character>(c, character));
     }
 
@@ -2893,7 +2896,15 @@ void tmt::render::update()
         if (lights.size() > 0)
             lightUniforms->Apply(lights);
 
-        call.mesh->use();
+        if (call.mesh)
+        {
+            call.mesh->use();
+        }
+        else
+        {
+            setVertexBuffer(0, call.vbh, 0, call.vertexCount);
+            setIndexBuffer(call.ibh, 0, call.indexCount);
+        }
 
         bgfx::setState(call.state);
 

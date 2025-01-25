@@ -63,17 +63,18 @@ namespace tmt::ui
 
     private:
         std::vector<std::function<void()>> hovers, clicks;
-        SpriteObject* cursor;
 
         bool hoverLast, clickLast;
     };
 
-    struct TextObject : obj::Object
+    struct TextObject : SpriteObject
     {
         string text;
         render::Font* font;
-        render::Color color;
-        float size;
+        float size = 48;
+
+        TextObject();
+
         void Update() override;
         string GetDefaultName() override { return "Text"; }
     };
