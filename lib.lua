@@ -77,7 +77,8 @@ end
             "include/tomato/",
             IMGUI_DIR,
             "vendor/enet/include/",
-            "vendor/box2d/include/"
+            "vendor/box2d/include/",
+            "vendor/freetype/"
         }
 
         libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
@@ -92,6 +93,10 @@ end
             ".editorconfig",
             IMGUI_DIR.."**"
         }
+
+        
+        libdirs { "vendor/freetype/lib/" }
+        links {"freetype"}
 
         removefiles { "include/testproject/**"}
 

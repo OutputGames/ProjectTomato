@@ -3,6 +3,9 @@
 #include "vertex.h"
 #include "common/imgui/imgui.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #define ResMgr tmt::fs::ResourceManager::pInstance
 
 using namespace tmt::render;
@@ -2364,7 +2367,7 @@ Font::Font(string path)
     }
 
     FT_Face face;
-    if (FT_New_Face(ft, path, 0, &face))
+    if (FT_New_Face(ft, path.c_str(), 0, &face))
     {
         std::cout << "Failed to load font" << std::endl;
         return;
@@ -2372,19 +2375,64 @@ Font::Font(string path)
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
-    for (int i = 0; i < 128; i++)
+    bgfx::VertexLayout layout;
+    layout.begin();
+    layout.add()
+    layout.end();
+
+    for (unsigned char c = 0; c < 128; c++)
     {
         // load character glyph
-        if (FT_Load_Char(face, i, FT_LOAD_RENDER))
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
         {
             std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
         }
 
 
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::R8;
+        uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+
+        var width = face->glyph->bitmap.width;
+        var height = face->glyph->bitmap.rows;
+
+        if (width == 0 || height == 0)
+            continue;
+
+        // Create the texture in bgfx, passing the image data directly
+        var handle = createTexture2D(
+            static_cast<u16>(width), static_cast<u16>(height), false, 1,
+            textureFormat, textureFlags,
+            bgfx::copy(face->glyph->bitmap.buffer, (width * height)));
+
+        string handleName = "";
+        handleName += static_cast<char>(c);
+        handleName += "_";
+        handleName += face->family_name;
+
+        setName(handle, handleName.c_str());
+
+        std::vector<glm::vec2> vertices;
+
+        vertices.push_back(glm::vec2(0, 0));
+        vertices.push_back(glm::vec2(width, 0));
+        vertices.push_back(glm::vec2(width, height));
+        vertices.push_back(glm::vec2(0, height));
+
+        std::vector<u16> indices = {
+            0,1,2,
+            1,3,2
+        };
+
+        bgfx::createVertexBuffer(bgfx::copy(vertices, (vertices.size() * sizeof(glm::vec2))))
+
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x};
-        Characters.insert(std::pair<char, Character>(c, character));
+                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
+                               handle};
+        characters.insert(std::pair<char, Character>(c, character));
     }
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
 }
 
 float* Camera::GetView()

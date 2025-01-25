@@ -594,7 +594,9 @@ namespace tmt::render
             glm::ivec2 size;
             glm::ivec2 bearing;
             uint advance;
-
+            bgfx::TextureHandle handle;
+            bgfx::VertexBufferHandle vbh;
+            bgfx::IndexBufferHandle ibh;
         };
 
         std::map<char, Character> characters;
