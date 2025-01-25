@@ -332,7 +332,7 @@ int ButtonObject::AddClickEvent(std::function<void()> f)
 
 TextObject::TextObject()
 {
-    material->shader = render::Shader::CreateShader("text/vert", "text/frag");
+    material->Reload(render::Shader::CreateShader("text/vert", "text/frag"));
 
     material->state.SetWrite(BGFX_STATE_WRITE_RGB);
     material->state.depth = render::MaterialState::LessEqual;
@@ -374,6 +374,7 @@ void TextObject::Update()
 
     float x = 0;
 
+
     for (char value : text)
     {
         var c = font->characters[value];
@@ -395,15 +396,15 @@ void TextObject::Update()
         drawCall.vertexCount = 4;
         drawCall.indexCount = 6;
 
-        std::vector<render::MaterialOverride*> overrides;
+        mainTexture = c.handle;
 
-        overrides.insert(overrides.end(), material->overrides.begin(), material->overrides.end());
+        material->GetUniform("s_fontTex", true)->tex = c.handle;
 
         drawCall.program = material->shader;
-        if (overrides.size() > 0)
+        if (material->overrides.size() > 0)
         {
-            drawCall.overrides = overrides.data();
-            drawCall.overrideCt = overrides.size();
+            drawCall.overrides = material->overrides.data();
+            drawCall.overrideCt = material->overrides.size();
         }
         else
             drawCall.overrides = nullptr;

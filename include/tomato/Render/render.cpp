@@ -237,7 +237,7 @@ Shader::Shader(ShaderInitInfo info)
     ResMgr->loaded_shaders[info.name] = this;
 }
 
-void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
+void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
 {
     std::unordered_map<std::string, MaterialOverride> m_overrides;
 
@@ -246,7 +246,7 @@ void Shader::Push(int viewId, MaterialOverride** overrides, size_t oc)
         m_overrides.reserve(oc); // Reserve space to avoid reallocation
         for (size_t i = 0; i < oc; ++i)
         {
-            m_overrides.emplace(overrides[i]->name, *overrides[i]);
+            m_overrides.emplace(overrides[i].name, overrides[i]);
         }
     }
 
@@ -325,7 +325,7 @@ Shader* Shader::CreateShader(string vertex, string fragment)
     if (info.name == "UNDEFINED")
     {
         std::hash<string> hsh;
-        info.name = hsh(info.fragmentProgram->name + "_" + info.vertexProgram->name);
+        info.name = info.vertexProgram->name + "__" + info.fragmentProgram->name;
     }
 
     if (IN_MAP(ResMgr->loaded_shaders, info.name))
@@ -415,18 +415,18 @@ void MaterialState::SetWrite(u64 flag)
 
 MaterialOverride* Material::GetUniform(string name, bool force)
 {
-    for (auto override : overrides)
-        if (override->name == name)
-            return override;
+    for (auto& override : overrides)
+        if (override.name == name)
+            return &override;
 
     if (force)
     {
-        var ovr = new MaterialOverride();
-        ovr->name = name;
+        var ovr = MaterialOverride();
+        ovr.name = name;
 
         overrides.push_back(ovr);
 
-        return ovr;
+        return &ovr;
     }
 
     return nullptr;
@@ -468,10 +468,10 @@ void Material::Reload(Shader* shader)
         {
             for (auto uniform : sub_shader->uniforms)
             {
-                var ovr = new MaterialOverride();
-                ovr->name = uniform->name;
-                ovr->shaderType = sub_shader->type;
-                ovr->type = uniform->type;
+                var ovr = MaterialOverride();
+                ovr.name = uniform->name;
+                ovr.shaderType = sub_shader->type;
+                ovr.type = uniform->type;
 
                 overrides.push_back(ovr);
             }
@@ -2313,6 +2313,12 @@ Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags,
     ResMgr->loaded_textures[name] = this;
 }
 
+Texture::Texture(bgfx::TextureHandle handle)
+{
+    this->handle = handle;
+
+}
+
 Texture::~Texture()
 {
     destroy(handle);
@@ -2377,7 +2383,7 @@ Font::Font(string path)
 
     bgfx::VertexLayout layout;
     layout.begin();
-    layout.add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float);
+    layout.add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float);
     layout.end();
 
 
@@ -2409,6 +2415,8 @@ Font::Font(string path)
             textureFormat, textureFlags,
             bgfx::copy(face->glyph->bitmap.buffer, (width * height)));
 
+        var tex = new Texture(handle);
+
         string handleName = "";
         handleName += static_cast<char>(c);
         handleName += "_";
@@ -2416,21 +2424,23 @@ Font::Font(string path)
 
         setName(handle, handleName.c_str());
 
-        std::vector<glm::vec2> vertices;
+        tex->name = handleName;
+
+        std::vector<glm::vec4> vertices;
 
         var v_width = static_cast<float>(width) / face->size->metrics.x_ppem;
         var v_height = static_cast<float>(height) / face->size->metrics.y_ppem;
 
-        vertices.emplace_back(0, 0);
-        vertices.emplace_back(v_width, 0);
-        vertices.emplace_back(0, v_height);
-        vertices.emplace_back(v_width, v_height);
+        vertices.emplace_back(0, 0, v_width, v_height);
+        vertices.emplace_back(v_width, 0, v_width, v_height);
+        vertices.emplace_back(0, v_height, v_width, v_height);
+        vertices.emplace_back(v_width, v_height, v_width, v_height);
 
         var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec2))), layout);
 
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
-                               handle, vbh};
+                               tex, vbh};
         characters.insert(std::pair<char, Character>(c, character));
     }
 

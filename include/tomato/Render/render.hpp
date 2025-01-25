@@ -116,7 +116,7 @@ namespace tmt::render
         std::vector<SubShader*> subShaders;
         string name;
 
-        void Push(int viewId = 0, MaterialOverride** overrides = nullptr, size_t overrideCount = 0);
+        void Push(int viewId = 0, MaterialOverride* overrides = nullptr, size_t overrideCount = 0);
 
         ~Shader();
 
@@ -240,7 +240,7 @@ namespace tmt::render
     {
         MaterialState state;
         Shader* shader;
-        std::vector<MaterialOverride*> overrides;
+        std::vector<MaterialOverride> overrides;
         string name = "Material";
 
         MaterialOverride* GetUniform(string name, bool force = false);
@@ -553,6 +553,9 @@ namespace tmt::render
 
         Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
                 string name = "");
+
+        Texture(bgfx::TextureHandle handle);
+
         ~Texture();
 
     private:
@@ -594,7 +597,7 @@ namespace tmt::render
             glm::ivec2 size;
             glm::ivec2 bearing;
             uint advance;
-            bgfx::TextureHandle handle;
+            Texture* handle;
             bgfx::VertexBufferHandle vbh;
         };
 
@@ -691,7 +694,7 @@ namespace tmt::render
         u64 state;
         u32 layer = 0;
 
-        MaterialOverride** overrides;
+        MaterialOverride* overrides;
         size_t overrideCt = 0;
 
         Mesh* mesh;
