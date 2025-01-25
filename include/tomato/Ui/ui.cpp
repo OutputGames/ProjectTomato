@@ -345,6 +345,10 @@ TextObject::TextObject()
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
 
     mainColor = render::Color::Black;
+
+
+    //var cursor = MakeCorner(glm::vec2(0));
+    //cursor->SetParent(this);
 }
 
 void TextObject::Start()
@@ -376,11 +380,11 @@ void TextObject::Update()
     }
     position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
 
-    var transform = GetLocalTransform();
+    var transform = GetLocalTransform(false);
 
     if (isUI)
     {
-        transform = GetTransform();
+        transform = GetTransform(false);
     }
 
     position = og_pos;
@@ -388,11 +392,14 @@ void TextObject::Update()
     float x = 0;
     var textSize = font->CalculateTextSize(text, size, spacing);
 
-    //x += textSize / 4;
+    x += textSize / 2;
+    float y = 0;
 
     for (char value : text)
     {
         var c = font->characters[value];
+
+        x -= (c.advance * (size / 2)) * spacing;
 
         var drawCall = render::DrawCall();
 
@@ -402,7 +409,12 @@ void TextObject::Update()
 
         drawCall.transformMatrix = transform;
 
-        drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(x, 0, 0));
+        float xPos = x + c.bearing.x * size;
+        float yPos = y - ((c.size.y - c.bearing.y)) * size;
+
+        yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
+
+        drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
         drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(size));
 
         drawCall.vbh = c.vbh;
@@ -429,8 +441,6 @@ void TextObject::Update()
             drawCall.overrides = nullptr;
 
         pushDrawCall(drawCall);
-
-        x -= (c.advance * (size / 2)) * spacing;
     }
 
     Object::Update();

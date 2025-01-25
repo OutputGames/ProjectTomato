@@ -7,6 +7,7 @@
 
 namespace tmt::render
 {
+    struct Font;
     struct SceneDescription;
     struct Mesh;
     struct Texture;
@@ -553,6 +554,7 @@ namespace tmt::fs
         std::map<string, render::Shader*> loaded_shaders;
         std::map<string, render::ComputeShader*> loaded_compute_shaders;
         std::map<string, render::Texture*> loaded_textures;
+        std::map<string, render::Font*> loaded_fonts;
         std::map<string, render::Mesh*> loaded_meshes;
         std::map<string, render::SceneDescription*> loaded_scene_descs;
 

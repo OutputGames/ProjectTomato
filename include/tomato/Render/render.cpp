@@ -2376,6 +2376,11 @@ RenderTexture::~RenderTexture()
 
 Font* Font::Create(string path)
 {
+    if (IN_MAP(ResMgr->loaded_fonts, path))
+    {
+        return ResMgr->loaded_fonts[path];
+    }
+
     return new Font(path);
 }
 
@@ -2483,6 +2488,8 @@ Font::Font(string path)
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
+
+    ResMgr->loaded_fonts[path] = this;
 }
 
 float* Camera::GetView()
