@@ -587,6 +587,25 @@ namespace tmt::render
         ~RenderTexture();
     };
 
+    struct Font
+    {
+        struct Character
+        {
+            glm::ivec2 size;
+            glm::ivec2 bearing;
+            uint advance;
+
+        };
+
+        std::map<char, Character> characters;
+
+        static Font* Create(string path);
+
+    private:
+        Font(string path);
+
+    };
+
     struct Camera
     {
         glm::vec3 position;

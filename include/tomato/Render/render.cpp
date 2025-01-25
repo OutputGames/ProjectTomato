@@ -2347,6 +2347,46 @@ RenderTexture::~RenderTexture()
     bgfx::resetView(vid);
 }
 
+Font* Font::Create(string path)
+{
+    return new Font(path);
+}
+
+Font::Font(string path)
+{
+
+
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft))
+    {
+        std::cout << "Could not init FreeType Library" << std::endl;
+        return;
+    }
+
+    FT_Face face;
+    if (FT_New_Face(ft, path, 0, &face))
+    {
+        std::cout << "Failed to load font" << std::endl;
+        return;
+    }
+
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    for (int i = 0; i < 128; i++)
+    {
+        // load character glyph
+        if (FT_Load_Char(face, i, FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+        }
+
+
+        Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x};
+        Characters.insert(std::pair<char, Character>(c, character));
+    }
+}
+
 float* Camera::GetView()
 {
     var Front = GetFront();

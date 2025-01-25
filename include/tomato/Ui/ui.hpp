@@ -67,7 +67,16 @@ namespace tmt::ui
 
         bool hoverLast, clickLast;
     };
-    ;
+
+    struct TextObject : obj::Object
+    {
+        string text;
+        render::Font* font;
+        render::Color color;
+        float size;
+        void Update() override;
+        string GetDefaultName() override { return "Text"; }
+    };
 
 }
 

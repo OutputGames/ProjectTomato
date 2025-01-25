@@ -329,3 +329,8 @@ int ButtonObject::AddClickEvent(std::function<void()> f)
 
     return clicks.size();
 }
+
+void TextObject::Update()
+{
+    Object::Update();
+}
