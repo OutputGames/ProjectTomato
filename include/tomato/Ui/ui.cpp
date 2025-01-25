@@ -353,7 +353,8 @@ TextObject::TextObject()
 
 void TextObject::Start()
 {
-    spacing = font->spacing;
+    if (spacing == FLT_MAX)
+        spacing = font->spacing;
 
     SpriteObject::Start();
 }
@@ -399,7 +400,7 @@ void TextObject::Update()
     {
         var c = font->characters[value];
 
-        x -= (c.advance * (size / 2)) * spacing;
+        x -= (c.advance * spacing) * size / 2;
 
         var drawCall = render::DrawCall();
 

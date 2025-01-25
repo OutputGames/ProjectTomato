@@ -72,7 +72,7 @@ namespace tmt::ui
         string text;
         render::Font* font;
         float size = 48;
-        float spacing = 1.0f;
+        float spacing = FLT_MAX;
 
         TextObject();
         void Start() override;
