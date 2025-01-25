@@ -77,16 +77,23 @@ glm::vec3 Mouse::GetWorldMousePosition(render::Camera* camera)
     return glm::vec3{0};
 }
 
-Mouse::MouseButtonState Mouse::GetMouseButton(MouseButton i)
+Mouse::MouseButtonState Mouse::GetMouseButton(MouseButton i, bool real)
 {
     int state = glfwGetMouseButton(renderer->window, i);
+
+    if (!real)
+    {
+        if (ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemActive())
+            state = Release;
+    }
 
     if (state == Press && (mstates[i] == Press || mstates[i] == Hold))
     {
         state = Hold;
     }
 
-    mstates[i] = state;
+    if (real)
+        mstates[i] = state;
 
     return static_cast<MouseButtonState>(state);
 }

@@ -36,7 +36,7 @@ namespace tmt::input
             Hold,
         };
 
-        static MouseButtonState GetMouseButton(MouseButton btn);
+        static MouseButtonState GetMouseButton(MouseButton btn, bool real = false);
     };
 
     struct Keyboard
