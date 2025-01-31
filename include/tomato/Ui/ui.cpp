@@ -148,9 +148,11 @@ void SpriteObject::Update()
 {
     var tex = material->GetUniform("s_texColor", true);
     var color = material->GetUniform("u_color", true);
+    var spriteData = material->GetUniform("u_spriteData", true);
 
     color->v4 = mainColor.getData();
     tex->tex = mainTexture;
+    spriteData->v4 = glm::vec4(layer, isUI, 0, 0);
 
     //material->state.write = BGFX_STATE_WRITE_RGB;
     //material->state.depth = render::MaterialState::Always;
