@@ -152,7 +152,7 @@ void SpriteObject::Update()
 
     color->v4 = mainColor.getData();
     tex->tex = mainTexture;
-    spriteData->v4 = glm::vec4(layer, isUI, 0, 0);
+    spriteData->v4 = glm::vec4(layer, isUI, useAlpha, 0);
 
     //material->state.write = BGFX_STATE_WRITE_RGB;
     //material->state.depth = render::MaterialState::Always;
