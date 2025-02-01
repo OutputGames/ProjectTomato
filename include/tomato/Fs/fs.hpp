@@ -1,6 +1,8 @@
 #ifndef FS_H
 #define FS_H
 
+#include <codecvt>
+
 #include "utils.hpp"
 
 #include <sstream>
@@ -526,6 +528,22 @@ namespace tmt::fs
             }
 
             return s;
+        }
+
+        std::string ReadStringUTF16(int size)
+        {
+            var s = std::u16string();
+
+            for (int i = 0; i < size; ++i)
+            {
+                char16_t c = ReadUInt16();
+                if (c == u'\0')
+                    break;
+                s.push_back(c);
+            }
+
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+            return converter.to_bytes(s);
         }
 
         string ReadString()
