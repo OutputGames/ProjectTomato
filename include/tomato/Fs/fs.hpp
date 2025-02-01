@@ -30,7 +30,10 @@ namespace tmt::fs
 
     struct BinaryWriter : std::ofstream
     {
-        BinaryWriter(std::string path);
+        BinaryWriter(std::string path) :
+            std::ofstream(path, std::ios::binary)
+        {
+        }
 
         template <typename T>
         void Write(T value)
@@ -99,6 +102,10 @@ namespace tmt::fs
             Write(f);
         }
 
+        void Close()
+        {
+            close();
+        }
 
     };
 
@@ -426,9 +433,9 @@ namespace tmt::fs
             return arr;
         }
 
-        u8* ReadByteArray(int size)
+        unsigned char* ReadByteArray(int size)
         {
-            var arr = new u8[size];
+            var arr = new unsigned char[size];
 
             for (int i = 0; i < size; ++i)
             {
