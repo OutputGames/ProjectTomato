@@ -530,6 +530,14 @@ namespace tmt::fs
             return s;
         }
 
+        string ReadString(int size, int offset)
+        {
+
+            SeekBegin(offset);
+
+            return ReadString(size);
+        }
+
         std::string ReadStringUTF16(int size)
         {
             var s = std::u16string();
@@ -544,6 +552,13 @@ namespace tmt::fs
 
             std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
             return converter.to_bytes(s);
+        }
+
+        std::string ReadStringUTF16(int size, int offset)
+        {
+            SeekBegin(offset);
+
+            return ReadStringUTF16(size);
         }
 
         string ReadString()
