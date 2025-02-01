@@ -66,6 +66,9 @@ namespace tmt::ui
         std::vector<std::function<void()>> hovers, clicks;
 
         bool hoverLast, clickLast;
+        SpriteObject* sprite;
+
+        render::Texture* origTexture;
     };
 
     struct TextObject : SpriteObject

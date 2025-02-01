@@ -231,6 +231,9 @@ void ButtonObject::Start()
 
     //cursor = MakeCorner(glm::vec2(0));
 
+    sprite = dynamic_cast<SpriteObject*>(parent);
+    origTexture = sprite->mainTexture;
+
     Object::Start();
 }
 
@@ -269,7 +272,6 @@ void ButtonObject::Update()
     bool click = false;
 
     // mama a typecheck behind u
-    var sprite = dynamic_cast<SpriteObject*>(parent);
 
     float darkenAmt = 0.25;
 
