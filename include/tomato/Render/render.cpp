@@ -15,6 +15,7 @@ Color Color::Blue = {0, 0, 1, 1};
 Color Color::Green = {0, 1, 0, 1};
 Color Color::Red = {1, 0, 0, 1};
 Color Color::Black = {0, 0, 0, 1};
+Color Color::Gray = {0.5, 0.5, 0.5, 1};
 
 RendererInfo* RendererInfo::GetRendererInfo()
 {
@@ -2393,6 +2394,12 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
 
     for (char value : text)
     {
+        if (value == ' ' || value == '\0')
+        {
+            size += (0.5 * (fontSize / 2)) * forcedSpacing;
+            continue;
+        }
+
         var c = characters[value];
 
         size += (c.advance * (fontSize / 2)) * forcedSpacing;

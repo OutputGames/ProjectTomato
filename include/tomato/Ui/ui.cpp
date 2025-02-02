@@ -402,6 +402,12 @@ void TextObject::Update()
 
     for (char value : text)
     {
+        if (value == ' ' || value == '\0')
+        {
+            x -= (0.5 * spacing) * size / 2;
+            continue;
+        }
+
         var c = font->characters[value];
 
         x -= (c.advance * spacing) * size / 2;

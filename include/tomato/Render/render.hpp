@@ -689,7 +689,7 @@ namespace tmt::render
             return (red << 24) | (green << 16) | (blue << 8) | alpha;
         }
 
-        static Color White, Red, Blue, Green, Black;
+        static Color White, Red, Blue, Green, Black, Gray;
     };
 
     using MatrixArray = std::vector<float>;
