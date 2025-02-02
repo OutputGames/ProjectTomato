@@ -150,7 +150,17 @@ void SpriteObject::Update()
     var color = material->GetUniform("u_color", true);
     var spriteData = material->GetUniform("u_spriteData", true);
 
-    color->v4 = mainColor.getData();
+    var col = mainColor;
+    if (copyAlpha)
+    {
+        var s_parent = GetParent()->Cast<SpriteObject>();
+        if (s_parent)
+        {
+            col.a *= s_parent->mainColor.a;
+        }
+    }
+
+    color->v4 = col.getData();
     tex->tex = mainTexture;
     spriteData->v4 = glm::vec4(layer, isUI, useAlpha, 0);
 
@@ -368,7 +378,17 @@ void TextObject::Update()
     var tex = material->GetUniform("s_texColor", true);
     var color = material->GetUniform("u_color", true);
 
-    color->v4 = mainColor.getData();
+    var col = mainColor;
+    if (copyAlpha)
+    {
+        var s_parent = GetParent()->Cast<SpriteObject>();
+        if (s_parent)
+        {
+            col.a *= s_parent->mainColor.a;
+        }
+    }
+
+    color->v4 = col.getData();
     tex->tex = mainTexture;
 
     // material->state.write = BGFX_STATE_WRITE_RGB;

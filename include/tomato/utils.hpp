@@ -14,6 +14,7 @@
 #include <span>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <typeinfo>
 #include <vector>

@@ -37,6 +37,7 @@ namespace tmt::ui
         render::Mesh* spriteMesh = GetPrimitive(prim::Quad);
         bool isUI = true;
         bool useAlpha = true;
+        bool copyAlpha = true;
         int layer = 0;
 
         SpriteObject();
