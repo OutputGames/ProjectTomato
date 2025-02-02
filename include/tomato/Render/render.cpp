@@ -2766,6 +2766,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     GetPrimitive(prim::Cube);
     GetPrimitive(prim::Sphere);
+    GetPrimitive(prim::Quad);
 
     var white =
         new Texture(10, 10, bgfx::TextureFormat::RGB8, 0, bgfx::copy(whiteData.data(), whiteData.size()), "White");
@@ -2975,7 +2976,7 @@ void tmt::render::update()
     }
     calls.clear();
 
-    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
+    //bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
 
     auto dde = DebugDrawEncoder();
 
