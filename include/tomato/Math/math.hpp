@@ -132,7 +132,8 @@ namespace tmt::math
     float lerp(float start, float end, float t);
 
     float magnitude(glm::vec3 v);
-    ;
+
+    float angleBetween(glm::vec3 a, glm::vec3 b);
 
 }
 

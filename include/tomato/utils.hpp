@@ -74,6 +74,7 @@ using byte = unsigned char;
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/type_aligned.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 inline int randomInt(int a, int b)
 {
