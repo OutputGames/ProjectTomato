@@ -501,6 +501,8 @@ namespace tmt::fs
 
         u32 ReadUInt32() { return Read<u32>(); }
 
+        u8 ReadU8() { return Read<u8>(); }
+
         u16 ReadUInt16() { return Read<u16>(); }
 
         s16 ReadInt16() { return Read<s16>(); }
