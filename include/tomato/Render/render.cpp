@@ -713,9 +713,12 @@ SceneDescription::Node* SceneDescription::Node::GetNode(string name)
     return nullptr;
 }
 
-SceneDescription::Node* SceneDescription::GetNode(string name)
+SceneDescription::Node* SceneDescription::GetNode(string name, bool isPath)
 {
-    return rootNode->GetNode(name);
+
+
+    if (!isPath)
+        return rootNode->GetNode(name);
 }
 
 SceneDescription::Node* SceneDescription::Node::GetNode(aiNode* node)
@@ -1352,9 +1355,12 @@ Skeleton::Bone* Skeleton::GetBone(string name)
             return value;
     }
     */
-    if (boneInfoMap.contains(name))
+    if (boneInfoMap.contains(name) && bones.size() > 0)
     {
-        return bones[boneInfoMap[name].id];
+        var id = boneInfoMap[name].id;
+
+        if (bones.size() > id)
+            return bones[id];
     }
 
     return nullptr;
@@ -1389,36 +1395,40 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         modelNode->SetParent(description->rootNode);
 
         var armatureNode = description->GetNode("Armature");
-        var bones = armatureNode->GetAllChildren();
-
-
-        for (int i = 0; i < bones.size(); ++i)
+        if (armatureNode)
         {
 
-            var bnode = bones[i];
+            var bones = armatureNode->GetAllChildren();
 
-            bnode->isBone = true;
 
-            var boneName = bnode->name;
+            for (int i = 0; i < bones.size(); ++i)
+            {
 
-            BoneInfo boneInfo;
-            boneInfo.id = skeleton->boneInfoMap.size();
-            // boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
-            skeleton->boneInfoMap[boneName] = boneInfo;
+                var bnode = bones[i];
 
-            var bone = new Skeleton::Bone;
-            bone->name = boneName;
-            bone->skeleton = skeleton;
-            bone->position = bnode->position;
-            bone->rotation = bnode->rotation;
-            bone->scale = bnode->scale;
+                bnode->isBone = true;
 
-            skeleton->bones.push_back(bone);
+                var boneName = bnode->name;
+
+                BoneInfo boneInfo;
+                boneInfo.id = skeleton->boneInfoMap.size();
+                // boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
+                skeleton->boneInfoMap[boneName] = boneInfo;
+
+                var bone = new Skeleton::Bone;
+                bone->name = boneName;
+                bone->skeleton = skeleton;
+                bone->position = bnode->position;
+                bone->rotation = bnode->rotation;
+                bone->scale = bnode->scale;
+
+                skeleton->bones.push_back(bone);
+            }
+
+            maxBones = bones.size();
+
+            std::cout << "Max bones for " << description->name << "is " << maxBones << std::endl;
         }
-
-        maxBones = bones.size();
-
-        std::cout << "Max bones for " << description->name << "is " << maxBones << std::endl;
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1517,7 +1527,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     var anode = description->GetNode("Armature");
 
                     skeleton->rootName = boneName;
-                    if (anode != description->rootNode)
+                    if (anode != nullptr && anode != description->rootNode)
                     {
                         anode->SetParent(modelNode);
                     }

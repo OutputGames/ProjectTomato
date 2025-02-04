@@ -133,7 +133,7 @@ namespace tmt::math
 
     float magnitude(glm::vec3 v);
 
-    float angleBetween(glm::vec3 a, glm::vec3 b);
+    float angleBetween(glm::vec2 a, glm::vec2 b);
 
 }
 

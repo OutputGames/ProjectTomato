@@ -121,3 +121,12 @@ float tmt::math::magnitude(glm::vec3 v)
 
     return m;
 }
+
+float tmt::math::angleBetween(glm::vec2 a, glm::vec2 b)
+{
+    var difference = a - b;
+
+    var angle = glm::atan2(difference.y, difference.x);
+
+    return angle;
+}

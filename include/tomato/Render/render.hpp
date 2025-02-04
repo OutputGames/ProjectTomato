@@ -447,7 +447,7 @@ namespace tmt::render
         Model* GetModel(string name);
         Mesh* GetMesh(int idx);
 
-        Node* GetNode(string name);
+        Node* GetNode(string name, bool isPath = false);
         Node* GetNode(aiNode* node);
         Node* GetNode(aiMesh* mesh, int index);
 
