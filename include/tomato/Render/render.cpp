@@ -715,10 +715,39 @@ SceneDescription::Node* SceneDescription::Node::GetNode(string name)
 
 SceneDescription::Node* SceneDescription::GetNode(string name, bool isPath)
 {
+    if (isPath)
+    {
+        // Create a stringstream object to str
+        std::stringstream ss(name);
 
+        // Temporary object to store the splitted
+        // string
+        string t;
 
-    if (!isPath)
-        return rootNode->GetNode(name);
+        // Delimiter
+        char del = '/';
+
+        Node* node = rootNode;
+        Node* parentNode = nullptr;
+
+        // Splitting the str string by delimiter
+        while (getline(ss, t, del))
+        {
+            if (node)
+            {
+                parentNode = node;
+                node = node->GetNode(t);
+                if (!node)
+                {
+                    std::cout << "Null at " << t << std::endl;
+                    break;
+                }
+            }
+        }
+
+        return node;
+    }
+    return rootNode->GetNode(name);
 }
 
 SceneDescription::Node* SceneDescription::Node::GetNode(aiNode* node)
@@ -1388,11 +1417,12 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     SceneDescription::Node* modelNode;
     if (description)
     {
-
+        /*
         modelNode = new SceneDescription::Node;
         modelNode->name = name;
         modelNode->scene = description;
         modelNode->SetParent(description->rootNode);
+        */
 
         var armatureNode = description->GetNode("Armature");
         if (armatureNode)
@@ -1529,7 +1559,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     skeleton->rootName = boneName;
                     if (anode != nullptr && anode != description->rootNode)
                     {
-                        anode->SetParent(modelNode);
+                        //anode->SetParent(modelNode);
                     }
                 }
 
@@ -1545,7 +1575,8 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         auto incs = new u16[indices.size()];
         std::copy(indices.begin(), indices.end(), incs);
 
-        var mesh = createMesh(verts, incs, vertices.size(), indices.size(), Vertex::getVertexLayout(), this);
+        var mesh = createMesh(verts, incs, vertices.size(), indices.size(), Vertex::getVertexLayout(), this,
+                              msh->mName.C_Str());
 
         meshes.push_back(mesh);
         materialIndices.push_back(msh->mMaterialIndex);
@@ -1557,6 +1588,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             mesh->bones.push_back(bone->mName.C_Str());
         }
 
+        /*
         if (description)
         {
             var mnd = description->GetNode(msh, i);
@@ -1576,8 +1608,10 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
             //delete mnd;
         }
+        */
     }
 
+    /*
     if (description)
     {
 
@@ -1592,6 +1626,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             }
         }
     }
+    */
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
     {
