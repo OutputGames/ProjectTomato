@@ -413,6 +413,8 @@ namespace tmt::render
             string name;
 
             glm::vec3 position{0};
+            glm::vec3 GetGlobalPosition();
+
             glm::quat rotation{glm::vec3{0}};
             glm::vec3 scale{1};
 
@@ -432,7 +434,7 @@ namespace tmt::render
             Node(fs::BinaryReader* reader, SceneDescription* scene);
             Node(aiNode* node, SceneDescription* scene);
 
-            Node* GetNode(string name);
+            Node* GetNode(string name, bool isPath = false);
             Node* GetNode(aiNode* node);
 
             obj::Object* ToObject(int modelIndex = -1);

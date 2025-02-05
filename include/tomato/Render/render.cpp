@@ -700,17 +700,50 @@ SceneDescription::Node::Node(aiNode* node, SceneDescription* scene)
 
 }
 
-SceneDescription::Node* SceneDescription::Node::GetNode(string name)
+SceneDescription::Node* SceneDescription::Node::GetNode(string name, bool isPath)
 {
-    if (this->name == name)
-        return this;
-    for (auto child : children)
+    if (!isPath)
     {
-        var node = child->GetNode(name);
-        if (node)
-            return node;
+
+        if (this->name == name)
+            return this;
+        for (auto child : children)
+        {
+            var node = child->GetNode(name);
+            if (node)
+                return node;
+        }
+        return nullptr;
     }
-    return nullptr;
+    // Create a stringstream object to str
+    std::stringstream ss(name);
+
+    // Temporary object to store the splitted
+    // string
+    string t;
+
+    // Delimiter
+    char del = '/';
+
+    auto node = this;
+    Node* parentNode = nullptr;
+
+    // Splitting the str string by delimiter
+    while (getline(ss, t, del))
+    {
+        if (node)
+        {
+            parentNode = node;
+            node = node->GetNode(t);
+            if (!node)
+            {
+                std::cout << "Null at " << t << std::endl;
+                break;
+            }
+        }
+    }
+
+    return node;
 }
 
 SceneDescription::Node* SceneDescription::GetNode(string name, bool isPath)
@@ -970,7 +1003,7 @@ SceneDescription::SceneDescription(string path)
         {
             if (value->meshIndices.size() > 0)
             {
-                value->SetParent(rootNode);
+                //value->SetParent(rootNode);
             }
             if (value->name.starts_with("Armature_"))
             {
@@ -1417,12 +1450,12 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     SceneDescription::Node* modelNode;
     if (description)
     {
-        /*
+
         modelNode = new SceneDescription::Node;
         modelNode->name = name;
         modelNode->scene = description;
         modelNode->SetParent(description->rootNode);
-        */
+
 
         var armatureNode = description->GetNode("Armature");
         if (armatureNode)
@@ -1559,7 +1592,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     skeleton->rootName = boneName;
                     if (anode != nullptr && anode != description->rootNode)
                     {
-                        //anode->SetParent(modelNode);
+                        anode->SetParent(modelNode);
                     }
                 }
 
@@ -1730,6 +1763,16 @@ Model::~Model()
     delete[] animations.data();
 
     delete skeleton;
+}
+
+glm::vec3 SceneDescription::Node::GetGlobalPosition()
+{
+    var p = position;
+
+    if (parent)
+        p += parent->GetGlobalPosition();
+
+    return p;
 }
 
 Model::Model(fs::BinaryReader* reader, SceneDescription* description)
