@@ -7,6 +7,23 @@
 
 #include <sstream>
 
+#include <cstdint>
+
+using u8 = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
+
+using s8 = int8_t;
+using s16 = int16_t;
+using s32 = int32_t;
+using s64 = int64_t;
+
+using ulong = unsigned long long;
+using uint = unsigned int;
+using ushort = unsigned short;
+using byte = unsigned char;
+
 namespace tmt::render
 {
     struct Font;
@@ -52,6 +69,7 @@ namespace tmt::fs
             Write(i);
         }
 
+#ifdef GLM_ENABLE_EXPERIMENTAL
         void WriteVec3(glm::vec3 v)
         {
             Write(v.x);
@@ -74,7 +92,7 @@ namespace tmt::fs
             Write(v.z);
             Write(v.w);
         }
-
+#endif
 
         void WriteInt16(u16 i)
         {
@@ -172,6 +190,7 @@ namespace tmt::fs
             return s == sig;
         }
 
+#ifdef GLM_ENABLE_EXPERIMENTAL
         glm::vec3 ReadVec3()
         {
             float x = ReadSingle();
@@ -199,6 +218,7 @@ namespace tmt::fs
 
             return glm::quat(v.w, v.x, v.y, v.z);
         }
+#endif
 
         u16* ReadUInt16Array(int size)
         {
@@ -393,6 +413,7 @@ namespace tmt::fs
             return s == sig;
         }
 
+#ifdef GLM_ENABLE_EXPERIMENTAL
         glm::vec3 ReadVec3()
         {
             float x = ReadSingle();
@@ -420,6 +441,8 @@ namespace tmt::fs
 
             return glm::quat(v.w, v.x, v.y, v.z);
         }
+#endif
+
 
         u16* ReadUInt16Array(int size)
         {
@@ -607,6 +630,40 @@ namespace tmt::fs
             ReloadShaders();
         }
 
+    };
+
+    struct TRES
+    {
+
+        enum TResType
+        {
+            TRS_File,
+            TRS_Folder
+        };
+
+        struct TResFileBase
+        {
+            string name;
+            TResFileBase* parent;
+            TResType type;
+        };
+
+        struct TResFolder : TResFileBase
+        {
+            std::vector<TResFileBase*> subfiles;
+
+            TResFolder(BinaryReader* reader, TResFileBase* parent = nullptr);
+        };
+
+        struct TResFile : TResFileBase
+        {
+            TResFile(BinaryReader* reader, TResFileBase* parent = nullptr);
+        };
+
+        std::vector<TResFileBase*> files;
+
+
+        TRES(string path);
     };
 
 }
