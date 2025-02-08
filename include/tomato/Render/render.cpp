@@ -1257,7 +1257,7 @@ glm::quat Animator::AnimationBone::InterpolateRotation(float animationTime)
         GetScaleFactor(channel->rotations[p0Index]->time, channel->rotations[p1Index]->time, animationTime);
     glm::quat finalRotation =
         glm::slerp(channel->rotations[p0Index]->value, channel->rotations[p1Index]->value, scaleFactor);
-    //finalRotation = normalize(finalRotation);
+    finalRotation = normalize(finalRotation);
     return finalRotation;
 }
 
@@ -1302,7 +1302,7 @@ void Animator::Update()
         if (currentAnimation->duration <= 0)
             time = 0;
 
-        if (animationBones.size() <= currentAnimation->nodeChannels.size())
+        if (animationBones.size() < currentAnimation->nodeChannels.size())
             LoadAnimationBones();
 
         for (auto animation_bone : animationBones)
@@ -1590,9 +1590,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             for (int k = 0; k < b->mNumWeights; ++k)
             {
                 var weight = b->mWeights[k];
-
-                if (weight.mVertexId == 40)
-                    std::cout << std::endl;
 
                 bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
                 vertices[weight.mVertexId].SetBoneData(boneId, weight.mWeight);
@@ -2093,7 +2090,7 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
         {
             for (int y = 0; y < 4; ++y)
             {
-                offsetMatrix[x][y] = reader->ReadSingle();
+                offsetMatrix[y][x] = reader->ReadSingle();
             }
         }
 
