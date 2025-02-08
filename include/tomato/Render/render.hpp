@@ -354,6 +354,8 @@ namespace tmt::render
             glm::mat4 transformation = glm::mat4(-1);
             glm::mat4 GetTransformation();
 
+            glm::mat4 GetWorldTransform();
+
             void CopyTransformation(glm::mat4 m);
 
             std::vector<string> children;
@@ -370,6 +372,7 @@ namespace tmt::render
         glm::mat4 inverseTransform;
 
         Bone* GetBone(string name);
+        Bone* GetParent(Bone* b);
 
         void CalculateBoneIds();
 

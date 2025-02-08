@@ -1094,10 +1094,29 @@ glm::mat4 Skeleton::Bone::GetTransformation()
 {
     if (transformation == glm::mat4(-1))
     {
-        transformation =
-            translate(glm::mat4(1.0), position) * toMat4(rotation) * glm::scale(glm::mat4(1.0), scale);
+        //transformation = glm::mat4(1.);
+
+        transformation = glm::scale(scale) * toMat4(rotation) * translate(position);
     }
     return transformation;
+}
+
+glm::mat4 Skeleton::Bone::GetWorldTransform()
+{
+    var transform = GetTransformation();
+
+    var parent = skeleton->GetParent(this);
+
+    if (parent)
+    {
+        transform *= parent->GetWorldTransform();
+    }
+    else
+    {
+
+    }
+
+    return transform;
 }
 
 void Skeleton::Bone::CopyTransformation(glm::mat4 m)
@@ -1130,6 +1149,8 @@ void BoneObject::Update()
         rotation = copyBone->rotation;
         scale = copyBone->scale;
     }
+
+    //debug::Gizmos::DrawSphere(GetGlobalPosition(), 0.25);
 }
 
 void SkeletonObject::Load(SceneDescription::Node* node)
@@ -1478,6 +1499,22 @@ Skeleton::Bone* Skeleton::GetBone(string name)
             return bones[id];
     }
 
+    return nullptr;
+}
+
+Skeleton::Bone* Skeleton::GetParent(Bone* b)
+{
+    for (auto value : bones)
+    {
+        if (value->name != b->name)
+        {
+            for (auto child : value->children)
+            {
+                if (child == b->name)
+                    return value;
+            }
+        }
+    }
     return nullptr;
 }
 
@@ -2083,6 +2120,7 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
         bone->position = pos;
         bone->rotation = rot;
         bone->scale = scl;
+        bone->skeleton = this;
 
         glm::mat4 offsetMatrix;
 
@@ -2106,6 +2144,12 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
     }
 
     rootName = reader->ReadString();
+
+    for (auto value : bones)
+    {
+        var world = value->GetWorldTransform();
+        boneInfoMap[value->name].offset *= glm::inverse(world);
+    }
 }
 
 tmt::obj::Object* Model::CreateObject(Shader* shdr)
