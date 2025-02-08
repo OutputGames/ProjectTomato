@@ -1372,7 +1372,8 @@ SkeletonObject::SkeletonObject(Skeleton* skl)
         for (auto child : bone->children)
         {
             var realChild = GetChild(child);
-            realChild->SetParent(obj);
+            if (realChild)
+                realChild->SetParent(obj);
         }
     }
 }
@@ -1420,7 +1421,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
-        boneMatrices[index] = glm::inverse(boneMatrices[index]);
+        //boneMatrices[index] = glm::inverse(boneMatrices[index]);
     }
 
     for (string child : skeleBone->children)
@@ -1498,7 +1499,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     skeleton->inverseTransform = math::convertMat4(scene->mRootNode->mTransformation.Inverse());
 
 
-    int maxBones = 0;
+    int maxBones = INT_MAX;
     SceneDescription::Node* modelNode;
     if (description)
     {
@@ -1508,46 +1509,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         modelNode->scene = description;
         modelNode->SetParent(description->rootNode);
 
-
-        var armatureNode = description->GetNode("Armature");
-        if (armatureNode)
-        {
-
-            var bones = armatureNode->GetAllChildren();
-
-
-            for (int i = 0; i < bones.size(); ++i)
-            {
-
-                var bnode = bones[i];
-
-                bnode->isBone = true;
-
-                var boneName = bnode->name;
-
-                BoneInfo boneInfo;
-                boneInfo.id = skeleton->boneInfoMap.size();
-                // boneInfo.offset = math::convertMat4(b->mOffsetMatrix);
-                skeleton->boneInfoMap[boneName] = boneInfo;
-
-                var bone = new Skeleton::Bone;
-                bone->name = boneName;
-                bone->skeleton = skeleton;
-                bone->position = bnode->position;
-                bone->rotation = bnode->rotation;
-                bone->scale = bnode->scale;
-
-                skeleton->bones.push_back(bone);
-            }
-
-            maxBones = bones.size();
-
-            std::cout << "Max bones for " << description->name << "is " << maxBones << std::endl;
-        }
-    }
-    else
-    {
-        maxBones = INT_MAX;
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1629,6 +1590,10 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             for (int k = 0; k < b->mNumWeights; ++k)
             {
                 var weight = b->mWeights[k];
+
+                if (weight.mVertexId == 40)
+                    std::cout << std::endl;
+
                 bone->weights.push_back(Skeleton::Bone::VertexWeight{weight.mVertexId, weight.mWeight});
                 vertices[weight.mVertexId].SetBoneData(boneId, weight.mWeight);
             }
@@ -1783,45 +1748,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         animations.push_back(animation);
 
         break;
-    }
-
-    if (description)
-    {
-        var children = description->GetAllChildren();
-        std::vector<Skeleton::Bone*> n_bones;
-        int nodeCount = 0;
-        for (auto child : children)
-        {
-            child->id = nodeCount;
-            if (child->isBone)
-            {
-                var bone = skeleton->GetBone(child->name);
-                if (skeleton->boneInfoMap.contains(bone->name))
-                {
-                    n_bones.push_back(bone);
-                }
-            }
-            nodeCount++;
-        }
-        skeleton->bones = n_bones;
-
-        for (auto child : children)
-        {
-            if (child->isBone)
-            {
-                var bone = skeleton->GetBone(child->name);
-                if (bone)
-                {
-                    var parentBone = skeleton->GetBone(child->parent->name);
-                    if (parentBone)
-                    {
-                        parentBone->children.push_back(bone->name);
-                    }
-                }
-            }
-        }
-
-        modelNode->SetParent(description->rootNode);
     }
 
 }
