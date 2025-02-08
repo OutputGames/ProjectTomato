@@ -1047,6 +1047,15 @@ SceneDescription* SceneDescription::CreateSceneDescription(string path)
     return new SceneDescription(path);
 }
 
+BoneObject::BoneObject(Skeleton::Bone* bone)
+{
+    this->bone = bone;
+    name = bone->name;
+    position = bone->position;
+    rotation = bone->rotation;
+    scale = bone->scale;
+}
+
 void BoneObject::Load(SceneDescription::Node* node)
 {
     for (auto child : node->children)
@@ -1332,14 +1341,44 @@ void Animator::SetAnimation(Animation* animation)
     LoadAnimationBones();
 }
 
+SkeletonObject::SkeletonObject(Skeleton* skl)
+{
+    skeleton = skl;
+
+    for (auto bone : skl->bones)
+    {
+        var obj = new BoneObject(bone);
+
+        obj->SetParent(this);
+
+        bones.push_back(obj);
+    }
+
+    for (auto bone : skl->bones)
+    {
+        var obj = GetBone(bone->name);
+        for (auto child : bone->children)
+        {
+            var realChild = GetChild(child);
+            realChild->SetParent(obj);
+        }
+    }
+}
+
 void SkeletonObject::Update()
 {
 
     boneMatrices.clear();
-    boneMatrices.resize(MAX_BONE_MATRICES, glm::mat4(1.0));
+    boneMatrices.resize(bones.size(), glm::mat4(1.0));
 
     //GetBone(skeleton->rootName)->CalculateBoneMatrix(this, glm::mat4(1.0));
-    CalculateBoneTransform(skeleton->GetBone(skeleton->rootName), glm::mat4(1.0));
+    for (auto bone : bones)
+    {
+        if (bone->parent == this)
+        {
+            CalculateBoneTransform(bone->bone, glm::mat4(1.0));
+        }
+    }
 
     Object::Update();
 }
@@ -1369,7 +1408,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
-        //boneMatrices[index] = transpose(boneMatrices[index]);
+        boneMatrices[index] = glm::inverse(boneMatrices[index]);
     }
 
     for (string child : skeleBone->children)
@@ -1699,10 +1738,22 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     {
         var skl = scene->mSkeletons[i];
 
-
         break;
     }
 
+    if (scene->mSkeletons == nullptr)
+    {
+        for (auto value : skeleton->bones)
+        {
+            var node = scene->mRootNode->FindNode(value->name.c_str());
+
+            for (int i = 0; i < node->mNumChildren; ++i)
+            {
+                var child = node->mChildren[i];
+                value->children.push_back(child->mName.C_Str());
+            }
+        }
+    }
 
     for (int i = 0; i < scene->mNumAnimations; ++i)
     {
@@ -2128,6 +2179,14 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 
         midx++;
     }
+
+    var sklObj = new SkeletonObject(skeleton);
+    sklObj->SetParent(mdlObj);
+
+    var animator = new Animator();
+    animator->SetParent(mdlObj);
+
+    sklObj->animator = animator;
 
     return mdlObj;
 }
@@ -3013,7 +3072,7 @@ void tmt::render::update()
         {
             //bgfx::setUniform(animHandle, call.animationMatrices);
 
-            var matrixCount = call.animationMatrices.size() + 2;
+            var matrixCount = call.animationMatrices.size() + 1;
 
             std::vector<float> matrixData;
             matrixData.reserve(matrixCount * 16);

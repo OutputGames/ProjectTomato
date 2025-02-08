@@ -468,8 +468,10 @@ namespace tmt::render
 
     struct BoneObject : obj::Object
     {
-        BoneObject* copyBone;
+        BoneObject* copyBone = nullptr;
 
+        BoneObject() = default;
+        BoneObject(Skeleton::Bone* bone);
         void Load(SceneDescription::Node* node);
 
         glm::mat4 GetGlobalOffsetMatrix();
@@ -488,6 +490,9 @@ namespace tmt::render
         Animator* animator;
 
         Skeleton* skeleton;
+
+        SkeletonObject() = default;
+        SkeletonObject(Skeleton* skl);
 
         void Update() override;
 
