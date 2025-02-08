@@ -1394,9 +1394,7 @@ Model::Model(string path)
 
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(path,
-                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals |
-                                               aiProcess_FindInvalidData | aiProcess_PreTransformVertices |
-                                               aiProcess_PopulateArmatureData | aiProcess_GenUVCoords);
+                                               aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenUVCoords);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -1492,6 +1490,10 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
             std::cout << "Max bones for " << description->name << "is " << maxBones << std::endl;
         }
+    }
+    else
+    {
+        maxBones = INT_MAX;
     }
 
     for (int i = 0; i < scene->mNumMeshes; ++i)
@@ -1621,7 +1623,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             mesh->bones.push_back(bone->mName.C_Str());
         }
 
-        /*
+
         if (description)
         {
             var mnd = description->GetNode(msh, i);
@@ -1637,14 +1639,14 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             meshNode->scale = mnd->scale;
             meshNode->scene = description;
 
-            //mnd->SetParent(nullptr);
+            mnd->SetParent(nullptr);
 
-            //delete mnd;
+            delete mnd;
         }
-        */
+
     }
 
-    /*
+
     if (description)
     {
 
@@ -1659,7 +1661,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             }
         }
     }
-    */
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
     {
@@ -1703,6 +1704,17 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
     }
 
 
+    for (int i = 0; i < scene->mNumAnimations; ++i)
+    {
+        var anim = scene->mAnimations[i];
+
+        var animation = new Animation();
+        animation->LoadFromAiAnimation(anim);
+
+
+        animations.push_back(animation);
+    }
+
     if (description)
     {
         var children = description->GetAllChildren();
@@ -1737,17 +1749,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     }
                 }
             }
-        }
-
-        for (int i = 0; i < scene->mNumAnimations; ++i)
-        {
-            var anim = scene->mAnimations[i];
-
-            var animation = new Animation();
-            animation->LoadFromAiAnimation(anim);
-
-
-            animations.push_back(animation);
         }
 
         modelNode->SetParent(description->rootNode);
@@ -2796,7 +2797,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    //init.type = bgfx::RendererType::OpenGL;
+    init.type = bgfx::RendererType::OpenGL;
 
     if (!bgfx::init(init))
         return nullptr;
