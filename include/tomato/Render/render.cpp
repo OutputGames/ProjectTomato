@@ -1298,7 +1298,7 @@ void Animator::Update()
     if (currentAnimation && skeleton)
     {
         time += static_cast<float>(currentAnimation->ticksPerSecond) * (deltaTime);
-        time = fmod(time, currentAnimation->duration);
+        time = fmod(time, (currentAnimation->duration - 1));
         if (currentAnimation->duration <= 0)
             time = 0;
 
@@ -1420,7 +1420,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
-        //boneMatrices[index] = glm::inverse(boneMatrices[index]);
+        boneMatrices[index] = glm::inverse(boneMatrices[index]);
     }
 
     for (string child : skeleBone->children)
@@ -1781,6 +1781,8 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
 
         animations.push_back(animation);
+
+        break;
     }
 
     if (description)
@@ -1997,9 +1999,26 @@ Model::Model(fs::BinaryReader* reader, SceneDescription* description)
     skeleton = new Skeleton(reader);
 
     var animCount = reader->ReadInt32();
+
+    int preAnim = reader->tellg();
+    int postAnim = -1;
+
+    int animSize = -1;
+
     for (int i = 0; i < animCount; ++i)
     {
-        animations.push_back(new Animation(reader));
+        if (animSize == -1)
+            animations.push_back(new Animation(reader));
+
+        if (i == 0 && postAnim == -1)
+        {
+            postAnim = reader->tellg();
+            animSize = postAnim - preAnim;
+        }
+        else
+        {
+            reader->Skip(animSize);
+        }
     }
 }
 
@@ -2873,7 +2892,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    //init.type = bgfx::RendererType::OpenGL;
+    init.type = bgfx::RendererType::OpenGL;
 
     if (!bgfx::init(init))
         return nullptr;
