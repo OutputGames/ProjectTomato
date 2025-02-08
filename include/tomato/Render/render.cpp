@@ -1442,7 +1442,16 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
-        //boneMatrices[index] = glm::inverse(boneMatrices[index]);
+
+        if (time::getTime() == 1)
+        {
+            var mat = boneMatrices[index];
+            if (mat != glm::mat4(1.0))
+            {
+                std::cout << nodeName << " has an offset matrix issue." << std::endl;
+                //boneMatrices[index] = glm::inverse(boneMatrices[index]);
+            }
+        }
     }
 
     for (string child : skeleBone->children)
@@ -2128,7 +2137,7 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
         {
             for (int y = 0; y < 4; ++y)
             {
-                offsetMatrix[x][y] = reader->ReadSingle();
+                offsetMatrix[y][x] = reader->ReadSingle();
             }
         }
 
@@ -2148,7 +2157,8 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
     for (auto value : bones)
     {
         var world = value->GetWorldTransform();
-        //boneInfoMap[value->name].offset = glm::inverse(world);
+        var inverse = glm::inverse(world);
+        boneInfoMap[value->name].offset = inverse;
     }
 }
 
