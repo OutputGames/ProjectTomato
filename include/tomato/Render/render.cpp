@@ -2128,7 +2128,7 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
         {
             for (int y = 0; y < 4; ++y)
             {
-                offsetMatrix[y][x] = reader->ReadSingle();
+                offsetMatrix[x][y] = reader->ReadSingle();
             }
         }
 
@@ -2148,7 +2148,7 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
     for (auto value : bones)
     {
         var world = value->GetWorldTransform();
-        boneInfoMap[value->name].offset *= glm::inverse(world);
+        //boneInfoMap[value->name].offset = glm::inverse(world);
     }
 }
 
