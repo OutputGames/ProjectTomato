@@ -354,6 +354,8 @@ namespace tmt::render
             glm::mat4 transformation = glm::mat4(-1);
             glm::mat4 GetTransformation();
 
+            void CopyTransformation(glm::mat4 m);
+
             std::vector<string> children;
 
             Skeleton* skeleton;

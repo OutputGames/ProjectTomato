@@ -1100,6 +1100,18 @@ glm::mat4 Skeleton::Bone::GetTransformation()
     return transformation;
 }
 
+void Skeleton::Bone::CopyTransformation(glm::mat4 m)
+{
+    glm::vec3 pos, scl;
+    glm::quat rot;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    decompose(m, scl, rot, pos, skew, perspective);
+    position = pos;
+    rotation = rot;
+    scale = scl;
+}
+
 glm::mat4 BoneObject::GetOffsetMatrix()
 {
     glm::mat4 offset(1.0);
@@ -1408,7 +1420,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         var index = skeleton->boneInfoMap[nodeName].id;
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
-        boneMatrices[index] = glm::inverse(boneMatrices[index]);
+        //boneMatrices[index] = glm::inverse(boneMatrices[index]);
     }
 
     for (string child : skeleBone->children)
@@ -1422,7 +1434,10 @@ Model::Model(string path)
 {
     if (path.ends_with(".tmdl"))
     {
+
+
         var reader = new fs::BinaryReader(path);
+
 
         reader->close();
 
@@ -1746,6 +1761,8 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         for (auto value : skeleton->bones)
         {
             var node = scene->mRootNode->FindNode(value->name.c_str());
+
+            value->CopyTransformation(math::convertMat4(node->mTransformation));
 
             for (int i = 0; i < node->mNumChildren; ++i)
             {
@@ -2726,7 +2743,7 @@ bgfx::VertexLayout Vertex::getVertexLayout()
           .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
           .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
           .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-          .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
+          .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Float, false, false)
           .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float, true)
           .end();
 
@@ -2856,7 +2873,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    init.type = bgfx::RendererType::OpenGL;
+    //init.type = bgfx::RendererType::OpenGL;
 
     if (!bgfx::init(init))
         return nullptr;
