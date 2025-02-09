@@ -1424,7 +1424,7 @@ SkeletonObject::SkeletonObject(Skeleton* skl)
 
     for (auto bone : bones)
     {
-        //bone->bone->skeleton->boneInfoMap[bone->name].offset = glm::inverse(bone->GetTransform());
+        bone->bone->skeleton->boneInfoMap[bone->name].offset = glm::inverse(bone->GetTransform());
     }
 }
 
