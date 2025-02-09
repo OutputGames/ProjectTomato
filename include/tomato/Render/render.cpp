@@ -615,6 +615,18 @@ Animation* Model::GetAnimation(string name)
     return nullptr;
 }
 
+int Model::GetAnimationIndex(string name)
+{
+    int i = 0;
+    for (auto animation : animations)
+    {
+        if (animation->name == name)
+            return i;
+        i++;
+    }
+    return -1;
+}
+
 void SceneDescription::Node::SetParent(Node* parent)
 {
     if (this->parent)
@@ -645,8 +657,8 @@ SceneDescription::Node::Node(fs::BinaryReader* reader, SceneDescription* scene)
 
     var x = position.x;
     var z = position.z;
-    position.x = z;
-    position.z = x;
+    //position.x = z;
+    //position.z = x;
 
     std::cout << name << ": " << std::to_string(position) << std::endl;
 
@@ -1327,8 +1339,12 @@ void Animator::Update()
     if (currentAnimation && skeleton)
     {
         time += static_cast<float>(currentAnimation->ticksPerSecond) * (deltaTime);
-        time = fmod(time, (currentAnimation->duration - 1));
-        if (currentAnimation->duration <= 0)
+        if (doLoop)
+            time = fmod(time, (currentAnimation->duration));
+        else if (time >= currentAnimation->duration)
+            time = currentAnimation->duration;
+
+        if (currentAnimation->duration <= 0 && doLoop)
             time = 0;
 
         if (animationBones.size() < currentAnimation->nodeChannels.size())
@@ -1405,6 +1421,17 @@ SkeletonObject::SkeletonObject(Skeleton* skl)
                 realChild->SetParent(obj);
         }
     }
+
+    for (auto bone : bones)
+    {
+        //bone->bone->skeleton->boneInfoMap[bone->name].offset = glm::inverse(bone->GetTransform());
+    }
+}
+
+void SkeletonObject::Start()
+{
+
+    Object::Start();
 }
 
 void SkeletonObject::Update()
@@ -2027,9 +2054,10 @@ Model::Model(fs::BinaryReader* reader, SceneDescription* description)
         if (i == 0 && postAnim == -1)
         {
             postAnim = reader->tellg();
-            animSize = postAnim - preAnim;
+            //animSize = postAnim - preAnim;
         }
-        else
+
+        if (animSize != -1)
         {
             reader->Skip(animSize);
         }

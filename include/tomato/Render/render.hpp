@@ -404,6 +404,7 @@ namespace tmt::render
         Material* CreateMaterial(MaterialDescription* materialDesc, Shader* shader);
 
         Animation* GetAnimation(string name);
+        int GetAnimationIndex(string name);
 
     private:
         void LoadFromAiScene(const aiScene* scene, SceneDescription* description = nullptr);
@@ -499,6 +500,8 @@ namespace tmt::render
         SkeletonObject() = default;
         SkeletonObject(Skeleton* skl);
 
+        void Start() override;
+
         void Update() override;
 
         void Load(SceneDescription::Node* node);
@@ -544,6 +547,8 @@ namespace tmt::render
         AnimationBone* GetBone(string name);
 
         float time = 0;
+
+        bool doLoop = false;
 
         void Update() override;
 
