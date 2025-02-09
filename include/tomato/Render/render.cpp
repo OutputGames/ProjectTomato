@@ -2158,7 +2158,12 @@ Skeleton::Skeleton(fs::BinaryReader* reader)
     {
         var world = value->GetWorldTransform();
         var inverse = glm::inverse(world);
-        boneInfoMap[value->name].offset = inverse;
+
+        var diff = inverse - world;
+        var diff2 = world + inverse;
+
+        boneInfoMap[value->name].offset = (inverse);
+
     }
 }
 

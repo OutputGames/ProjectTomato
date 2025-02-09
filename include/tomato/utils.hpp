@@ -144,6 +144,21 @@ namespace glm
 
         return g.x || g.y || g.z;
     }
+
+    inline mat4 flip(mat4 m)
+    {
+        mat4 _m;
+
+        for (int x = 0; x < 4; ++x)
+        {
+            for (int y = 0; y < 4; ++y)
+            {
+                _m[y][x] = m[x][y];
+            }
+        }
+
+        return _m;
+    }
 }
 
 #include <stdio.h>
