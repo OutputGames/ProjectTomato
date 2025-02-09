@@ -548,7 +548,7 @@ namespace tmt::render
 
         float time = 0;
 
-        bool doLoop = false;
+        bool doLoop = true;
 
         void Update() override;
 

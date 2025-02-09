@@ -1036,12 +1036,16 @@ SceneDescription::SceneDescription(string path)
 
 tmt::obj::Object* SceneDescription::ToObject()
 {
-    if (!rootNode)
+    var root = new obj::Object();
+    root->name = name;
+
+    for (auto odel : models)
     {
-        return new obj::Object();
+        var obj = odel->CreateObject();
+        obj->SetParent(root);
     }
 
-    return rootNode->ToObject();
+    return root;
 }
 
 SceneDescription::~SceneDescription()
@@ -1424,7 +1428,7 @@ SkeletonObject::SkeletonObject(Skeleton* skl)
 
     for (auto bone : bones)
     {
-        bone->bone->skeleton->boneInfoMap[bone->name].offset = glm::inverse(bone->GetTransform());
+        //bone->bone->skeleton->boneInfoMap[bone->name].offset = glm::inverse(bone->GetTransform());
     }
 }
 
@@ -2257,7 +2261,7 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
     var mdlObj = new obj::Object();
 
     std::vector<Material*> mats;
-
+    mdlObj->name = name;
 
     for (auto materialDesc : this->materials)
     {
