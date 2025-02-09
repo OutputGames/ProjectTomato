@@ -1482,6 +1482,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
         glm::mat4 offset = skeleton->boneInfoMap[nodeName].offset;
         boneMatrices[index] = globalTransform * (offset);
 
+        /*
         var mat = boneMatrices[index];
 
         if (time::getTime() == 1)
@@ -1528,6 +1529,7 @@ void SkeletonObject::CalculateBoneTransform(const Skeleton::Bone* skeleBone, glm
                 //boneMatrices[index] = glm::inverse(boneMatrices[index]);
             }
         }
+        */
     }
 
     for (string child : skeleBone->children)
