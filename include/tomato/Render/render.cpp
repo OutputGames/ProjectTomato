@@ -2338,6 +2338,8 @@ Texture::Texture(string path, bool isCubemap)
                                  textureFlags, bgfx::copy(rgbaData, dataSize));
         format = textureFormat;
 
+        var fpath = std::filesystem::path(path);
+        name = fpath.filename().string();
 
         stbi_image_free(data);
     }
@@ -2957,7 +2959,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    init.type = bgfx::RendererType::OpenGL;
+    //init.type = bgfx::RendererType::OpenGL;
 
     if (!bgfx::init(init))
         return nullptr;
