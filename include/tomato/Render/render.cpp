@@ -1768,25 +1768,29 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         {
             var mnd = description->GetNode(msh, i);
 
-            var meshNode = new SceneDescription::Node;
-            meshNode->name = "TMSH_" + string(msh->mName.C_Str());
+            if (mnd)
+            {
 
-            meshNode->meshIndices.push_back(i);
-            meshNode->SetParent(modelNode);
+                var meshNode = new SceneDescription::Node;
+                meshNode->name = "TMSH_" + mnd->name;
 
-            meshNode->position = mnd->position;
-            meshNode->rotation = mnd->rotation;
-            meshNode->scale = mnd->scale;
-            meshNode->scene = description;
+                meshNode->meshIndices.push_back(i);
+                meshNode->SetParent(modelNode);
 
-            mnd->SetParent(nullptr);
+                meshNode->position = mnd->position;
+                meshNode->rotation = mnd->rotation;
+                meshNode->scale = mnd->scale;
+                meshNode->scene = description;
 
-            delete mnd;
+                mnd->SetParent(nullptr);
+
+                delete mnd;
+            }
         }
 
     }
 
-
+    /*
     if (description)
     {
 
@@ -1801,6 +1805,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             }
         }
     }
+    */
 
     for (int i = 0; i < scene->mNumMaterials; ++i)
     {
