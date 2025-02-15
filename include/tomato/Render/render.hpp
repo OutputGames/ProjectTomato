@@ -706,6 +706,8 @@ namespace tmt::render
             return (red << 24) | (green << 16) | (blue << 8) | alpha;
         }
 
+        static Color FromHex(string hex);
+
         static Color White, Red, Blue, Green, Black, Gray;
     };
 

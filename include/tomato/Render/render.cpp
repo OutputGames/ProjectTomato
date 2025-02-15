@@ -2827,6 +2827,24 @@ Camera::Camera()
     mainCamera = this;
 }
 
+Color Color::FromHex(string hex)
+{
+    if (hex.starts_with("#"))
+    {
+        hex = hex.substr(1);
+    }
+
+    int r, g, b;
+    sscanf(hex.c_str(), "%02x%02x%02x", &r, &g, &b);
+
+    Color c{};
+    c.r = r / 255.0f;
+    c.g = g / 255.0f;
+    c.b = b / 255.0f;
+
+    return c;
+}
+
 bgfx::VertexLayout Vertex::getVertexLayout()
 {
     var layout = bgfx::VertexLayout();
