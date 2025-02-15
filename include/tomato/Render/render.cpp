@@ -1175,6 +1175,8 @@ void BoneObject::Update()
     }
 
     //debug::Gizmos::DrawSphere(GetGlobalPosition(), 0.25);
+
+    Object::Update();
 }
 
 void SkeletonObject::Load(SceneDescription::Node* node)
@@ -1873,7 +1875,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
         animations.push_back(animation);
 
-        break;
+        //break;
     }
 
 }
