@@ -632,6 +632,17 @@ int Model::GetAnimationIndex(string name)
     return -1;
 }
 
+MaterialDescription* Model::GetMaterial(string name)
+{
+    for (auto material : materials)
+    {
+        if (material->Name == name)
+            return material;
+    }
+
+    return nullptr;
+}
+
 void SceneDescription::Node::SetParent(Node* parent)
 {
     if (this->parent)

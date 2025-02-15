@@ -405,6 +405,7 @@ namespace tmt::render
 
         Animation* GetAnimation(string name);
         int GetAnimationIndex(string name);
+        MaterialDescription* GetMaterial(string name);
 
     private:
         void LoadFromAiScene(const aiScene* scene, SceneDescription* description = nullptr);
