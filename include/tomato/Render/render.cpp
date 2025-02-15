@@ -2362,7 +2362,8 @@ Texture::Texture(aiTexel* texels, int width, int height)
 Texture::Texture(string path, bool isCubemap)
 {
 
-    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT;
+    // Adjust as needed
     if (!isCubemap)
     {
         int nrChannels;
@@ -3064,6 +3065,7 @@ RendererInfo* tmt::render::init(int width, int height)
     {
         exit(-69);
     }
+
 
     renderer = new RendererInfo();
     calls = std::vector<DrawCall>();
