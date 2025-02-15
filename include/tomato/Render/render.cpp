@@ -470,6 +470,7 @@ u64 Material::GetMaterialState()
 
 Material::Material(Shader* shader)
 {
+
     Reload(shader);
 }
 
@@ -491,6 +492,10 @@ void Material::Reload(Shader* shader)
                 overrides.push_back(ovr);
             }
         }
+    }
+    else
+    {
+        Reload(defaultShader);
     }
 }
 
