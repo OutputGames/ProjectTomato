@@ -1838,6 +1838,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             var property = mat->mProperties[i];
         }
 
+        /*
         for (int i = 0; i < AI_TEXTURE_TYPE_MAX; ++i)
         {
             var type = static_cast<aiTextureType>(i);
@@ -1861,15 +1862,21 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     if (result == aiReturn_SUCCESS)
                     {
                         var _tex = scene->GetEmbeddedTexture(path.C_Str());
-                        
-                        var tex = Texture::CreateTexture(_tex->pcData)
 
-                        std::cout << path.C_Str() << std::endl;
-                        // desc->Textures.insert(std::make_pair(type, path.C_Str()));
+                        Texture* tex = GetTextureFromName(_tex->mFilename.C_Str());
+                        if (!tex)
+                        {
+                            tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
+                            tex->name = _tex->mFilename.C_Str();
+
+                            textures.push_back(tex);
+                        }
+                        desc->Textures.insert(std::make_pair(std::to_string(type), tex->name));
                     }
                 }
             }
         }
+        */
 
 
         materials.push_back(desc);
@@ -1913,19 +1920,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
 }
 
-Texture::Texture(aiTexel* texels, int width, int height)
-{
-    for (int x = 0; x < width; ++x)
-    {
-        for (int y = 0; y < height; ++y)
-        {
-            var p = x * y;
-
-
-
-        }
-    }
-}
 
 Model::~Model()
 {
@@ -2344,6 +2338,25 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
     sklObj->animator = animator;
 
     return mdlObj;
+}
+
+Texture::Texture(aiTexel* texels, int width, int height)
+{
+
+
+    int channels;
+    u8* data = stbi_load_from_memory((unsigned char*)texels, width, &this->width, &this->height, &channels, 4);
+
+    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+
+    // Create the texture in bgfx, passing the image data directly
+    handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
+                             textureFlags,
+                             bgfx::copy(data, this->width * this->height * 4));
+    format = textureFormat;
+
+    stbi_image_free(data);
 }
 
 Texture::Texture(string path, bool isCubemap)
