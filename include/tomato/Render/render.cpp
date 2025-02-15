@@ -1833,23 +1833,40 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
         desc->Name = mat->GetName().C_Str();
 
+        for (int i = 0; i < mat->mNumProperties; ++i)
+        {
+            var property = mat->mProperties[i];
+        }
+
         for (int i = 0; i < AI_TEXTURE_TYPE_MAX; ++i)
         {
             var type = static_cast<aiTextureType>(i);
-            for (int j = 0; j < mat->GetTextureCount(type); ++j)
+            var textureCount = mat->GetTextureCount(type);
+
+            if (textureCount > 0)
             {
-                aiString path;
-                aiTextureMapping mapping;
-                unsigned int uvindex;
-                float blend;
-                aiTextureOp op;
-                aiTextureMapMode mapmode[3];
 
-                aiReturn result = mat->GetTexture(type, j, &path, &mapping, &uvindex, &blend, &op, mapmode);
 
-                if (result == aiReturn_SUCCESS)
+                for (int j = 0; j < textureCount; ++j)
                 {
-                    // desc->Textures.insert(std::make_pair(type, path.C_Str()));
+                    aiString path;
+                    aiTextureMapping mapping;
+                    unsigned int uvindex;
+                    float blend;
+                    aiTextureOp op;
+                    aiTextureMapMode mapmode[3];
+
+                    aiReturn result = mat->GetTexture(type, j, &path, &mapping, &uvindex, &blend, &op, mapmode);
+
+                    if (result == aiReturn_SUCCESS)
+                    {
+                        var _tex = scene->GetEmbeddedTexture(path.C_Str());
+                        
+                        var tex = Texture::CreateTexture(_tex->pcData)
+
+                        std::cout << path.C_Str() << std::endl;
+                        // desc->Textures.insert(std::make_pair(type, path.C_Str()));
+                    }
                 }
             }
         }
@@ -1894,6 +1911,20 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
         //break;
     }
 
+}
+
+Texture::Texture(aiTexel* texels, int width, int height)
+{
+    for (int x = 0; x < width; ++x)
+    {
+        for (int y = 0; y < height; ++y)
+        {
+            var p = x * y;
+
+
+
+        }
+    }
 }
 
 Model::~Model()

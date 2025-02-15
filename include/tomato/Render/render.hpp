@@ -6,6 +6,7 @@
 #include "Obj/obj.hpp"
 
 
+struct aiTexel;
 struct aiMesh;
 struct aiAnimation;
 struct aiNode;
@@ -576,6 +577,7 @@ namespace tmt::render
                 string name = "");
 
         Texture(bgfx::TextureHandle handle);
+        Texture(aiTexel* texels, int width, int height);
 
         ~Texture();
 
@@ -584,6 +586,7 @@ namespace tmt::render
         Texture(string path, bool isCubemap = false);
         Texture();
     };
+
 
     struct TextureAtlas : Texture
     {
