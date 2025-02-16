@@ -1838,7 +1838,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             var property = mat->mProperties[i];
         }
 
-        /*
+
         for (int i = 0; i < AI_TEXTURE_TYPE_MAX; ++i)
         {
             var type = static_cast<aiTextureType>(i);
@@ -1876,7 +1876,6 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                 }
             }
         }
-        */
 
 
         materials.push_back(desc);
@@ -2353,7 +2352,7 @@ Texture::Texture(aiTexel* texels, int width, int height)
     // Create the texture in bgfx, passing the image data directly
     handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
                              textureFlags,
-                             bgfx::copy(data, this->width * this->height * 4));
+                             bgfx::copy(data, this->width * this->height * channels));
     format = textureFormat;
 
     stbi_image_free(data);
@@ -3042,6 +3041,8 @@ RendererInfo* tmt::render::init(int width, int height)
     init.resolution.height = static_cast<uint32_t>(height);
     init.resolution.reset = BGFX_RESET_VSYNC;
     init.debug = true;
+    init.capabilities |= BGFX_CAPS_GRAPHICS_DEBUGGER;
+    init.capabilities |= BGFX_CAPS_TEXTURE_DIRECT_ACCESS;
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
@@ -3060,6 +3061,7 @@ RendererInfo* tmt::render::init(int width, int height)
     bgfx::setDebug(m_debug);
 
     var caps = bgfx::getCaps();
+
 
     if ((caps->supported & BGFX_CAPS_TEXTURE_BLIT) == 0)
     {
@@ -3241,7 +3243,8 @@ void tmt::render::update()
                     break;
                 case MaterialState::ViewOrthoProj:
                     // bgfx::setViewTransform(0, mainCamera->GetView(), ortho);
-                    setUniform(orthoHandle, ortho);
+                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                                           ortho);
                     break;
                 case MaterialState::OrthoProj:
                 {
@@ -3406,6 +3409,11 @@ void tmt::render::update()
 
     bgfx::touch(0);
     // bgfx::touch(1);
+
+    if (input::Keyboard::GetKey(GLFW_KEY_LEFT_CONTROL) == input::Keyboard::Press)
+    {
+        fs::ResourceManager::pInstance->ReloadShaders();
+    }
 }
 
 void tmt::render::shutdown()
