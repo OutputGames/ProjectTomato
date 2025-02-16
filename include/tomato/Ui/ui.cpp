@@ -476,3 +476,22 @@ void TextObject::Update()
 
     Object::Update();
 }
+
+TextButtonObject::TextButtonObject(Rect r, render::Font* font)
+{
+    sprite = new SpriteObject();
+    button = new ButtonObject;
+    text = new TextObject();
+    text->font = font;
+
+    text->SetParent(sprite);
+    button->SetParent(sprite);
+
+    sprite->position.x = r.x;
+    sprite->position.y = r.y;
+
+    sprite->scale.x = r.width;
+    sprite->scale.y = r.height;
+
+    sprite->SetParent(this);
+}

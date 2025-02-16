@@ -86,6 +86,15 @@ namespace tmt::ui
         string GetDefaultName() override { return "Text"; }
     };
 
+    struct TextButtonObject : obj::Object
+    {
+        ButtonObject* button;
+        TextObject* text;
+        SpriteObject* sprite;
+
+        TextButtonObject(Rect r, render::Font* font);
+    };
+
 }
 
 #endif
