@@ -132,6 +132,7 @@ SpriteObject::SpriteObject()
     material = new render::Material(render::Shader::CreateShader(initInfo));
 
     material->state.SetWrite(BGFX_STATE_WRITE_RGB);
+    material->state.writeA = true;
     material->state.depth = render::MaterialState::LessEqual;
 
     if (!mainTexture)

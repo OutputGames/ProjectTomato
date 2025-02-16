@@ -4,6 +4,8 @@
 #include "common/imgui/imgui.h"
 
 #include <ft2build.h>
+#include <bx/timer.h>
+
 #include FT_FREETYPE_H
 
 #define ResMgr tmt::fs::ResourceManager::pInstance
@@ -3452,6 +3454,24 @@ void tmt::render::update()
     {
         fs::ResourceManager::pInstance->ReloadShaders();
     }
+
+    /*
+    static int64_t lastTime = bx::getHPCounter();
+    const static int64_t freq = bx::getHPFrequency(); // High precision timer frequency
+    constexpr int TARGET_FPS = 60;
+    constexpr int FRAME_TIME_MS = 1000 / TARGET_FPS; // 16ms per frame
+
+
+    int64_t currentTime = bx::getHPCounter();
+    float elapsedMs = static_cast<float>((currentTime - lastTime) * 1000) / freq;
+
+    if (elapsedMs < FRAME_TIME_MS)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_TIME_MS - static_cast<int>(elapsedMs)));
+    }
+
+    lastTime = bx::getHPCounter();
+    */
 }
 
 void tmt::render::shutdown()
