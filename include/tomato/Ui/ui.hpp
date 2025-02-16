@@ -88,11 +88,15 @@ namespace tmt::ui
 
     struct TextButtonObject : obj::Object
     {
+        Rect rect;
+
         ButtonObject* button;
         TextObject* text;
         SpriteObject* sprite;
 
         TextButtonObject(Rect r, render::Font* font);
+
+        void Update() override;
     };
 
 }

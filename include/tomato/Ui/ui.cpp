@@ -234,10 +234,10 @@ void ButtonObject::Start()
     var min = rect.getMin();
     var max = rect.getMax();
 
-    //var corner1 = MakeCorner(glm::vec2(min.x, min.y));
-    //var corner2 = MakeCorner(glm::vec2(max.x, min.y));
-    //var corner3 = MakeCorner(glm::vec2(max.x, max.y));
-    //var corner4 = MakeCorner(glm::vec2(min.x, max.y));
+    var corner1 = MakeCorner(glm::vec2(min.x, min.y));
+    var corner2 = MakeCorner(glm::vec2(max.x, min.y));
+    var corner3 = MakeCorner(glm::vec2(max.x, max.y));
+    var corner4 = MakeCorner(glm::vec2(min.x, max.y));
 
     //cursor = MakeCorner(glm::vec2(0));
 
@@ -262,6 +262,10 @@ void ButtonObject::Update()
 
     // Apply orthographic projection scaling based on FOV and screen dimensions.
     float rad = glm::radians(mainCamera->FOV);
+
+    if (!application->is2D)
+        rad = 1;
+
     float halfWidth = (width / 2.0f) * rad;
     float halfHeight = (height / 2.0f) * rad;
 
@@ -487,11 +491,21 @@ TextButtonObject::TextButtonObject(Rect r, render::Font* font)
     text->SetParent(sprite);
     button->SetParent(sprite);
 
-    sprite->position.x = r.x;
-    sprite->position.y = r.y;
-
-    sprite->scale.x = r.width;
-    sprite->scale.y = r.height;
-
     sprite->SetParent(this);
+
+    rect = r;
+}
+
+void TextButtonObject::Update()
+{
+    sprite->position.x = rect.x;
+    sprite->position.y = rect.y;
+
+    sprite->scale.x = rect.width;
+    sprite->scale.y = rect.height;
+
+    text->position.x = -rect.width / 2;
+    //text->position.y = -rect.height / 2;
+
+    Object::Update();
 }

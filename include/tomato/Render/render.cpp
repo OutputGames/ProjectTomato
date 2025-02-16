@@ -3221,6 +3221,9 @@ void tmt::render::update()
 
         float rad = glm::radians(mainCamera->FOV);
 
+        if (!application->is2D)
+            rad = 1;
+
         float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
         float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
 
