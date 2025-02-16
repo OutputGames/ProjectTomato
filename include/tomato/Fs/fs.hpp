@@ -218,6 +218,7 @@ namespace tmt::fs
 
             return glm::quat(v.w, v.x, v.y, v.z);
         }
+
 #endif
 
         u16* ReadUInt16Array(int size)
