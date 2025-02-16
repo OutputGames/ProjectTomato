@@ -600,6 +600,8 @@ namespace tmt::fs
         }
     };
 
+    std::vector<u8> readToBuffer(string path);
+
 #define RESFUNC(name, p1, p2, ret) private: \
         ret _##name##p1; \
     public: \

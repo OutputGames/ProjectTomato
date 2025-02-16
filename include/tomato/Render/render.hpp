@@ -195,6 +195,9 @@ namespace tmt::render
 
         bool writeZ = true;
 
+        u64 srcAlpha = BGFX_STATE_BLEND_SRC_ALPHA;
+        u64 dstAlpha = BGFX_STATE_BLEND_INV_SRC_ALPHA;
+
         void SetWrite(u64 flag);
 
         enum MatrixMode
@@ -247,7 +250,7 @@ namespace tmt::render
         std::vector<MaterialOverride> overrides;
         string name = "Material";
 
-        MaterialOverride* GetUniform(string name, bool force = false);
+        MaterialOverride* GetUniform(string name, bool force = true);
         u64 GetMaterialState();
 
         Material(Shader* shader = nullptr);
@@ -290,7 +293,8 @@ namespace tmt::render
 
         void use();
 
-        virtual void draw(glm::mat4 t, Material* material, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+        virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos,
+                          std::vector<glm::mat4> anims = std::vector<glm::mat4>());
     };
 
 
@@ -732,12 +736,15 @@ namespace tmt::render
 
         u32 vertexCount, indexCount;
 
+        glm::vec3 sortedPosition = glm::vec3(0);
         glm::mat4 transformMatrix;
         std::vector<glm::mat4> animationMatrices;
         //float animationMatrices[4][4][MAX_BONE_MATRICES];
         int matrixCount = 0;
         Shader* program;
         MaterialState::MatrixMode matrixMode;
+
+        float getDistance(Camera* cam);
     };
 
     MatrixArray GetMatrixArray(glm::mat4 m);

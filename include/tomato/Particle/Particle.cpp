@@ -1,5 +1,5 @@
-#include "particle.hpp" 
-#include "globals.hpp" 
+#include "particle.hpp"
+#include "globals.hpp"
 
 glm::mat4 tmt::particle::Particle::getTransform()
 {
@@ -13,7 +13,7 @@ glm::mat4 tmt::particle::Particle::getTransform()
         r = emitterParent->GetGlobalRotation() * r;
     }
 
-    var rt = glm::toMat4(rotation);
+    var rt = toMat4(rotation);
 
     return translate(glm::mat4(1.0), p) * rt * glm::scale(glm::mat4(1.0), s);
 }
@@ -48,7 +48,8 @@ void tmt::particle::Particle::OnParticleCollision(physics::ParticleCollision c)
 {
 }
 
-tmt::particle::ParticleEmitter::ParticleEmitter() : Object()
+tmt::particle::ParticleEmitter::ParticleEmitter() :
+    Object()
 {
     system = new ParticleSystem();
 
@@ -68,19 +69,20 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
         particle->scale = glm::vec3{system->startSize};
 
         particle->position = {0, 0, 0};
-        particle->rotation = {1,0, 0, 0};
+        particle->rotation = {1, 0, 0, 0};
         particle->emitterParent = this;
         particle->velocity = particle->GetForward();
 
         switch (system->shape.type)
         {
-        case ParticleSystem::SystemShape::Cone: {
-            float dir = randval(0, 360);
-            float rad = randomFloat(0, system->shape.radius);
+            case ParticleSystem::SystemShape::Cone:
+            {
+                float dir = randval(0, 360);
+                float rad = randomFloat(0, system->shape.radius);
 
-            // particle->position += glm::vec3{ glm::sin(dir) * rad,0,glm::cos(dir) * rad };
-        }
-        break;
+                // particle->position += glm::vec3{ glm::sin(dir) * rad,0,glm::cos(dir) * rad };
+            }
+            break;
         }
 
         if (system->collision.useColliders)
@@ -167,7 +169,7 @@ void tmt::particle::ParticleEmitter::Update()
         }
     }
 
-    std::vector<Particle *> deleteParticles;
+    std::vector<Particle*> deleteParticles;
     for (auto particle : particles)
     {
         if (system->collision.useColliders == false)
@@ -196,7 +198,7 @@ void tmt::particle::ParticleEmitter::Update()
         }
         else
         {
-            system->renderer.mesh->draw(particle->getTransform(), system->renderer.material);
+            system->renderer.mesh->draw(particle->getTransform(), system->renderer.material, particle->position);
         }
     }
 
@@ -208,7 +210,7 @@ void tmt::particle::ParticleEmitter::Update()
     }
 }
 
-void tmt::particle::ParticleEmitter::OnCollision(physics::Collision c, Particle *p)
+void tmt::particle::ParticleEmitter::OnCollision(physics::Collision c, Particle* p)
 {
     p->lifetime -= system->collision.lifetimeLoss * system->startLifetime;
 }

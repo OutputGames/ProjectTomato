@@ -463,7 +463,8 @@ u64 Material::GetMaterialState()
     if (state.writeZ)
         v |= BGFX_STATE_WRITE_Z;
 
-    v |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+    v |= BGFX_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
+
 
     return v;
 }
@@ -532,13 +533,14 @@ void Mesh::use()
     }
 }
 
-void Mesh::draw(glm::mat4 transform, Material* material, std::vector<glm::mat4> anims)
+void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
 
     drawCall.mesh = this;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = material->state.matrixMode;
+    drawCall.sortedPosition = spos;
 
     //drawCall.transformMatrices = std::vector<MatrixArray>(MAX_BONE_MATRICES + 1);
     drawCall.transformMatrix = transform;
@@ -2360,6 +2362,8 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 Texture::Texture(aiTexel* texels, int width, int height)
 {
     var caps = bgfx::getCaps();
+    //stbi_set_flip_vertically_on_load(true);
+
 
     int channels;
     u8* data = stbi_load_from_memory((unsigned char*)texels, width, &this->width, &this->height, &channels, 4);
@@ -2369,7 +2373,7 @@ Texture::Texture(aiTexel* texels, int width, int height)
 
 
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
-        uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR; // Adjust as needed
+        uint64_t textureFlags = 0; // Adjust as needed
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
@@ -2962,6 +2966,11 @@ void Vertex::SetBoneData(int boneId, float boneWeight)
     }
 }
 
+float DrawCall::getDistance(Camera* cam)
+{
+    return glm::length(cam->position - sortedPosition);
+}
+
 MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
 {
     MatrixArray mat(16, 0.0f);
@@ -3070,14 +3079,16 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
-    //init.type = bgfx::RendererType::OpenGL;
+    init.type = bgfx::RendererType::OpenGL;
+
+    init.type = bgfx::RendererType::Direct3D11;
 
     if (!bgfx::init(init))
         return nullptr;
     // Set view 0 to the same dimensions as the window and to clear the color buffer.
     constexpr bgfx::ViewId kClearView = 0;
-    bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Color(0, 0, 0, 1).getHex(), 1.0f, 0);
-    setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+    bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Color(0.1, 0, 0, 1).getHex(), 1.0f, 0);
+    setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Half);
 
 
     var m_debug = BGFX_DEBUG_TEXT;
@@ -3333,6 +3344,7 @@ void tmt::render::update()
         }
 
         bgfx::setState(call.state);
+
 
         call.program->Push(0, call.overrides, call.overrideCt);
 

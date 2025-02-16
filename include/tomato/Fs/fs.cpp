@@ -8,6 +8,28 @@ using namespace tmt::fs;
 
 ResourceManager* ResourceManager::pInstance;
 
+std::vector<u8> tmt::fs::readToBuffer(string path)
+{
+    // Open the file for reading
+    std::ifstream fin(path);
+
+    // Create an empty vector
+    std::vector<u8> v;
+
+    // Read the contents of the file and store them in the
+    // vector
+    char c;
+    while (fin >> c)
+    {
+        v.push_back(c);
+    }
+
+    // Close the file
+    fin.close();
+
+    return v;
+}
+
 ResourceManager::ResourceManager() { pInstance = this; }
 
 void ResourceManager::ReloadShaders()
