@@ -326,12 +326,9 @@ namespace tmt::fs
             return ReadString(size);
         }
 
-    private:
-        size_t tellg()
-        {
-            return position_;
-        }
+        size_t tellg() { return position_; }
 
+    private:
         void seekg(size_t position, std::ios_base::seekdir dir)
         {
             switch (dir)
@@ -518,7 +515,12 @@ namespace tmt::fs
         }
 
         BinaryReader(std::string path) :
-            std::ifstream(path, std::ios::binary) { fileSize = tellg(); }
+            std::ifstream(path, std::ios::binary)
+        {
+            seekg(0, std::ios::end);
+            fileSize = tellg();
+            seekg(0, std::ios::beg);
+        }
 
         u64 ReadUInt64() { return Read<u64>(); }
 
