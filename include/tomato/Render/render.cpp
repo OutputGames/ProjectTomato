@@ -1838,6 +1838,9 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             var property = mat->mProperties[i];
         }
 
+        std::map<int, string> typeToName = {
+            {aiTextureType_DIFFUSE, "s_texColor"}
+        };
 
         for (int i = 0; i < AI_TEXTURE_TYPE_MAX; ++i)
         {
@@ -1847,6 +1850,12 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
             if (textureCount > 0)
             {
 
+                var typeName = std::to_string(type);
+
+                if (typeToName.contains(type))
+                {
+                    typeName = typeToName.at(type);
+                }
 
                 for (int j = 0; j < textureCount; ++j)
                 {
@@ -1867,11 +1876,20 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                         if (!tex)
                         {
                             tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
-                            tex->name = _tex->mFilename.C_Str();
 
-                            textures.push_back(tex);
+                            if (bgfx::isValid(tex->handle))
+                            {
+                                tex->name = _tex->mFilename.C_Str();
+
+                                textures.push_back(tex);
+                            }
+                            else
+                            {
+                                tex = nullptr;
+                            }
                         }
-                        desc->Textures.insert(std::make_pair(std::to_string(type), tex->name));
+                        if (tex)
+                            desc->Textures.insert(std::make_pair(typeName, tex->name));
                     }
                 }
             }
@@ -2341,19 +2359,27 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 
 Texture::Texture(aiTexel* texels, int width, int height)
 {
-
+    var caps = bgfx::getCaps();
 
     int channels;
     u8* data = stbi_load_from_memory((unsigned char*)texels, width, &this->width, &this->height, &channels, 4);
 
-    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
-    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+    if (this->width < caps->limits.maxTextureSize && this->height < caps->limits.maxTextureSize)
+    {
 
-    // Create the texture in bgfx, passing the image data directly
-    handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
-                             textureFlags,
-                             bgfx::copy(data, this->width * this->height * channels));
-    format = textureFormat;
+
+        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+        uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR; // Adjust as needed
+
+        // Create the texture in bgfx, passing the image data directly
+        handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
+                                 textureFlags, bgfx::copy(data, this->width * this->height * channels));
+        format = textureFormat;
+    }
+    else
+    {
+        handle.idx = -1;
+    }
 
     stbi_image_free(data);
 }
@@ -3041,8 +3067,6 @@ RendererInfo* tmt::render::init(int width, int height)
     init.resolution.height = static_cast<uint32_t>(height);
     init.resolution.reset = BGFX_RESET_VSYNC;
     init.debug = true;
-    init.capabilities |= BGFX_CAPS_GRAPHICS_DEBUGGER;
-    init.capabilities |= BGFX_CAPS_TEXTURE_DIRECT_ACCESS;
 
     init.vendorId = BGFX_PCI_ID_NVIDIA;
 
@@ -3067,7 +3091,6 @@ RendererInfo* tmt::render::init(int width, int height)
     {
         exit(-69);
     }
-
 
     renderer = new RendererInfo();
     calls = std::vector<DrawCall>();

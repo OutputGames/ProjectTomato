@@ -101,6 +101,10 @@ Mouse::MouseButtonState Mouse::GetMouseButton(MouseButton i, bool real)
 Keyboard::KeyState Keyboard::GetKey(int key)
 {
     int state = glfwGetKey(renderer->window, key);
+    if (glfwGetWindowAttrib(renderer->window, GLFW_FOCUSED) == GLFW_FALSE)
+    {
+        state = Release;
+    }
 
     if (kstates.size() <= key)
     {
