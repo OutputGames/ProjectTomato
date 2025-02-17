@@ -2759,7 +2759,9 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
         size += (static_cast<int>(c.advance) >> 6) * scl;
     }
 
-    size = 0;
+    size -= fontSize;
+
+    //size = 0;
 
     return size;
 }
@@ -3562,4 +3564,5 @@ void bgfx::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
     var arr = tmt::math::mat4ArrayToArray(v);
     setUniform(handle, arr, v.size());
 
-    del
+    delete[] arr;
+}

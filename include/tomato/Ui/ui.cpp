@@ -375,6 +375,8 @@ void TextObject::Start()
     if (spacing == FLT_MAX)
         spacing = font->spacing;
 
+    c = MakeCorner(glm::vec2(position.x, position.y));
+
     SpriteObject::Start();
 }
 
@@ -392,6 +394,9 @@ void TextObject::Update()
             col.a *= s_parent->mainColor.a;
         }
     }
+
+    if (c)
+        c->position = position;
 
     color->v4 = col.getData();
     tex->tex = mainTexture;
@@ -422,7 +427,11 @@ void TextObject::Update()
     float x = 0;
     var textSize = font->CalculateTextSize(text, size, spacing);
 
-    x += textSize / 2;
+    if (HorizontalAlign == Center)
+        x += textSize / 2;
+    else if (HorizontalAlign == Right)
+        x += textSize;
+
     float y = 0;
 
     float scl = 1;

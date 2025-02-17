@@ -74,6 +74,16 @@ namespace tmt::ui
 
     struct TextObject : SpriteObject
     {
+
+        enum TextAlign
+        {
+            Left,
+            Center,
+            Right
+        };
+
+        TextAlign HorizontalAlign = Center, VerticalAlign = Center;
+
         string text;
         render::Font* font;
         float size = 48;
@@ -84,6 +94,9 @@ namespace tmt::ui
 
         void Update() override;
         string GetDefaultName() override { return "Text"; }
+
+    private:
+        SpriteObject* c = nullptr;
     };
 
     struct TextButtonObject : obj::Object
