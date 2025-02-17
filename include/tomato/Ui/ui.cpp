@@ -425,17 +425,22 @@ void TextObject::Update()
     x += textSize / 2;
     float y = 0;
 
+    float scl = 1;
+
+    scl = spacing;
+
     for (char value : text)
     {
         if (value == ' ' || value == '\0')
         {
-            x -= (0.5 * spacing) * size / 2;
+            x -= (20 * spacing);
             continue;
         }
 
         var c = font->characters[value];
 
-        x -= (c.advance * spacing) * size / 2;
+
+        x -= (static_cast<int>(c.advance) >> 6) * scl;
 
         var drawCall = render::DrawCall();
 
@@ -445,10 +450,10 @@ void TextObject::Update()
 
         drawCall.transformMatrix = transform;
 
-        float xPos = x + c.bearing.x * size;
-        float yPos = y - ((c.size.y - c.bearing.y)) * size;
+        float xPos = x + c.bearing.x * scl;
+        float yPos = y - (c.size.y - c.bearing.y) * scl;
 
-        yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
+        //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
 
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
         drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(size));

@@ -2755,6 +2755,8 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
         size += (c.advance * (fontSize / 2)) * forcedSpacing;
     }
 
+    size = 0;
+
     return size;
 }
 
@@ -2835,7 +2837,7 @@ Font::Font(string path)
 
         var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
 
-        float advance = static_cast<float>(face->glyph->advance.x) / static_cast<float>(face->max_advance_width);
+        float advance = static_cast<float>(face->glyph->advance.x);
 
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), advance,
@@ -3050,6 +3052,7 @@ void tmt::render::pushLight(light::Light* light)
     lights.push_back(light);
 }
 
+
 RendererInfo* tmt::render::init(int width, int height)
 {
     glfwSetErrorCallback(glfw_errorCallback);
@@ -3059,6 +3062,7 @@ RendererInfo* tmt::render::init(int width, int height)
     GLFWwindow* window = glfwCreateWindow(width, height, application->name.c_str(), nullptr, nullptr);
     if (!window)
         return nullptr;
+
     // glfwSetKeyCallback(window, glfw_keyCallback);
     //  Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
     //  Most graphics APIs must be used on the same thread that created the window.
