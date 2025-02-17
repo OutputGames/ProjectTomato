@@ -429,6 +429,8 @@ void TextObject::Update()
 
     scl = spacing;
 
+    scl *= (size / 16);
+
     for (char value : text)
     {
         if (value == ' ' || value == '\0')

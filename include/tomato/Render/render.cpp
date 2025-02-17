@@ -2742,22 +2742,64 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
     if (forcedSpacing == FLT_MAX)
         forcedSpacing = spacing;
 
+    var scl = forcedSpacing;
+
+    scl *= (fontSize / 16);
+
     for (char value : text)
     {
         if (value == ' ' || value == '\0')
         {
-            size += (0.5 * (fontSize / 2)) * forcedSpacing;
+            size += (20) * scl;
             continue;
         }
 
         var c = characters[value];
 
-        size += (c.advance * (fontSize / 2)) * forcedSpacing;
+        size += (static_cast<int>(c.advance) >> 6) * scl;
     }
 
     size = 0;
 
     return size;
+}
+
+
+// Compute the squared Euclidean distance
+float euclideanDistance(int x1, int y1, int x2, int y2) { return sqrtf((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)); }
+
+// Convert a bitmap to an SDF
+std::vector<float> generateSDF(const FT_Bitmap& bitmap, int spread)
+{
+    int width = bitmap.width;
+    int height = bitmap.rows;
+    std::vector<float> sdf(width * height, spread);
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            bool isInside = bitmap.buffer[y * width + x] > 128;
+
+            // Find nearest edge pixel
+            for (int yy = 0; yy < height; ++yy)
+            {
+                for (int xx = 0; xx < width; ++xx)
+                {
+                    bool sampleInside = bitmap.buffer[yy * width + xx] > 128;
+                    if (sampleInside != isInside)
+                    {
+                        float dist = euclideanDistance(x, y, xx, yy);
+                        sdf[y * width + x] = std::min(sdf[y * width + x], dist);
+                    }
+                }
+            }
+
+            // Normalize [-1, 1] range
+            sdf[y * width + x] = (sdf[y * width + x] / spread) * (isInside ? -1.0f : 1.0f);
+        }
+    }
+    return sdf;
 }
 
 Font::Font(string path)
@@ -2790,6 +2832,8 @@ Font::Font(string path)
 
     ibh = createIndexBuffer(bgfx::copy(indices.data(), indices.size() * sizeof(u16)));
 
+    FT_GlyphSlot slot = face->glyph; // <-- This is new
+
     for (unsigned char c = 0; c < 128; c++)
     {
         // load character glyph
@@ -2798,9 +2842,14 @@ Font::Font(string path)
             std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
         }
 
+        // Render as SDF using FreeType's built-in support
+        if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF))
+        {
+            std::cerr << "Failed to render SDF glyph!" << std::endl;
+        }
 
         bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::R8;
-        uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+        uint64_t textureFlags = 0; // Adjust as needed
 
         var width = face->glyph->bitmap.width;
         var height = face->glyph->bitmap.rows;
@@ -2808,11 +2857,13 @@ Font::Font(string path)
         if (width == 0 || height == 0)
             continue;
 
+        var size = width * height;
+
         // Create the texture in bgfx, passing the image data directly
         var handle = createTexture2D(
             static_cast<u16>(width), static_cast<u16>(height), false, 1,
             textureFormat, textureFlags,
-            bgfx::copy(face->glyph->bitmap.buffer, (width * height)));
+            bgfx::copy(face->glyph->bitmap.buffer, size));
 
         var tex = new Texture(handle);
 
@@ -3511,5 +3562,4 @@ void bgfx::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
     var arr = tmt::math::mat4ArrayToArray(v);
     setUniform(handle, arr, v.size());
 
-    delete[] arr;
-}
+    del
