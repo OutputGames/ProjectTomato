@@ -521,7 +521,7 @@ void TextButtonObject::Update()
     sprite->scale.x = rect.width;
     sprite->scale.y = rect.height;
 
-    text->position.x = -rect.width / 2;
+    //text->position.x = -rect.width / 2;
     //text->position.y = -rect.height / 2;
 
     Object::Update();

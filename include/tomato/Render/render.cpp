@@ -481,12 +481,31 @@ void Material::Reload(Shader* shader)
 {
     if (shader)
     {
+
+        std::vector<MaterialOverride> texture_overrides;
+
+        for (auto override : overrides)
+        {
+            if (override.type == bgfx::UniformType::Sampler)
+                texture_overrides.push_back(override);
+        }
+
         overrides.clear();
+
+        for (auto ovr : texture_overrides)
+            overrides.push_back(ovr);
+
         this->shader = shader;
         for (auto sub_shader : shader->subShaders)
         {
             for (auto uniform : sub_shader->uniforms)
             {
+                for (auto textureOverride : texture_overrides)
+                {
+                    if (textureOverride.name == uniform->name)
+                        continue;
+                }
+
                 var ovr = MaterialOverride();
                 ovr.name = uniform->name;
                 ovr.shaderType = sub_shader->type;
