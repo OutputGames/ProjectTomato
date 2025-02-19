@@ -212,3 +212,4 @@ end
         }
     include(RECAST_DIR .. "premake5.lua")
     include("vendor/enet/premake5.lua")
+    include ("D:/Code/ImportantRepos/tmgl/lib.lua")

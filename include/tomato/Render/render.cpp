@@ -26,19 +26,7 @@ RendererInfo* RendererInfo::GetRendererInfo()
 
 void ShaderUniform::Use(SubShader* shader)
 {
-    /*
-    if (type == bgfx::UniformType::Count)
-    {
-        if (v4 != glm::vec4(-1000))
-            type = bgfx::UniformType::Vec4;
-        else if (m3 != glm::mat3(-1000))
-            type = bgfx::UniformType::Mat3;
-        else if (m4 != glm::mat4(-1000))
-            type = bgfx::UniformType::Mat4;
-        else if (tex != nullptr)
-            type = bgfx::UniformType::Sampler;
-    }
-    */
+
 
     switch (type)
     {
