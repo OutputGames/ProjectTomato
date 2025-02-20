@@ -3039,22 +3039,22 @@ RendererInfo* tmt::render::init(int width, int height)
         return nullptr;
 
 #ifndef TMGL_BGFX
-    init.platformData.swap = (TMGLSwapProc)glfwSwapBuffers;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(width, height, application->name.c_str(), nullptr, nullptr);
     if (!window)
         return nullptr;
 
-    tmgl::Init init;
 #ifndef TMGL_BGFX
     glfwMakeContextCurrent(window);
 #endif
+
+    tmgl::Init init;
 
     init.platformData.nwh = glfwGetWin32Window(window);
     //init.platformData.ndt = glfwGetWin32Window(window);
@@ -3074,7 +3074,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     tmgl::init(init);
 
-    tmgl::setViewClear(TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2, 0.3, 0.3, 1).getHex(), 1.0f, 0);
+    tmgl::setViewClear(TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
     renderer = new RendererInfo();
     calls = std::vector<DrawCall>();
@@ -3083,8 +3083,6 @@ RendererInfo* tmt::render::init(int width, int height)
     renderer->windowWidth = width;
     renderer->windowHeight = height;
 
-    /*
-    renderer->clearView = kClearView;
 
     ShaderInitInfo info = {
         SubShader::CreateSubShader("test/vert", SubShader::Vertex),
@@ -3093,6 +3091,8 @@ RendererInfo* tmt::render::init(int width, int height)
     };
 
     defaultShader = Shader::CreateShader(info);
+
+    /*
 
     var rdoc = tmgl::loadRenderDoc();
 
@@ -3455,7 +3455,7 @@ void tmt::render::update()
 
 void tmt::render::shutdown()
 {
-    //tmgl::shutdown();
+    tmgl::shutdown();
     glfwTerminate();
 }
 
