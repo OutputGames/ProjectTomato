@@ -163,6 +163,12 @@ namespace glm
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>
+
+#include <tmgl/tmgl.h>
+
+//#include <bgfx/bgfx.h>
+//#include <bgfx/platform.h>
+
 #include <bx/bx.h>
 #if BX_PLATFORM_LINUX
 #define GLFW_EXPOSE_NATIVE_X11
@@ -181,8 +187,7 @@ namespace glm
 #include <GLFW/glfw3native.h>
 
 #include "vertex.h"
-#include "bgfx/src/debug_renderdoc.h"
-#include "tomato/common/debugdraw/debugdraw.h"
+//#include "bgfx/src/debug_renderdoc.h"
 
 #include "bullet3/src/btBulletDynamicsCommon.h"
 

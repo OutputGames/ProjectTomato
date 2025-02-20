@@ -52,7 +52,7 @@ namespace tmt::render
     struct RendererInfo
     {
         GLFWwindow* window;
-        bgfx::ViewId clearView;
+        //tmgl::ViewId clearView;
         int windowWidth, windowHeight;
         bool useImgui = true;
         bool usePosAnim = true;
@@ -68,9 +68,9 @@ namespace tmt::render
 
     struct ShaderUniform
     {
-        bgfx::UniformHandle handle = BGFX_INVALID_HANDLE;
+        tmgl::UniformHandle handle = TMGL_INVALID_HANDLE;
         string name;
-        bgfx::UniformType::Enum type = bgfx::UniformType::Count;
+        tmgl::UniformType::Enum type = tmgl::UniformType::Count;
 
         glm::vec4 v4 = glm::vec4(-1000);
         glm::mat3 m3 = glm::mat3(-1000.0);
@@ -92,7 +92,7 @@ namespace tmt::render
             Compute
         } type;
 
-        bgfx::ShaderHandle handle;
+        tmgl::ShaderHandle handle;
         std::vector<ShaderUniform*> uniforms;
         std::vector<string> texSets;
         string name;
@@ -114,7 +114,7 @@ namespace tmt::render
 
     struct Shader
     {
-        bgfx::ProgramHandle program;
+        tmgl::ProgramHandle program;
         std::vector<SubShader*> subShaders;
         string name;
 
@@ -135,10 +135,10 @@ namespace tmt::render
 
     struct ComputeShader
     {
-        bgfx::ProgramHandle program;
+        tmgl::ProgramHandle program;
         SubShader* internalShader;
 
-        void SetUniform(string name, bgfx::UniformType::Enum type, const void* data);
+        void SetUniform(string name, tmgl::UniformType::Enum type, const void* data);
 
         void SetMat4(string name, glm::mat4 m);
         void SetVec4(string name, glm::vec4 v);
@@ -165,27 +165,27 @@ namespace tmt::render
         int forcedSamplerIndex = -1;
 
         SubShader::ShaderType shaderType;
-        bgfx::UniformType::Enum type;
+        tmgl::UniformType::Enum type;
     };
 
     struct MaterialState
     {
         enum DepthTest
         {
-            Less         = BGFX_STATE_DEPTH_TEST_LESS,
-            LessEqual    = BGFX_STATE_DEPTH_TEST_LEQUAL,
-            Equal        = BGFX_STATE_DEPTH_TEST_EQUAL,
-            GreaterEqual = BGFX_STATE_DEPTH_TEST_GEQUAL,
-            Greater      = BGFX_STATE_DEPTH_TEST_GREATER,
-            NotEqual     = BGFX_STATE_DEPTH_TEST_NOTEQUAL,
-            Never        = BGFX_STATE_DEPTH_TEST_NEVER,
-            Always       = BGFX_STATE_DEPTH_TEST_ALWAYS,
+            Less         = TMGL_STATE_DEPTH_TEST_LESS,
+            LessEqual    = TMGL_STATE_DEPTH_TEST_LEQUAL,
+            Equal        = TMGL_STATE_DEPTH_TEST_EQUAL,
+            GreaterEqual = TMGL_STATE_DEPTH_TEST_GEQUAL,
+            Greater      = TMGL_STATE_DEPTH_TEST_GREATER,
+            NotEqual     = TMGL_STATE_DEPTH_TEST_NOTEQUAL,
+            Never        = TMGL_STATE_DEPTH_TEST_NEVER,
+            Always       = TMGL_STATE_DEPTH_TEST_ALWAYS,
         } depth = LessEqual;
 
         enum CullMode
         {
-            Clockwise        = BGFX_STATE_CULL_CW,
-            Counterclockwise = BGFX_STATE_CULL_CCW
+            Clockwise        = TMGL_STATE_CULL_CW,
+            Counterclockwise = TMGL_STATE_CULL_CCW
         } cull = Counterclockwise;
 
         bool writeR = true;
@@ -195,8 +195,8 @@ namespace tmt::render
 
         bool writeZ = true;
 
-        u64 srcAlpha = BGFX_STATE_BLEND_SRC_ALPHA;
-        u64 dstAlpha = BGFX_STATE_BLEND_INV_SRC_ALPHA;
+        u64 srcAlpha = TMGL_STATE_BLEND_SRC_ALPHA;
+        u64 dstAlpha = TMGL_STATE_BLEND_INV_SRC_ALPHA;
 
         void SetWrite(u64 flag);
 
@@ -274,10 +274,10 @@ namespace tmt::render
 
     struct Mesh
     {
-        bgfx::IndexBufferHandle ibh;
-        bgfx::VertexBufferHandle vbh;
-        std::vector<bgfx::DynamicVertexBufferHandle> vertexBuffers;
-        bgfx::DynamicIndexBufferHandle indexBuffer;
+        tmgl::IndexBufferHandle ibh;
+        tmgl::VertexBufferHandle vbh;
+        std::vector<tmgl::DynamicVertexBufferHandle> vertexBuffers;
+        tmgl::DynamicIndexBufferHandle indexBuffer;
         size_t vertexCount, indexCount;
         Vertex* vertices;
         u16* indices;
@@ -570,17 +570,17 @@ namespace tmt::render
     struct Texture
     {
         string name;
-        bgfx::TextureHandle handle;
-        bgfx::TextureFormat::Enum format;
+        tmgl::TextureHandle handle;
+        tmgl::TextureFormat::Enum format;
 
         int width, height;
 
         static Texture* CreateTexture(string path, bool isCubemap = false);
 
-        Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags = 0, const bgfx::Memory* mem = nullptr,
+        Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags = 0, const tmgl::Memory* mem = nullptr,
                 string name = "");
 
-        Texture(bgfx::TextureHandle handle);
+        Texture(tmgl::TextureHandle handle);
         Texture(aiTexel* texels, int width, int height);
 
         ~Texture();
@@ -606,14 +606,14 @@ namespace tmt::render
 
     struct RenderTexture
     {
-        bgfx::FrameBufferHandle handle;
-        bgfx::ViewId vid = 1;
+        tmgl::FrameBufferHandle handle;
+        //tmgl::ViewId vid = 1;
         Texture* realTexture;
         Texture* depthTexture;
 
-        bgfx::TextureFormat::Enum format;
+        tmgl::TextureFormat::Enum format;
 
-        RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 clearFlags);
+        RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum format, u16 clearFlags);
 
         ~RenderTexture();
     };
@@ -626,7 +626,7 @@ namespace tmt::render
             glm::ivec2 bearing;
             float advance;
             Texture* handle;
-            bgfx::VertexBufferHandle vbh;
+            tmgl::VertexBufferHandle vbh;
         };
 
         std::map<char, Character> characters;
@@ -634,7 +634,7 @@ namespace tmt::render
         static Font* Create(string path);
 
         float spacing = 1.0;
-        bgfx::IndexBufferHandle ibh;
+        tmgl::IndexBufferHandle ibh;
 
         float CalculateTextSize(string text, float fontSize, float forcedSpacing = FLT_MAX);
 
@@ -731,8 +731,8 @@ namespace tmt::render
 
         Mesh* mesh;
 
-        bgfx::VertexBufferHandle vbh;
-        bgfx::IndexBufferHandle ibh;
+        tmgl::VertexBufferHandle vbh;
+        tmgl::IndexBufferHandle ibh;
 
         u32 vertexCount, indexCount;
 
@@ -749,7 +749,7 @@ namespace tmt::render
 
     MatrixArray GetMatrixArray(glm::mat4 m);
 
-    Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, bgfx::VertexLayout pcvDecl,
+    Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, tmgl::VertexLayout pcvDecl,
                      Model* model = nullptr, string name = "none");
 
     void pushDrawCall(DrawCall d);
@@ -764,7 +764,7 @@ namespace tmt::render
 
 }
 
-namespace bgfx
+namespace tmgl
 {
     void setUniform(UniformHandle handle, glm::vec4 v);
     void setUniform(UniformHandle handle, std::vector<glm::vec4> v);

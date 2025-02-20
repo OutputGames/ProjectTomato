@@ -1,7 +1,7 @@
 #include "render.hpp"
 #include "globals.hpp"
 #include "vertex.h"
-#include "common/imgui/imgui.h"
+//#include "common/imgui/imgui.h"
 
 #include <ft2build.h>
 #include <bx/timer.h>
@@ -30,7 +30,7 @@ void ShaderUniform::Use(SubShader* shader)
 
     switch (type)
     {
-        case bgfx::UniformType::Sampler:
+        case tmgl::UniformType::Sampler:
             if (tex)
             {
 
@@ -52,20 +52,20 @@ void ShaderUniform::Use(SubShader* shader)
                 setTexture(texSet, handle, tex->handle);
             }
             break;
-        case bgfx::UniformType::End:
+        case tmgl::UniformType::End:
             break;
-        case bgfx::UniformType::Vec4:
+        case tmgl::UniformType::Vec4:
             setUniform(handle, value_ptr(v4));
             break;
-        case bgfx::UniformType::Mat3:
+        case tmgl::UniformType::Mat3:
             setUniform(handle, value_ptr(m3));
             break;
-        case bgfx::UniformType::Mat4:
+        case tmgl::UniformType::Mat4:
         {
             setUniform(handle, value_ptr(m4));
         }
         break;
-        case bgfx::UniformType::Count:
+        case tmgl::UniformType::Count:
             break;
         default:
             break;
@@ -108,7 +108,7 @@ ShaderUniform* SubShader::GetUniform(string name, bool force)
 
 void SubShader::Reload()
 {
-    if (isLoaded && bgfx::isValid(handle))
+    if (isLoaded && isValid(handle))
     {
         destroy(handle);
         uniforms.clear();
@@ -117,23 +117,23 @@ void SubShader::Reload()
 
     string shaderPath = "";
 
-    switch (bgfx::getRendererType())
+    switch (tmgl::getRendererType())
     {
-        case bgfx::RendererType::Noop:
-        case bgfx::RendererType::Direct3D11:
-        case bgfx::RendererType::Direct3D12:
+        case tmgl::RendererType::Noop:
+        case tmgl::RendererType::Direct3D11:
+        case tmgl::RendererType::Direct3D12:
             shaderPath = "runtime/shaders/dx/";
             break;
-        case bgfx::RendererType::OpenGL:
+        case tmgl::RendererType::OpenGL:
             shaderPath = "runtime/shaders/gl/";
             break;
-        case bgfx::RendererType::Vulkan:
+        case tmgl::RendererType::Vulkan:
             shaderPath = "runtime/shaders/spirv/";
             break;
-        // case bgfx::RendererType::Nvn:
-        // case bgfx::RendererType::WebGPU:
-        case bgfx::RendererType::Count:
-            handle = BGFX_INVALID_HANDLE;
+        // case tmgl::RendererType::Nvn:
+        // case tmgl::RendererType::WebGPU:
+        case tmgl::RendererType::Count:
+            handle = TMGL_INVALID_HANDLE;
             return; // count included to keep compiler warnings happy
     }
 
@@ -159,14 +159,14 @@ void SubShader::Reload()
     std::streamsize size = in.tellg();
     in.seekg(0, std::ios::beg);
 
-    const bgfx::Memory* mem = bgfx::alloc(size);
+    const tmgl::Memory* mem = tmgl::alloc(size);
     in.read(reinterpret_cast<char*>(mem->data), size);
 
     in.close();
 
     handle = createShader(mem);
 
-    var unis = std::vector<bgfx::UniformHandle>();
+    var unis = std::vector<tmgl::UniformHandle>();
     var uniformCount = getShaderUniforms(handle);
     unis.resize(uniformCount);
     getShaderUniforms(handle, unis.data(), uniformCount);
@@ -176,7 +176,7 @@ void SubShader::Reload()
     texSets.clear();
     for (int i = 0; i < uniformCount; i++)
     {
-        bgfx::UniformInfo info = {};
+        tmgl::UniformInfo info = {};
 
         getUniformInfo(unis[i], info);
 
@@ -196,7 +196,7 @@ void SubShader::Reload()
             uniform->type = info.type;
             uniform->handle = unis[i];
 
-            if (info.type == bgfx::UniformType::Sampler)
+            if (info.type == tmgl::UniformType::Sampler)
             {
                 texSets.push_back(info.name);
             }
@@ -287,7 +287,7 @@ Shader::~Shader()
 
 void Shader::Reload()
 {
-    if (bgfx::isValid(program))
+    if (isValid(program))
     {
         destroy(program);
     }
@@ -349,7 +349,7 @@ ComputeShader::ComputeShader(SubShader* shader)
     ResMgr->loaded_compute_shaders[shader->name + "_CMP"] = this;
 }
 
-void ComputeShader::SetUniform(string name, bgfx::UniformType::Enum type, const void* data)
+void ComputeShader::SetUniform(string name, tmgl::UniformType::Enum type, const void* data)
 {
     var uni = createUniform(name.c_str(), type);
 
@@ -363,13 +363,13 @@ void ComputeShader::SetMat4(string name, glm::mat4 m)
     // internalShader->GetUniform()
     for (int i = 0; i < 4; ++i)
     {
-        SetUniform(name + "[" + std::to_string(i) + "]", bgfx::UniformType::Vec4, math::vec4toArray(m[0]));
+        SetUniform(name + "[" + std::to_string(i) + "]", tmgl::UniformType::Vec4, math::vec4toArray(m[0]));
     }
 }
 
 void ComputeShader::SetVec4(string name, glm::vec4 v)
 {
-    SetUniform(name, bgfx::UniformType::Vec4, math::vec4toArray(v));
+    SetUniform(name, tmgl::UniformType::Vec4, math::vec4toArray(v));
 }
 
 void ComputeShader::Run(int vid, glm::vec3 groups)
@@ -406,15 +406,15 @@ void MaterialState::SetWrite(u64 flag)
     writeA = false;
     writeZ = false;
 
-    if (flag & BGFX_STATE_WRITE_R)
+    if (flag & TMGL_STATE_WRITE_R)
         writeR = true;
-    if (flag & BGFX_STATE_WRITE_G)
+    if (flag & TMGL_STATE_WRITE_G)
         writeG = true;
-    if (flag & BGFX_STATE_WRITE_B)
+    if (flag & TMGL_STATE_WRITE_B)
         writeB = true;
-    if (flag & BGFX_STATE_WRITE_A)
+    if (flag & TMGL_STATE_WRITE_A)
         writeA = true;
-    if (flag & BGFX_STATE_WRITE_Z)
+    if (flag & TMGL_STATE_WRITE_Z)
         writeZ = true;
 }
 
@@ -443,17 +443,17 @@ u64 Material::GetMaterialState()
     v |= state.depth;
 
     if (state.writeR)
-        v |= BGFX_STATE_WRITE_R;
+        v |= TMGL_STATE_WRITE_R;
     if (state.writeG)
-        v |= BGFX_STATE_WRITE_G;
+        v |= TMGL_STATE_WRITE_G;
     if (state.writeB)
-        v |= BGFX_STATE_WRITE_B;
+        v |= TMGL_STATE_WRITE_B;
     if (state.writeA)
-        v |= BGFX_STATE_WRITE_A;
+        v |= TMGL_STATE_WRITE_A;
     if (state.writeZ)
-        v |= BGFX_STATE_WRITE_Z;
+        v |= TMGL_STATE_WRITE_Z;
 
-    v |= BGFX_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
+    v |= TMGL_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
 
 
     return v;
@@ -474,7 +474,7 @@ void Material::Reload(Shader* shader)
 
         for (auto override : overrides)
         {
-            if (override.type == bgfx::UniformType::Sampler)
+            if (override.type == tmgl::UniformType::Sampler)
                 texture_overrides.push_back(override);
         }
 
@@ -1888,7 +1888,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                         {
                             tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
 
-                            if (bgfx::isValid(tex->handle))
+                            if (isValid(tex->handle))
                             {
                                 tex->name = _tex->mFilename.C_Str();
 
@@ -2074,24 +2074,24 @@ Model::Model(fs::BinaryReader* reader, SceneDescription* description)
                 }
             }
 
-            var format = bgfx::TextureFormat::RGBA8;
+            var format = tmgl::TextureFormat::RGBA8;
 
             switch (channelCount)
             {
                 case 1:
-                    format = bgfx::TextureFormat::R8;
+                    format = tmgl::TextureFormat::R8;
                     break;
                 case 2:
-                    format = bgfx::TextureFormat::RG8;
+                    format = tmgl::TextureFormat::RG8;
                     break;
                 case 3:
-                    format = bgfx::TextureFormat::RGB8;
+                    format = tmgl::TextureFormat::RGB8;
                     break;
                 default:
                     break;
             }
 
-            var tex = new Texture(width, height, format, BGFX_SAMPLER_UVW_CLAMP, bgfx::copy(dataV.data(), size), name);
+            var tex = new Texture(width, height, format, TMGL_SAMPLER_UVW_CLAMP, tmgl::copy(dataV.data(), size), name);
 
 
             textures.push_back(tex);
@@ -2370,7 +2370,7 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 
 Texture::Texture(aiTexel* texels, int width, int height)
 {
-    var caps = bgfx::getCaps();
+    var caps = tmgl::getCaps();
     //stbi_set_flip_vertically_on_load(true);
 
 
@@ -2381,12 +2381,12 @@ Texture::Texture(aiTexel* texels, int width, int height)
     {
 
 
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+        tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
         uint64_t textureFlags = 0; // Adjust as needed
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
-                                 textureFlags, bgfx::copy(data, this->width * this->height * channels));
+                                 textureFlags, tmgl::copy(data, this->width * this->height * channels));
         format = textureFormat;
     }
     else
@@ -2400,7 +2400,7 @@ Texture::Texture(aiTexel* texels, int width, int height)
 Texture::Texture(string path, bool isCubemap)
 {
 
-    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT;
+    uint64_t textureFlags = TMGL_SAMPLER_U_MIRROR | TMGL_SAMPLER_V_MIRROR | TMGL_SAMPLER_POINT;
     // Adjust as needed
     if (!isCubemap)
     {
@@ -2437,11 +2437,11 @@ Texture::Texture(string path, bool isCubemap)
         }
 
 
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
+        tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
-                                 textureFlags, bgfx::copy(rgbaData, dataSize));
+                                 textureFlags, tmgl::copy(rgbaData, dataSize));
         format = textureFormat;
 
         var fpath = std::filesystem::path(path);
@@ -2452,92 +2452,6 @@ Texture::Texture(string path, bool isCubemap)
     else
     {
 
-        int nrChannels;
-        float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0);
-
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA32F;
-
-        u32 dataSize = width * height * 4;
-        auto rgbaData = new float[dataSize];
-        for (int i = 0; i < width * height; ++i)
-        {
-            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
-            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
-            rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
-            rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
-        }
-
-        u16 uwidth = width;
-        u16 uheight = height;
-
-
-        var size = 512;
-        // Create the texture in bgfx, passing the image data directly
-        var temp_handle = createTexture2D(uwidth, uheight,
-                                          false, // no mip-maps
-                                          1, // single layer
-                                          textureFormat, BGFX_SAMPLER_UVW_CLAMP,
-                                          bgfx::copy(rgbaData, dataSize * sizeof(float)) // copies the image data
-            );
-        setName(temp_handle, "basecbtex");
-
-        //var colorBuffer = new tmt::render::Texture(size, size, bgfx::TextureFormat::RGBA32F,BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_POINT);
-
-        var readBackShader = Shader::CreateShader(ShaderInitInfo{
-            SubShader::CreateSubShader("equi/vert", SubShader::Vertex),
-            SubShader::CreateSubShader("equi/frag", SubShader::Fragment),
-        });
-
-
-        var cubemapHandle = createTextureCube(size, false, 1, bgfx::TextureFormat::RGBA16F,
-                                              BGFX_SAMPLER_UVW_CLAMP | BGFX_TEXTURE_BLIT_DST);
-        setName(cubemapHandle, "realcbtex");
-
-        var cubeMapRenderTexture =
-            new RenderTexture(size, size, bgfx::TextureFormat::RGBA16F, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
-
-        var vid = cubeMapRenderTexture->vid;
-
-        bgfx::setViewClear(vid, BGFX_CLEAR_DEPTH);
-        bgfx::setViewRect(vid, 0, 0, size, size);
-        setViewFrameBuffer(vid, cubeMapRenderTexture->handle);
-        bgfx::touch(vid);
-
-        glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-        glm::mat4 captureViews[] = {
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-        for (uint8_t i = 0; i < 6; ++i)
-        {
-            var view = captureViews[i];
-            var proj = captureProjection;
-            bgfx::setViewTransform(vid, math::mat4ToArray(view), math::mat4ToArray(proj));
-
-            GetPrimitive(prim::Cube)->use();
-
-            setTexture(0, createUniform("s_texCube", bgfx::UniformType::Sampler), temp_handle);
-            bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-            //bgfx::setTransform(math::mat4ToArray(glm::scale(glm::vec3{2})));
-
-            readBackShader->Push(vid);
-
-            bgfx::touch(vid);
-
-            blit(vid, cubemapHandle, 0, 0, 0, i, cubeMapRenderTexture->realTexture->handle, 0, 0, 0, 0, size, size);
-
-            //break;
-        }
-
-
-        handle = cubemapHandle;
-
-
-        stbi_image_free(data);
     }
 
 }
@@ -2601,13 +2515,13 @@ TextureAtlas::TextureAtlas(string dirPath) :
         }
     }
 
-    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
-    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+    tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
+    uint64_t textureFlags = TMGL_SAMPLER_U_MIRROR | TMGL_SAMPLER_V_MIRROR | TMGL_SAMPLER_POINT; // Adjust as needed
 
     // Create the texture in bgfx, passing the image data directly
     handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, imageCount, textureFormat,
                              textureFlags,
-                             bgfx::copy(pixels.data(),
+                             tmgl::copy(pixels.data(),
                                         (static_cast<u32>(pixels.size()) * static_cast<u32>(sizeof(u8)))));
     format = textureFormat;
     setName(handle, "atlas");
@@ -2654,13 +2568,13 @@ TextureAtlas::TextureAtlas(std::vector<string> paths)
         imageCount++;
     }
 
-    bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
-    uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_POINT; // Adjust as needed
+    tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
+    uint64_t textureFlags = TMGL_SAMPLER_U_MIRROR | TMGL_SAMPLER_V_MIRROR | TMGL_SAMPLER_POINT; // Adjust as needed
 
     // Create the texture in bgfx, passing the image data directly
     handle = createTexture2D(
         static_cast<u16>(width), static_cast<u16>(height), false, imageCount, textureFormat, textureFlags,
-        bgfx::copy(pixels.data(), (static_cast<u32>(pixels.size()) * static_cast<u32>(sizeof(u8)))));
+        tmgl::copy(pixels.data(), (static_cast<u32>(pixels.size()) * static_cast<u32>(sizeof(u8)))));
     format = textureFormat;
     setName(handle, "atlas");
 }
@@ -2675,7 +2589,7 @@ Texture* Texture::CreateTexture(string path, bool isCubemap)
     return new Texture(path, isCubemap);
 }
 
-Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags, const bgfx::Memory* mem, string name)
+Texture::Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags, const tmgl::Memory* mem, string name)
 {
     handle = createTexture2D(width, height, false, 1, tf, flags, mem);
 
@@ -2689,7 +2603,7 @@ Texture::Texture(int width, int height, bgfx::TextureFormat::Enum tf, u64 flags,
     ResMgr->loaded_textures[name] = this;
 }
 
-Texture::Texture(bgfx::TextureHandle handle)
+Texture::Texture(tmgl::TextureHandle handle)
 {
     this->handle = handle;
 
@@ -2700,26 +2614,26 @@ Texture::~Texture()
     destroy(handle);
 }
 
-RenderTexture::RenderTexture(u16 width, u16 height, bgfx::TextureFormat::Enum format, u16 cf)
+RenderTexture::RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum format, u16 cf)
 {
-    const bgfx::Memory* mem = nullptr;
-    if (format == bgfx::TextureFormat::RGBA8)
+    const tmgl::Memory* mem = nullptr;
+    if (format == tmgl::TextureFormat::RGBA8)
     {
         // std::vector<GLubyte> pixels(width * height * 4, (GLubyte)0xffffffff);
-        // mem = bgfx::copy(pixels.data(), width * height* 4);
+        // mem = tmgl::copy(pixels.data(), width * height* 4);
     }
 
     realTexture = new Texture(width, height, format,
-                              BGFX_TEXTURE_COMPUTE_WRITE | BGFX_TEXTURE_RT | BGFX_SAMPLER_MIN_POINT |
-                              BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP
+                              TMGL_TEXTURE_COMPUTE_WRITE | TMGL_TEXTURE_RT | TMGL_SAMPLER_MIN_POINT |
+                              TMGL_SAMPLER_MAG_POINT | TMGL_SAMPLER_U_CLAMP | TMGL_SAMPLER_V_CLAMP
                               , mem);
 
     handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;
 
-    bgfx::setViewName(vid, "RenderTexture");
-    bgfx::setViewClear(vid, cf);
-    bgfx::setViewRect(vid, 0, 0, width, height);
+    //tmgl::setViewName(vid, "RenderTexture");
+    tmgl::setViewClear(vid, cf);
+    tmgl::setViewRect(vid, 0, 0, width, height);
     setViewFrameBuffer(vid, handle);
 
 
@@ -2729,7 +2643,7 @@ RenderTexture::~RenderTexture()
 {
     destroy(handle);
     delete realTexture;
-    bgfx::resetView(vid);
+    //tmgl::resetView(vid);
 }
 
 Font* Font::Create(string path)
@@ -2831,15 +2745,15 @@ Font::Font(string path)
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
-    bgfx::VertexLayout layout;
+    tmgl::VertexLayout layout;
     layout.begin();
-    layout.add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float);
+    layout.add(tmgl::Attrib::Position, 4, tmgl::AttribType::Float);
     layout.end();
 
 
     std::vector<u16> indices = {0, 1, 2, 1, 3, 2};
 
-    ibh = createIndexBuffer(bgfx::copy(indices.data(), indices.size() * sizeof(u16)));
+    ibh = createIndexBuffer(tmgl::copy(indices.data(), indices.size() * sizeof(u16)));
 
     FT_GlyphSlot slot = face->glyph; // <-- This is new
 
@@ -2857,7 +2771,7 @@ Font::Font(string path)
             std::cerr << "Failed to render SDF glyph!" << std::endl;
         }
 
-        bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::R8;
+        tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::R8;
         uint64_t textureFlags = 0; // Adjust as needed
 
         var width = face->glyph->bitmap.width;
@@ -2872,7 +2786,7 @@ Font::Font(string path)
         var handle = createTexture2D(
             static_cast<u16>(width), static_cast<u16>(height), false, 1,
             textureFormat, textureFlags,
-            bgfx::copy(face->glyph->bitmap.buffer, size));
+            tmgl::copy(face->glyph->bitmap.buffer, size));
 
         var tex = new Texture(handle);
 
@@ -2895,7 +2809,7 @@ Font::Font(string path)
         vertices.emplace_back(0, v_height, v_width, v_height);
         vertices.emplace_back(v_width, v_height, v_width, v_height);
 
-        var vbh = createVertexBuffer(bgfx::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
+        var vbh = createVertexBuffer(tmgl::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
 
         float advance = static_cast<float>(face->glyph->advance.x);
 
@@ -3001,15 +2915,15 @@ Color Color::FromHex(string hex)
     return c;
 }
 
-bgfx::VertexLayout Vertex::getVertexLayout()
+tmgl::VertexLayout Vertex::getVertexLayout()
 {
-    var layout = bgfx::VertexLayout();
+    var layout = tmgl::VertexLayout();
     layout.begin()
-          .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-          .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-          .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-          .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Float, false, false)
-          .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float, true)
+          .add(tmgl::Attrib::Position, 3, tmgl::AttribType::Float)
+          .add(tmgl::Attrib::Normal, 3, tmgl::AttribType::Float)
+          .add(tmgl::Attrib::TexCoord0, 2, tmgl::AttribType::Float)
+          .add(tmgl::Attrib::Indices, 4, tmgl::AttribType::Float, false, false)
+          .add(tmgl::Attrib::Weight, 4, tmgl::AttribType::Float, true)
           .end();
 
     return layout;
@@ -3050,7 +2964,7 @@ MatrixArray tmt::render::GetMatrixArray(glm::mat4 m)
 }
 
 Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 triSize,
-                              bgfx::VertexLayout layout, Model* model, string name)
+                              tmgl::VertexLayout layout, Model* model, string name)
 {
     u32 stride = layout.getStride();
     u32 vertS = stride * vertCount;
@@ -3077,21 +2991,21 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
     }
 
     {
-        const bgfx::Memory* mem = bgfx::alloc(vertS);
+        const tmgl::Memory* mem = tmgl::alloc(vertS);
 
         bx::memCopy(mem->data, data, vertS);
 
-        bgfx::VertexBufferHandle vbh = createVertexBuffer(mem, layout);
+        tmgl::VertexBufferHandle vbh = createVertexBuffer(mem, layout);
         mesh->vbh = vbh;
         mesh->vertexCount = vertCount;
     }
 
     {
-        const bgfx::Memory* mem = bgfx::alloc(indeS);
+        const tmgl::Memory* mem = tmgl::alloc(indeS);
 
         bx::memCopy(mem->data, indices, indeS);
 
-        bgfx::IndexBufferHandle ibh = createIndexBuffer(mem);
+        tmgl::IndexBufferHandle ibh = createIndexBuffer(mem);
 
         mesh->ibh = ibh;
         mesh->indexCount = triSize;
@@ -3118,65 +3032,50 @@ RendererInfo* tmt::render::init(int width, int height)
     glfwSetErrorCallback(glfw_errorCallback);
     if (!glfwInit())
         return nullptr;
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+
+    //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     GLFWwindow* window = glfwCreateWindow(width, height, application->name.c_str(), nullptr, nullptr);
     if (!window)
         return nullptr;
 
-    // glfwSetKeyCallback(window, glfw_keyCallback);
-    //  Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
-    //  Most graphics APIs must be used on the same thread that created the window.
-    bgfx::renderFrame();
+    tmgl::Init init;
 
-    bgfx::Init init;
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-
-#elif BX_PLATFORM_OSX
-
-#elif BX_PLATFORM_WINDOWS
     init.platformData.nwh = glfwGetWin32Window(window);
+    //init.platformData.ndt = glfwGetWin32Window(window);
+
+    init.windowWidth = static_cast<uint32_t>(width);
+    init.windowHeight = static_cast<uint32_t>(height);
+
+    init.vendorId = TMGL_PCI_ID_NVIDIA;
+
+#ifndef TMGL_BGFX
+    init.platformData.window = window;
+    init.platformData.proc = (GLADloadproc)glfwGetProcAddress;
+    init.platformData.swap = (TMGLSwapProc)glfwSwapBuffers;
 #endif
 
-    init.resolution.width = static_cast<uint32_t>(width);
-    init.resolution.height = static_cast<uint32_t>(height);
-    init.resolution.reset = BGFX_RESET_VSYNC;
-    init.debug = true;
+    //init.type = tmgl::RendererType::Direct3D11;
 
-    init.vendorId = BGFX_PCI_ID_NVIDIA;
+    tmgl::init(init);
 
-    init.type = bgfx::RendererType::OpenGL;
-
-    init.type = bgfx::RendererType::Direct3D11;
-
-    if (!bgfx::init(init))
-        return nullptr;
-    // Set view 0 to the same dimensions as the window and to clear the color buffer.
-    constexpr bgfx::ViewId kClearView = 0;
-    bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Color(0.1, 0, 0, 1).getHex(), 1.0f, 0);
-    setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Half);
-
-
-    var m_debug = BGFX_DEBUG_TEXT;
-
-    bgfx::setDebug(m_debug);
-
-    var caps = bgfx::getCaps();
-
-
-    if ((caps->supported & BGFX_CAPS_TEXTURE_BLIT) == 0)
-    {
-        exit(-69);
-    }
+    tmgl::setViewClear(TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.1, 0, 0, 1).getHex(), 1.0f, 0);
 
     renderer = new RendererInfo();
     calls = std::vector<DrawCall>();
-
-    renderer->clearView = kClearView;
     renderer->window = window;
 
     renderer->windowWidth = width;
     renderer->windowHeight = height;
+
+    /*
+    renderer->clearView = kClearView;
 
     ShaderInitInfo info = {
         SubShader::CreateSubShader("test/vert", SubShader::Vertex),
@@ -3186,7 +3085,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     defaultShader = Shader::CreateShader(info);
 
-    var rdoc = bgfx::loadRenderDoc();
+    var rdoc = tmgl::loadRenderDoc();
 
     if (renderer->useImgui)
         imguiCreate();
@@ -3209,7 +3108,9 @@ RendererInfo* tmt::render::init(int width, int height)
     GetPrimitive(prim::Quad);
 
     var white =
-        new Texture(10, 10, bgfx::TextureFormat::RGB8, 0, bgfx::copy(whiteData.data(), whiteData.size()), "White");
+        new Texture(10, 10, tmgl::TextureFormat::RGB8, 0, tmgl::copy(whiteData.data(), whiteData.size()), "White");
+
+*/
 
     return renderer;
 }
@@ -3217,16 +3118,17 @@ RendererInfo* tmt::render::init(int width, int height)
 void tmt::render::update()
 {
     // Set view 0 default viewport.
-    bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(renderer->windowWidth),
+    tmgl::setViewRect(0, 0, static_cast<uint16_t>(renderer->windowWidth),
                       static_cast<uint16_t>(renderer->windowHeight));
 
+    /*
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
-    bgfx::dbgTextClear();
+    tmgl::dbgTextClear();
 
-    const bgfx::Stats* stats = bgfx::getStats();
+    const tmgl::Stats* stats = tmgl::getStats();
 
-    //bgfx::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(bgfx::getRendererType()));
+    //tmgl::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(tmgl::getRendererType()));
 
     for (auto d : debugCalls)
     {
@@ -3234,7 +3136,7 @@ void tmt::render::update()
         {
             case debug::Text:
             {
-                bgfx::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
+                tmgl::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
             }
             break;
             default:
@@ -3242,7 +3144,7 @@ void tmt::render::update()
         }
     }
 
-    bgfx::setDebug(BGFX_DEBUG_TEXT);
+    tmgl::setDebug(TMGL_DEBUG_TEXT);
 
     u8 btn = ((input::Mouse::GetMouseButton(input::Mouse::Left, true) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
         ((input::Mouse::GetMouseButton(input::Mouse::Right, true) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |
@@ -3283,7 +3185,7 @@ void tmt::render::update()
     {
         bx::mtxProj(proj, mainCamera->FOV,
                     static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight), 0.01f,
-                    100.0f, bgfx::getCaps()->homogeneousDepth);
+                    100.0f, tmgl::getCaps()->homogeneousDepth);
 
         float rad = glm::radians(mainCamera->FOV);
 
@@ -3294,10 +3196,10 @@ void tmt::render::update()
         float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
 
         bx::mtxOrtho(ortho, left, -left, bottom, -bottom,
-                     -100, 100.0f, 0, bgfx::getCaps()->homogeneousDepth);
+                     -100, 100.0f, 0, tmgl::getCaps()->homogeneousDepth);
 
 
-        bgfx::setViewTransform(0, mainCamera->GetView(), proj);
+        tmgl::setViewTransform(0, mainCamera->GetView(), proj);
     }
 
     if (!subHandlesLoaded)
@@ -3305,10 +3207,10 @@ void tmt::render::update()
 
         lightUniforms = new light::LightUniforms;
 
-        orthoHandle = createUniform("iu_ortho", bgfx::UniformType::Mat4);
-        timeHandle = createUniform("iu_time", bgfx::UniformType::Vec4);
-        vposHandle = createUniform("iu_viewPos", bgfx::UniformType::Vec4);
-        animHandle = createUniform("iu_boneMatrices", bgfx::UniformType::Mat4, MAX_BONE_MATRICES);
+        orthoHandle = createUniform("iu_ortho", tmgl::UniformType::Mat4);
+        timeHandle = createUniform("iu_time", tmgl::UniformType::Vec4);
+        vposHandle = createUniform("iu_viewPos", tmgl::UniformType::Vec4);
+        animHandle = createUniform("iu_boneMatrices", tmgl::UniformType::Mat4, MAX_BONE_MATRICES);
 
         subHandlesLoaded = true;
     }
@@ -3322,7 +3224,7 @@ void tmt::render::update()
 
     for (const auto& call : calls)
     {
-        //bgfx::setTransform(call.transformMatrix);
+        //tmgl::setTransform(call.transformMatrix);
 
         if (!call.program)
             continue;
@@ -3332,26 +3234,26 @@ void tmt::render::update()
             switch (call.matrixMode)
             {
                 case MaterialState::ViewProj:
-                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                    tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
                                            value_ptr(mainCamera->GetProjection_m4()));
                     break;
                 case MaterialState::View:
-                    // bgfx::setViewTransform(0, mainCamera->GetView(), oneMat);
+                    // tmgl::setViewTransform(0, mainCamera->GetView(), oneMat);
                     break;
                 case MaterialState::Proj:
-                    // bgfx::setViewTransform(0, oneMat, proj);
+                    // tmgl::setViewTransform(0, oneMat, proj);
                     break;
                 case MaterialState::None:
-                    // bgfx::setViewTransform(0, oneMat, oneMat);
+                    // tmgl::setViewTransform(0, oneMat, oneMat);
                     break;
                 case MaterialState::ViewOrthoProj:
-                    // bgfx::setViewTransform(0, mainCamera->GetView(), ortho);
-                    bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                    // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
+                    tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
                                            ortho);
                     break;
                 case MaterialState::OrthoProj:
                 {
-                    // bgfx::setViewTransform(0, oneMat, ortho);
+                    // tmgl::setViewTransform(0, oneMat, ortho);
                     setUniform(orthoHandle, ortho);
                 }
                 break;
@@ -3366,7 +3268,7 @@ void tmt::render::update()
 
         if (call.animationMatrices.size() > 0)
         {
-            //bgfx::setUniform(animHandle, call.animationMatrices);
+            //tmgl::setUniform(animHandle, call.animationMatrices);
 
             var matrixCount = call.animationMatrices.size() + 1;
 
@@ -3385,8 +3287,8 @@ void tmt::render::update()
             }
 
 
-            //bgfx::setTransform(glm::value_ptr(fullVec[0]));
-            bgfx::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
+            //tmgl::setTransform(glm::value_ptr(fullVec[0]));
+            tmgl::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
 
         }
         else
@@ -3396,7 +3298,7 @@ void tmt::render::update()
             {
 
             }
-            bgfx::setTransform(value_ptr(matrix));
+            tmgl::setTransform(value_ptr(matrix));
         }
 
         if (lights.size() > 0)
@@ -3412,16 +3314,16 @@ void tmt::render::update()
             setIndexBuffer(call.ibh, 0, call.indexCount);
         }
 
-        bgfx::setState(call.state);
+        tmgl::setState(call.state);
 
 
         call.program->Push(0, call.overrides, call.overrideCt);
 
-        // bgfx::discard();
+        // tmgl::discard();
     }
     calls.clear();
 
-    //bgfx::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
+    //tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
 
     auto dde = DebugDrawEncoder();
 
@@ -3506,13 +3408,17 @@ void tmt::render::update()
     debugFuncs.clear();
     lights.clear();
 
-    frameTime = bgfx::frame();
+*/
+
+    frameTime = tmgl::frame();
     lastKey = -1;
+
     glfwPollEvents();
     counterTime++;
 
-    bgfx::touch(0);
-    // bgfx::touch(1);
+
+    //tmgl::touch(0);
+    // tmgl::touch(1);
 
     if (input::Keyboard::GetKey(GLFW_KEY_LEFT_CONTROL) == input::Keyboard::Press)
     {
@@ -3540,16 +3446,17 @@ void tmt::render::update()
 
 void tmt::render::shutdown()
 {
-    bgfx::shutdown();
+    //tmgl::shutdown();
     glfwTerminate();
 }
 
-void bgfx::setUniform(UniformHandle handle, glm::vec4 v)
+
+void tmgl::setUniform(UniformHandle handle, glm::vec4 v)
 {
     setUniform(handle, tmt::math::vec4toArray(v));
 }
 
-void bgfx::setUniform(UniformHandle handle, std::vector<glm::vec4> v)
+void tmgl::setUniform(UniformHandle handle, std::vector<glm::vec4> v)
 {
     auto arr = new float[v.size() * 4];
     for (int i = 0; i < v.size() * 4; i += 4)
@@ -3566,7 +3473,7 @@ void bgfx::setUniform(UniformHandle handle, std::vector<glm::vec4> v)
     delete[] arr;
 }
 
-void bgfx::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
+void tmgl::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 {
     var arr = tmt::math::mat4ArrayToArray(v);
     setUniform(handle, arr, v.size());

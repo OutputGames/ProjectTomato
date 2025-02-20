@@ -11,6 +11,7 @@ local GLFW_DIR = "vendor/glfw/"
 local IMGUI_DIR = "vendor/dear-imgui/"
 local MINI_DIR = "vendor/miniaudio/"
 local RECAST_DIR = "C:/RecastNavigation/"
+local TMGL_DIR = "D:/Code/ImportantRepos/tmgl/"
 
 local BULLET_LIBS = {
     "BulletDynamics",
@@ -67,6 +68,7 @@ end
             path.join(BGFX_DIR, "include"),
             path.join(BX_DIR, "include"),
             path.join(GLFW_DIR, "include"),
+            path.join(TMGL_DIR, "include"),
             path.join(MINI_DIR,"extras/miniaudio_split/"),
             "include/",
             "vendor/glm/",
@@ -112,10 +114,10 @@ end
 
         filter "action:vs*"
             defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-            dependson {"miniaudio"}
+            dependson {"miniaudio", "tmgl"}
             links {"miniaudio.lib"}
             characterset ("MBCS")
-        links {"miniaudio", "enet"}
+        links {"miniaudio", "enet", "tmgl"}
         libdirs {"./bin/%{cfg.buildcfg}", "vendor/enet/lib/%{cfg.buildcfg}/", "vendor/box2d/src/%{cfg.buildcfg}/"}
 
         filter "configurations:Debug"
@@ -212,4 +214,4 @@ end
         }
     include(RECAST_DIR .. "premake5.lua")
     include("vendor/enet/premake5.lua")
-    include ("D:/Code/ImportantRepos/tmgl/lib.lua")
+    include (TMGL_DIR .."lib.lua")
