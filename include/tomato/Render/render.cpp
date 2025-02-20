@@ -3092,13 +3092,6 @@ RendererInfo* tmt::render::init(int width, int height)
 
     defaultShader = Shader::CreateShader(info);
 
-    /*
-
-    var rdoc = tmgl::loadRenderDoc();
-
-    if (renderer->useImgui)
-        imguiCreate();
-
     std::vector<byte> whiteData;
 
     for (int x = 0; x < 10; ++x)
@@ -3119,7 +3112,6 @@ RendererInfo* tmt::render::init(int width, int height)
     var white =
         new Texture(10, 10, tmgl::TextureFormat::RGB8, 0, tmgl::copy(whiteData.data(), whiteData.size()), "White");
 
-*/
 
     return renderer;
 }
@@ -3130,15 +3122,17 @@ void tmt::render::update()
     tmgl::setViewRect(0, 0, static_cast<uint16_t>(renderer->windowWidth),
                       static_cast<uint16_t>(renderer->windowHeight));
 
-    /*
+
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
+
+    /*
     tmgl::dbgTextClear();
 
     const tmgl::Stats* stats = tmgl::getStats();
 
     //tmgl::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(tmgl::getRendererType()));
-
+    
     for (auto d : debugCalls)
     {
         switch (d.type)
@@ -3152,7 +3146,6 @@ void tmt::render::update()
                 break;
         }
     }
-
     tmgl::setDebug(TMGL_DEBUG_TEXT);
 
     u8 btn = ((input::Mouse::GetMouseButton(input::Mouse::Left, true) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
@@ -3160,6 +3153,7 @@ void tmt::render::update()
         ((input::Mouse::GetMouseButton(input::Mouse::Middle, true) == input::Mouse::Hold) ? IMGUI_MBUT_MIDDLE : 0);
     glfwGetWindowSize(renderer->window, &renderer->windowWidth, &renderer->windowHeight);
 
+    
     if (renderer->useImgui)
     {
 
@@ -3177,7 +3171,7 @@ void tmt::render::update()
 
         imguiEndFrame();
     }
-
+    */
 
     float proj[16];
     float ortho[16];
@@ -3334,6 +3328,7 @@ void tmt::render::update()
 
     //tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
 
+    /*
     auto dde = DebugDrawEncoder();
 
     dde.begin(0);
@@ -3413,11 +3408,12 @@ void tmt::render::update()
 
     dde.end();
 
+*/
+
     debugCalls.clear();
     debugFuncs.clear();
     lights.clear();
 
-*/
 
     frameTime = tmgl::frame();
     lastKey = -1;
