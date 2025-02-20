@@ -163,8 +163,6 @@ namespace glm
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 #include <bx/bx.h>
 #if BX_PLATFORM_LINUX
 #define GLFW_EXPOSE_NATIVE_X11
