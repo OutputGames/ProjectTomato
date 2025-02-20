@@ -31,11 +31,11 @@ void tmt::light::LightUniforms::Apply(std::vector<Light*> lights)
 
 tmt::light::LightUniforms::LightUniforms()
 {
-    position = createUniform("iu_lightPosition", bgfx::UniformType::Vec4, maxLights);
-    direction = createUniform("iu_lightDirection", bgfx::UniformType::Vec4, maxLights);
-    color = createUniform("iu_lightColor", bgfx::UniformType::Vec4, maxLights);
-    power = createUniform("iu_lightPower", bgfx::UniformType::Vec4, maxLights);
-    data = createUniform("iu_lightData", bgfx::UniformType::Vec4);
+    position = createUniform("iu_lightPosition", tmgl::UniformType::Vec4, maxLights);
+    direction = createUniform("iu_lightDirection", tmgl::UniformType::Vec4, maxLights);
+    color = createUniform("iu_lightColor", tmgl::UniformType::Vec4, maxLights);
+    power = createUniform("iu_lightPower", tmgl::UniformType::Vec4, maxLights);
+    data = createUniform("iu_lightData", tmgl::UniformType::Vec4);
 }
 
 tmt::light::LightObject::LightObject()

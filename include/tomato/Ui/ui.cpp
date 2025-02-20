@@ -131,7 +131,7 @@ SpriteObject::SpriteObject()
 
     material = new render::Material(render::Shader::CreateShader(initInfo));
 
-    material->state.SetWrite(BGFX_STATE_WRITE_RGB);
+    material->state.SetWrite(TMGL_STATE_WRITE_RGB);
     material->state.writeA = true;
     material->state.depth = render::MaterialState::LessEqual;
 
@@ -357,7 +357,7 @@ TextObject::TextObject()
 {
     material->Reload(render::Shader::CreateShader("text/vert", "text/frag"));
 
-    material->state.SetWrite(BGFX_STATE_WRITE_RGB);
+    material->state.SetWrite(TMGL_STATE_WRITE_RGB);
     material->state.depth = render::MaterialState::LessEqual;
 
     if (!mainTexture)

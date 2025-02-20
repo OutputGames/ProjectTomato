@@ -270,7 +270,7 @@ void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
         }
     }
 
-    submit(viewId, program);
+    submit(program);
 
     delete[] overrides;
 }
@@ -379,7 +379,7 @@ void ComputeShader::Run(int vid, glm::vec3 groups)
         uni->Use(internalShader);
     }
 
-    dispatch(vid, program, groups.x, groups.y, groups.z);
+    dispatch(program, groups.x, groups.y, groups.z);
 }
 
 ComputeShader::~ComputeShader()
@@ -2370,14 +2370,19 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 
 Texture::Texture(aiTexel* texels, int width, int height)
 {
-    var caps = tmgl::getCaps();
+
+    //var caps = tmgl::getCaps();
     //stbi_set_flip_vertically_on_load(true);
 
+
+    //bool f = this->width < caps->limits.maxTextureSize && this->height < caps->limits.maxTextureSize;
+
+    bool f = true;
 
     int channels;
     u8* data = stbi_load_from_memory((unsigned char*)texels, width, &this->width, &this->height, &channels, 4);
 
-    if (this->width < caps->limits.maxTextureSize && this->height < caps->limits.maxTextureSize)
+    if (f)
     {
 
 
@@ -2628,13 +2633,13 @@ RenderTexture::RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum fo
                               TMGL_SAMPLER_MAG_POINT | TMGL_SAMPLER_U_CLAMP | TMGL_SAMPLER_V_CLAMP
                               , mem);
 
-    handle = createFrameBuffer(1, &realTexture->handle, true);
+    //handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;
 
     //tmgl::setViewName(vid, "RenderTexture");
-    tmgl::setViewClear(vid, cf);
-    tmgl::setViewRect(vid, 0, 0, width, height);
-    setViewFrameBuffer(vid, handle);
+    //tmgl::setViewClear(vid, cf);
+    //tmgl::setViewRect(vid, 0, 0, width, height);
+    //setViewFrameBuffer(vid, handle);
 
 
 }
@@ -3045,7 +3050,7 @@ RendererInfo* tmt::render::init(int width, int height)
         return nullptr;
 
     tmgl::Init init;
-
+    glfwMakeContextCurrent(window);
 
     init.platformData.nwh = glfwGetWin32Window(window);
     //init.platformData.ndt = glfwGetWin32Window(window);

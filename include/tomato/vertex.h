@@ -13,7 +13,7 @@ namespace tmt::render
         glm::vec4 boneIds = glm::vec4(-1);
         glm::vec4 boneWeights = glm::vec4(0);
 
-        static bgfx::VertexLayout getVertexLayout();
+        static tmgl::VertexLayout getVertexLayout();
 
         void SetBoneData(int boneId, float boneWeight);
     };

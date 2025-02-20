@@ -19,6 +19,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include <tmgl/tmgl.h>
 
 #ifdef TOMATO_DLLBUILD
 #define TMAPI __declspec(dllexport)
@@ -164,7 +165,6 @@ namespace glm
 #include <stdio.h>
 #include <GLFW/glfw3.h>
 
-#include <tmgl/tmgl.h>
 
 //#include <bgfx/bgfx.h>
 //#include <bgfx/platform.h>

@@ -18,7 +18,7 @@ namespace tmt::light
 
     struct LightUniforms
     {
-        bgfx::UniformHandle position, direction, color, power, data;
+        tmgl::UniformHandle position, direction, color, power, data;
         const u16 maxLights = 10;
 
         void Apply(std::vector<Light*> lights);

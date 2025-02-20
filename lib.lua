@@ -65,8 +65,8 @@ end
         }
 
         includedirs { 
-            path.join(BGFX_DIR, "include"),
             path.join(BX_DIR, "include"),
+            path.join(BGFX_DIR, "include"),
             path.join(GLFW_DIR, "include"),
             path.join(TMGL_DIR, "include"),
             path.join(MINI_DIR,"extras/miniaudio_split/"),
@@ -77,7 +77,7 @@ end
             "vendor/bullet3/src/",
             "vendor/bimg/include/",
             "include/tomato/",
-            IMGUI_DIR,
+            --IMGUI_DIR,
             "vendor/enet/include/",
             "vendor/box2d/include/",
             "vendor/freetype/"
@@ -126,7 +126,7 @@ end
             debugdir "./"
             runtime "Debug"
             optimize "Off"
-            links { "bgfxDebug", "bimgDebug", "bxDebug", "assimp-vc143-mtd", "box2dd" }
+            links { "bimgDebug", "bxDebug", "assimp-vc143-mtd", "box2dd" }
             libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
             
             for _, lib in ipairs(BULLET_LIBS) do
@@ -137,7 +137,7 @@ end
             defines { "NDEBUG", "BX_CONFIG_DEBUG=0" }
             optimize "On"
             runtime "Release"
-            links { "bgfxRelease", "bimgRelease", "bxRelease", "assimp-vc143-mt", "box2d" }
+            links { "bimgRelease", "bxRelease", "assimp-vc143-mt", "box2d" }
             libdirs {"vendor/assimp/lib/Release/", "vendor/bullet3/lib/Release/"}
             for _, lib in ipairs(BULLET_LIBS) do
                 links { lib }

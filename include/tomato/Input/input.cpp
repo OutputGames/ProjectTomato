@@ -1,6 +1,6 @@
 #include "input.hpp"
 #include "globals.hpp"
-#include "imgui.h"
+//#include "imgui.h"
 
 
 using namespace tmt::input;
@@ -83,8 +83,10 @@ Mouse::MouseButtonState Mouse::GetMouseButton(MouseButton i, bool real)
 
     if (!real)
     {
+        /*
         if (ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemActive())
             state = Release;
+            */
     }
 
     if (state == Press && (mstates[i] == Press || mstates[i] == Hold))
@@ -295,6 +297,7 @@ static void joystick_cb(int jid, int event)
     }
 }
 
+/*
 static void char_cb(GLFWwindow* window, uint c)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -635,13 +638,13 @@ static void scrl_cb(GLFWwindow* window, double xoffset, double yoffset)
     io.AddMouseWheelEvent(xoffset, yoffset);
     mousescrl = {xoffset, yoffset};
 }
-
+*/
 void tmt::input::init()
 {
     glfwSetJoystickCallback(joystick_cb);
-    glfwSetCharCallback(renderer->window, char_cb);
-    glfwSetKeyCallback(renderer->window, key_cb);
-    glfwSetScrollCallback(renderer->window, scrl_cb);
+    //glfwSetCharCallback(renderer->window, char_cb);
+    //glfwSetKeyCallback(renderer->window, key_cb);
+    //glfwSetScrollCallback(renderer->window, scrl_cb);
 }
 
 
