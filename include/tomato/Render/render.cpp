@@ -3202,7 +3202,7 @@ void tmt::render::update()
                      -100, 100.0f, 0, tmgl::getCaps()->homogeneousDepth);
 
 
-        tmgl::setViewTransform(0, mainCamera->GetView(), proj);
+        tmgl::setViewTransform(mainCamera->GetView(), proj);
     }
 
     if (!subHandlesLoaded)
@@ -3237,7 +3237,7 @@ void tmt::render::update()
             switch (call.matrixMode)
             {
                 case MaterialState::ViewProj:
-                    tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                    tmgl::setViewTransform(value_ptr(mainCamera->GetView_m4()),
                                            value_ptr(mainCamera->GetProjection_m4()));
                     break;
                 case MaterialState::View:
@@ -3251,7 +3251,7 @@ void tmt::render::update()
                     break;
                 case MaterialState::ViewOrthoProj:
                     // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
-                    tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()),
+                    tmgl::setViewTransform(value_ptr(mainCamera->GetView_m4()),
                                            ortho);
                     break;
                 case MaterialState::OrthoProj:

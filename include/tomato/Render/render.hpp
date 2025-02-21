@@ -768,7 +768,7 @@ namespace tmgl
 {
     void setUniform(UniformHandle handle, glm::vec4 v);
     void setUniform(UniformHandle handle, std::vector<glm::vec4> v);
-    void setUniform(UniformHandle handle, std::vector<glm::mat4> v);
+    void setUniform(UniformHandle handle, std::vector<glm::mat4> v);;
 } // namespace bgfx
 
 #endif
