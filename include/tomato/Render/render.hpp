@@ -164,7 +164,7 @@ namespace tmt::render
 
         int forcedSamplerIndex = -1;
 
-        SubShader::ShaderType shaderType;
+        SubShader::ShaderType shaderType = SubShader::Fragment;
         tmgl::UniformType::Enum type;
     };
 

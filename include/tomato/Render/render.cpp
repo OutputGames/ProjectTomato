@@ -32,7 +32,7 @@ void ShaderUniform::Use(SubShader* shader)
     {
         case tmgl::UniformType::Sampler:
         {
-            Texture* t;
+            Texture* t = tex;
 
             if (tex)
             {
@@ -45,8 +45,13 @@ void ShaderUniform::Use(SubShader* shader)
             }
             else if (tex && tex->name != "White")
             {
-                //t = fs::ResourceManager::pInstance->loaded_textures["White"];
+                t = fs::ResourceManager::pInstance->loaded_textures["White"];
             }
+
+            t = fs::ResourceManager::pInstance->loaded_textures["White"];
+
+            if (t == nullptr)
+                return;
 
             var texSets = shader->texSets;
             int texSet = 0;
@@ -633,7 +638,9 @@ Material* Model::CreateMaterial(MaterialDescription* materialDesc, Shader* shade
     for (auto [uniform, texture] : materialDesc->Textures)
     {
         var t = GetTextureFromName(texture);
-        material->GetUniform(uniform, true)->tex = t;
+        var uni = material->GetUniform(uniform, true);
+        uni->type = tmgl::UniformType::Sampler;
+        uni->tex = t;
     }
 
     return material;
@@ -2389,16 +2396,17 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
 Texture::Texture(aiTexel* texels, int width, int height)
 {
 
-    //var caps = tmgl::getCaps();
+    var caps = tmgl::getCaps();
     //stbi_set_flip_vertically_on_load(true);
 
 
-    //bool f = this->width < caps->limits.maxTextureSize && this->height < caps->limits.maxTextureSize;
-
-    bool f = true;
+    //bool f = true;
 
     int channels;
     u8* data = stbi_load_from_memory((unsigned char*)texels, width, &this->width, &this->height, &channels, 4);
+
+    bool f = this->width < caps->limits.maxTextureSize && this->height < caps->limits.maxTextureSize;
+
 
     if (f)
     {
@@ -3083,7 +3091,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
     init.vendorId = TMGL_PCI_ID_NVIDIA;
 #ifdef TMGL_BGFX
-    init.type = bgfx::RendererType::OpenGL;
+    init.type = bgfx::RendererType::Direct3D11;
 #endif
 
 
