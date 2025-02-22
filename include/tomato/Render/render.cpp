@@ -45,10 +45,10 @@ void ShaderUniform::Use(SubShader* shader)
             }
             else if (tex && tex->name != "White")
             {
-                t = fs::ResourceManager::pInstance->loaded_textures["White"];
+                //t = fs::ResourceManager::pInstance->loaded_textures["White"];
             }
 
-            t = fs::ResourceManager::pInstance->loaded_textures["White"];
+            //t = fs::ResourceManager::pInstance->loaded_textures["White"];
 
             if (t == nullptr)
                 return;
