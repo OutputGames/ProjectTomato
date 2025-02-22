@@ -3414,7 +3414,6 @@ void tmt::render::update()
     debugFuncs.clear();
     lights.clear();
 
-
     frameTime = tmgl::frame();
     lastKey = -1;
 
