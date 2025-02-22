@@ -190,7 +190,7 @@ namespace glm
 //#include "bgfx/src/debug_renderdoc.h"
 
 #ifndef __SWITCH__
-#include "bullet/src/btBulletDynamicsCommon.h"
+#include "bullet3/src/btBulletDynamicsCommon.h"
 #else
 #include "bullet/btBulletDynamicsCommon.h"
 #endif

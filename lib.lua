@@ -130,6 +130,7 @@ end
             libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
             
             for _, lib in ipairs(BULLET_LIBS) do
+                print(lib)
                 links { lib .. "_Debug" }
             end
 
