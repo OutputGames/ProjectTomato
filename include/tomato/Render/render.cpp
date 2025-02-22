@@ -38,9 +38,14 @@ void ShaderUniform::Use(SubShader* shader)
             {
                 t = tex;
             }
-            else
+
+            if (!tex || tex->name == "White")
             {
                 t = fs::ResourceManager::pInstance->loaded_textures["White"];
+            }
+            else if (tex && tex->name != "White")
+            {
+                //t = fs::ResourceManager::pInstance->loaded_textures["White"];
             }
 
             var texSets = shader->texSets;
@@ -430,21 +435,24 @@ void MaterialState::SetWrite(u64 flag)
 MaterialOverride* Material::GetUniform(string name, bool force)
 {
     for (auto& override : overrides)
+    {
         if (override.name == name)
+        {
             return &override;
+        }
+    }
 
     if (force)
     {
-        var ovr = MaterialOverride();
+        MaterialOverride ovr;
         ovr.name = name;
-
         overrides.push_back(ovr);
-
-        return &ovr;
+        return &overrides.back();
     }
 
     return nullptr;
 }
+
 
 u64 Material::GetMaterialState()
 {
@@ -624,7 +632,8 @@ Material* Model::CreateMaterial(MaterialDescription* materialDesc, Shader* shade
 
     for (auto [uniform, texture] : materialDesc->Textures)
     {
-        material->GetUniform(uniform, true)->tex = GetTextureFromName(texture);
+        var t = GetTextureFromName(texture);
+        material->GetUniform(uniform, true)->tex = t;
     }
 
     return material;
@@ -2771,7 +2780,7 @@ Font::Font(string path)
 
     FT_GlyphSlot slot = face->glyph; // <-- This is new
 
-    for (unsigned char c = 0; c < 128; c++)
+    for (unsigned char c = 0; c < 100; c++)
     {
         // load character glyph
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))

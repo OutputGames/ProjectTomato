@@ -1,7 +1,6 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include <miniaudio/extras/miniaudio_split/miniaudio.h>
 
 #include <tomato/utils.hpp>
 
@@ -21,7 +20,6 @@ namespace tmt::audio
 
         void AddListener(SoundListener* listener);
         void RemoveListener(SoundListener* listener);
-        ma_engine engine;
 
     private:
         std::vector<SoundListener*> listeners;
@@ -47,7 +45,6 @@ namespace tmt::audio
         friend struct AudioPlayer;
         Sound(string path, SoundInitInfo info = {});
 
-        ma_sound sound;
 
     };
 
