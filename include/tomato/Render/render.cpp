@@ -31,27 +31,36 @@ void ShaderUniform::Use(SubShader* shader)
     switch (type)
     {
         case tmgl::UniformType::Sampler:
+        {
+            Texture* t;
+
             if (tex)
             {
-
-                var texSets = shader->texSets;
-                int texSet = 0;
-                for (auto set : texSets)
-                {
-                    if (set == name)
-                        break;
-
-                    texSet++;
-                }
-
-                if (forcedSamplerIndex > -1)
-                {
-                    texSet = forcedSamplerIndex;
-                }
-
-                setTexture(texSet, handle, tex->handle);
+                t = tex;
             }
-            break;
+            else
+            {
+                t = fs::ResourceManager::pInstance->loaded_textures["White"];
+            }
+
+            var texSets = shader->texSets;
+            int texSet = 0;
+            for (auto set : texSets)
+            {
+                if (set == name)
+                    break;
+
+                texSet++;
+            }
+
+            if (forcedSamplerIndex > -1)
+            {
+                texSet = forcedSamplerIndex;
+            }
+
+            setTexture(texSet, handle, t->handle);
+        }
+        break;
         case tmgl::UniformType::End:
             break;
         case tmgl::UniformType::Vec4:
