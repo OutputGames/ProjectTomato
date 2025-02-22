@@ -126,7 +126,7 @@ float tmt::math::angleBetween(glm::vec2 a, glm::vec2 b)
 {
     var difference = a - b;
 
-    var angle = glm::atan2(difference.y, difference.x);
+    var angle = std::atan2(difference.x, difference.y);
 
     return angle;
 }

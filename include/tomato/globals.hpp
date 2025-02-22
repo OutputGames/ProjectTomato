@@ -3,7 +3,6 @@
 
 #include "tomato.hpp"
 #include "utils.hpp"
-#include "bimg/include/bimg/bimg.h"
 #include "bx/math.h"
 #ifndef STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"

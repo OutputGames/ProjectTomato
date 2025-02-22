@@ -60,7 +60,7 @@ using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
 
-using ulong = unsigned long long;
+//using ulong = unsigned long long;
 using uint = unsigned int;
 using ushort = unsigned short;
 using byte = unsigned char;
@@ -189,7 +189,12 @@ namespace glm
 #include "vertex.h"
 //#include "bgfx/src/debug_renderdoc.h"
 
-#include "bullet3/src/btBulletDynamicsCommon.h"
+#ifndef __SWITCH__
+#include "bullet/src/btBulletDynamicsCommon.h"
+#else
+#include "bullet/btBulletDynamicsCommon.h"
+#endif
+
 
 #include "vertex.h"
 

@@ -3083,8 +3083,10 @@ RendererInfo* tmt::render::init(int width, int height)
 
     tmgl::Init init;
 
+    #ifdef _WIN32_
     init.platformData.nwh = glfwGetWin32Window(window);
     //init.platformData.ndt = glfwGetWin32Window(window);
+    #endif
 
     init.windowWidth = static_cast<uint32_t>(width);
     init.windowHeight = static_cast<uint32_t>(height);

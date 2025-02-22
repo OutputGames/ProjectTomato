@@ -34,7 +34,7 @@ namespace tmt::audio
             bool useSpatialization = true;
         };
 
-        static Sound* CreateSound(string path, SoundInitInfo info = {});
+        static Sound* CreateSound(string path, SoundInitInfo info);
 
         ~Sound();
 
@@ -43,7 +43,7 @@ namespace tmt::audio
 
     private:
         friend struct AudioPlayer;
-        Sound(string path, SoundInitInfo info = {});
+        Sound(string path, SoundInitInfo info);
 
 
     };

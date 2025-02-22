@@ -13,7 +13,6 @@ namespace tmt::render
 namespace tmt::prim
 {
 
-    enum PrimitiveType;
 
     enum PrimitiveType
     {

@@ -8,7 +8,6 @@
 namespace tmt::debug
 {
 
-    enum DebugCallType;
     struct DebugCall;
     struct Gizmos;
 

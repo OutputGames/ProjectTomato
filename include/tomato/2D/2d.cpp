@@ -2,7 +2,6 @@
 
 #include "globals.hpp"
 #include "Time/time.hpp"
-#include "box2d/box2d.h"
 
 using namespace tmt::engine2D;
 

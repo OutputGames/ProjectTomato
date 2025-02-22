@@ -99,6 +99,7 @@ tmt::net::NetServer::~NetServer()
 
 void tmt::net::NetServer::process()
 {
+
     ENetEvent event;
     while (enet_host_service(server, &event, 0) > 0)
     {
@@ -157,6 +158,7 @@ void tmt::net::NetServer::disconnectClient(u16 clientId)
 
 void tmt::net::init()
 {
+
     if (enet_initialize() != 0)
     {
         fprintf(stderr, "An error occurred while initializing ENet.\n");

@@ -47,7 +47,6 @@ namespace tmt::physics
 
     struct CollisionCallback;
     struct PhysicalWorld;
-    enum CollisionShape;
     struct ColliderInitInfo;
     struct CollisionBase;
     struct Collision;

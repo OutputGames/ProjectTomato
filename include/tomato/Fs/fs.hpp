@@ -19,7 +19,6 @@ using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
 
-using ulong = unsigned long long;
 using uint = unsigned int;
 using ushort = unsigned short;
 using byte = unsigned char;
@@ -173,7 +172,7 @@ namespace tmt::fs
         }
 
         template <typename T>
-        std::vector<T> ReadArray(ulong offset, int count)
+        std::vector<T> ReadArray(unsigned long long offset, int count)
         {
             long p = tellg();
 
@@ -246,7 +245,7 @@ namespace tmt::fs
         }
 
 
-        void Skip(int count) { seekg(count, std::ios::_Seekcur); }
+        void Skip(int count) { seekg(count, std::ios::cur); }
 
         float ReadSingle() { return Read<float>(); }
 
@@ -269,11 +268,11 @@ namespace tmt::fs
 
         size_t fileSize;
 
-        void SeekBegin(int pos) { seekg(pos, std::ios::_Seekbeg); }
+        void SeekBegin(int pos) { seekg(pos, std::ios::beg); }
 
-        void SeekCurrent(int pos) { seekg(pos, std::ios::_Seekcur); }
+        void SeekCurrent(int pos) { seekg(pos, std::ios::cur); }
 
-        void Align(int alignment) { seekg((-tellg() % alignment + alignment) % alignment, std::ios::_Seekcur); }
+        void Align(int alignment) { seekg((-tellg() % alignment + alignment) % alignment, std::ios::cur); }
 
         BinaryDataReader(char* data)
         {
@@ -334,10 +333,10 @@ namespace tmt::fs
         {
             switch (dir)
             {
-                case std::ios::_Seekbeg:
+                case std::ios::beg:
                     position_ = position;
                     break;
-                case std::ios::_Seekcur:
+                case std::ios::cur:
                     position_ += position;
                     break;
                 default:
@@ -394,7 +393,7 @@ namespace tmt::fs
         }
 
         template <typename T>
-        std::vector<T> ReadArray(ulong offset, int count)
+        std::vector<T> ReadArray(unsigned long long offset, int count)
         {
             long p = tellg();
 
@@ -469,7 +468,7 @@ namespace tmt::fs
 
         void Skip(int count)
         {
-            seekg(count, std::ios::_Seekcur);
+            seekg(count, std::ios::cur);
         }
 
         float ReadSingle()
@@ -505,15 +504,12 @@ namespace tmt::fs
 
         void SeekBegin(int pos)
         {
-            seekg(pos, std::ios::_Seekbeg);
+            seekg(pos, std::ios::beg);
         }
 
-        void SeekCurrent(int pos) { seekg(pos, std::ios::_Seekcur); }
+        void SeekCurrent(int pos) { seekg(pos, std::ios::cur); }
 
-        void Align(int alignment)
-        {
-            seekg((-tellg() % alignment + alignment) % alignment, _Seekcur);
-        }
+        void Align(int alignment) { seekg((-tellg() % alignment + alignment) % alignment, cur); }
 
         BinaryReader(std::string path) :
             std::ifstream(path, std::ios::binary)
