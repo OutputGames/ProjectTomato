@@ -3052,6 +3052,7 @@ RendererInfo* tmt::render::init(int width, int height)
 
 #ifndef TMGL_BGFX
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 #endif
 
     tmgl::Init init;
@@ -3063,14 +3064,16 @@ RendererInfo* tmt::render::init(int width, int height)
     init.windowHeight = static_cast<uint32_t>(height);
 
     init.vendorId = TMGL_PCI_ID_NVIDIA;
+#ifdef TMGL_BGFX
+    init.type = bgfx::RendererType::OpenGL;
+#endif
+
 
 #ifndef TMGL_BGFX
     init.platformData.window = window;
     init.platformData.proc = (GLADloadproc)glfwGetProcAddress;
     init.platformData.swap = (TMGLSwapProc)glfwSwapBuffers;
 #endif
-
-    //init.type = tmgl::RendererType::Direct3D11;
 
     tmgl::init(init);
 
