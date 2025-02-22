@@ -3106,8 +3106,8 @@ RendererInfo* tmt::render::init(int width, int height)
     }
 
     GetPrimitive(prim::Cube);
-    GetPrimitive(prim::Sphere);
-    GetPrimitive(prim::Quad);
+    //GetPrimitive(prim::Sphere);
+    //GetPrimitive(prim::Quad);
 
     var white =
         new Texture(10, 10, tmgl::TextureFormat::RGB8, 0, tmgl::copy(whiteData.data(), whiteData.size()), "White");
