@@ -87,6 +87,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
 
         if (system->collision.useColliders)
         {
+#ifndef __SWITCH__
             particle->pId = physicalBodies.size();
             particle->_callback = physics::ParticleCollisionCallback();
             particle->_callback.particle = particle;
@@ -131,6 +132,7 @@ void tmt::particle::ParticleEmitter::Emit(int amount)
             managed_particles.push_back(particle);
 
             rigidBody->applyCentralImpulse(convertVec3(GetForward() * system->startSpeed));
+#endif
         }
         else
         {
@@ -179,6 +181,7 @@ void tmt::particle::ParticleEmitter::Update()
         {
             particle->lifetime -= time::getDeltaTime();
 
+#ifndef __SWITCH__
             if (particle->pId == -1)
             {
                 particle->position += particle->velocity * system->startSpeed * time::getDeltaTime();
@@ -190,6 +193,8 @@ void tmt::particle::ParticleEmitter::Update()
                 particle->rotation = convertQuatEuler(body->getWorldTransform().getRotation());
                 particle->velocity = convertVec3(body->getLinearVelocity());
             }
+#endif
+
         }
 
         if (particle->lifetime <= 0)

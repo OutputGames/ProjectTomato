@@ -5,6 +5,8 @@ using namespace tmt::physics;
 
 std::vector<OBB*> obbs;
 
+#ifndef __SWITCH__
+
 btScalar CollisionCallback::addSingleResult(btManifoldPoint& cp,
                                             const btCollisionObjectWrapper* colObj0Wrap, int partId0,
                                             int index0, const btCollisionObjectWrapper* colObj1Wrap,
@@ -172,9 +174,11 @@ btScalar ParticleCollisionCallback::addSingleResult(btManifoldPoint& cp,
 btCollisionDispatcher* dispatcher;
 btBroadphaseInterface* overlappingPairCache;
 btSequentialImpulseConstraintSolver* solver;
+#endif
 
 PhysicalWorld::PhysicalWorld()
 {
+#ifndef __SWITCH__
     auto configuration = new btDefaultCollisionConfiguration();
 
     dispatcher = new btCollisionDispatcher(configuration);
@@ -188,10 +192,12 @@ PhysicalWorld::PhysicalWorld()
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
     SetLayerMask(BIT(0), {BIT(0), BIT(1), BIT(2), BIT(3), BIT(4), BIT(5)});
+#endif
 }
 
 PhysicalWorld::~PhysicalWorld()
 {
+#ifndef __SWITCH__
     delete dynamicsWorld;
     delete solver;
     delete overlappingPairCache;
@@ -200,6 +206,7 @@ PhysicalWorld::~PhysicalWorld()
     dynamicsWorld = nullptr;
 
     doneFirstPhysicsUpdate = true;
+#endif
 }
 
 void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
@@ -239,6 +246,7 @@ void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
 
 void PhysicalWorld::Update()
 {
+#ifndef __SWITCH__
     if (!dynamicsWorld)
         return;
     dynamicsWorld->stepSimulation(1.0 / 6.0f, 1);
@@ -509,12 +517,14 @@ void PhysicalWorld::Update()
     {
         value->center += value->velocity * (1.0f / 60.0f);
     }
+#endif
 
     doneFirstPhysicsUpdate = true;
 }
 
 void PhysicalWorld::RemoveBody(int pid, int cpid)
 {
+#ifndef __SWITCH__
     dynamicsWorld->removeRigidBody(physicalBodies[pid]);
 
     physicalBodies.erase(physicalBodies.begin() + pid);
@@ -539,11 +549,13 @@ void PhysicalWorld::RemoveBody(int pid, int cpid)
             managed_particle->cPID--;
         }
     }
+#endif
 }
 
 
 std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody* collider)
 {
+#ifndef __SWITCH__
     {
         std::vector<PhysicsBody*> collisions;
 
@@ -579,8 +591,10 @@ std::vector<PhysicsBody*> PhysicalWorld::GetGameObjectsCollidingWith(PhysicsBody
                 collisions.push_back(static_cast<GameObject*>(cObj->getCollisionShape()->getUserPointer()));
         }
         return collisions;
-        */
+        *
+         */
     }
+#endif
 }
 
 void PhysicalWorld::SetLayerMask(int layer, std::vector<int> mask)
@@ -659,6 +673,7 @@ ColliderObject::ColliderObject()
 
 void ColliderObject::Init(ColliderInitInfo i)
 {
+#ifndef __SWITCH__
     initInfo = i;
     var shape = ShapeFromInfo(i);
     if (i.s == Mesh || scaleByObject)
@@ -671,10 +686,12 @@ void ColliderObject::Init(ColliderInitInfo i)
 
     pId = collisionObjs.size();
     collisionObjs.push_back(shape);
+#endif
 }
 
 void PhysicsBody::Init(ColliderObject* collisionObj, float mass)
 {
+#ifndef __SWITCH__
     if (!collisionObj->parent)
     {
         collisionObj->SetParent(this);
@@ -690,6 +707,8 @@ void PhysicsBody::Init(ColliderObject* collisionObj, float mass)
     callback_.collider = collisionObj;
 
     bodies.push_back(this);
+#endif
+
 }
 
 PhysicsBody::PhysicsBody(ColliderObject* collisionObj, float mass) :
@@ -705,6 +724,7 @@ PhysicsBody::PhysicsBody()
 
 void PhysicsBody::SetForward(glm::vec3 v)
 {
+#ifndef __SWITCH__
     Object::SetForward(v);
 
     if (pId >= physicalBodies.size())
@@ -720,10 +740,13 @@ void PhysicsBody::SetForward(glm::vec3 v)
 
         body->setWorldTransform(t);
     }
+#endif
+
 }
 
 void PhysicsBody::Update()
 {
+#ifndef __SWITCH__
     if (!parent)
         transRelation = Self;
 
@@ -830,6 +853,9 @@ void PhysicsBody::Update()
 
     // pBody->activate();
 
+#endif
+
+
     Object::Update();
 }
 
@@ -844,72 +870,91 @@ void PhysicsBody::SetVelocity(glm::vec3 v)
 
 glm::vec3 PhysicsBody::GetVelocity()
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return glm::vec3{0};
     var pBody = physicalBodies[pId];
 
     return convertVec3(pBody->getLinearVelocity());
+#endif
+    return glm::vec3(0);
 }
 
 void PhysicsBody::SetPushVelocity(glm::vec3 v)
 {
+#ifndef __SWITCH__
     var pBody = physicalBodies[pId];
 
     pBody->setPushVelocity(convertVec3(v));
+#endif
 }
 
 void PhysicsBody::SetAngular(glm::vec3 v)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->setAngularVelocity(convertVec3(v));
+#endif
 }
 
 void PhysicsBody::AddImpulse(glm::vec3 v)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->applyCentralImpulse(convertVec3(v));
+#endif
 }
 
 void PhysicsBody::AddForce(glm::vec3 v)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->applyCentralForce(convertVec3(v));
+#endif
+
 }
 
 void PhysicsBody::SetLinearFactor(glm::vec3 v)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->setLinearFactor(convertVec3(v));
+#endif
 }
 
 void PhysicsBody::SetAngularFactor(glm::vec3 v)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->setAngularFactor(convertVec3(v));
+#endif
+
 }
 
 void PhysicsBody::SetDamping(float linear, float angular)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
 
     pBody->setDamping(linear, angular);
+#endif
 }
 
 void PhysicsBody::AddCollisionEvent(std::function<void(Collision)> func)
@@ -928,6 +973,7 @@ void PhysicsBody::AddParticleCollisionEvent(std::function<void(ParticleCollision
 
 glm::vec3 PhysicsBody::GetBasisColumn(float v)
 {
+#ifndef __SWITCH__
     var pBody = physicalBodies[pId];
 
     var basis = pBody->getWorldTransform().getBasis();
@@ -935,10 +981,13 @@ glm::vec3 PhysicsBody::GetBasisColumn(float v)
     var vector = basis.getColumn(v);
 
     return convertVec3(vector);
+#endif
+    return glm::vec3(0);
 }
 
 glm::vec3 PhysicsBody::GetBasisRow(float v)
 {
+#ifndef __SWITCH__
     var pBody = physicalBodies[pId];
 
     var basis = pBody->getWorldTransform().getBasis();
@@ -946,18 +995,23 @@ glm::vec3 PhysicsBody::GetBasisRow(float v)
     var vector = basis.getRow(v);
 
     return convertVec3(vector);
+#endif
+    return glm::vec3(0);
 }
 
 void PhysicsBody::Reset()
 {
+#ifndef __SWITCH__
     var pBody = physicalBodies[pId];
 
     pBody->setAngularVelocity({0, 0, 0});
     pBody->setLinearVelocity({0, 0, 0});
+#endif
 }
 
 void PhysicsBody::SetPosition(glm::vec3 p)
 {
+#ifndef __SWITCH__
     if (pId >= physicalBodies.size())
         return;
     var pBody = physicalBodies[pId];
@@ -967,6 +1021,7 @@ void PhysicsBody::SetPosition(glm::vec3 p)
     tr.setOrigin(convertVec3(p));
 
     pBody->setWorldTransform(tr);
+#endif
 }
 
 PhysicsBody::~PhysicsBody()
@@ -992,6 +1047,7 @@ void PhysicsBody::OnParticleCollision(ParticleCollision c)
 
 RaycastHit* Ray::Cast()
 {
+#ifndef __SWITCH__
     auto start = convertVec3(position);
     auto end = convertVec3(position + (direction * maxDistance));
     btCollisionWorld::ClosestRayResultCallback callback(start, end);
@@ -1023,6 +1079,7 @@ RaycastHit* Ray::Cast()
 
         return hit;
     }
+#endif
     return nullptr;
 }
 

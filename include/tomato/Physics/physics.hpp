@@ -56,6 +56,7 @@ namespace tmt::physics
     struct Ray;
     struct RaycastHit;
 
+#ifndef __SWITCH__
     struct CollisionCallback : btCollisionWorld::ContactResultCallback
     {
         PhysicsBody* body;
@@ -76,6 +77,8 @@ namespace tmt::physics
                                  int index0,
                                  const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override;
     };
+#endif
+
 
     struct PhysicalWorld
     {
@@ -197,7 +200,9 @@ namespace tmt::physics
         friend PhysicalWorld;
         friend CollisionCallback;
 
+#ifndef __SWITCH__
         CollisionCallback callback_;
+#endif
 
         u16 pId = UINT16_MAX;
         u16 cPID = UINT16_MAX;

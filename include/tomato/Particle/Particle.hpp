@@ -1,126 +1,130 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-#include "utils.hpp" 
-#include "tomato/Render/render.hpp"
-#include "tomato/Physics/physics.hpp"
-#include "tomato/Render/render.hpp"
-#include "tomato/Physics/physics.hpp"
-#include "tomato/Physics/physics.hpp"
+#include "utils.hpp"
 #include "tomato/Obj/obj.hpp"
 #include "tomato/Physics/physics.hpp"
+#include "tomato/Physics/physics.hpp"
+#include "tomato/Physics/physics.hpp"
+#include "tomato/Physics/physics.hpp"
+#include "tomato/Render/render.hpp"
+#include "tomato/Render/render.hpp"
 
 
-namespace tmt::particle {
- struct Particle;
- }
-
-
-namespace tmt::particle {
-
-struct ParticleSystem;
-struct Particle;
-struct ParticleEmitter;
-
-struct ParticleSystem
+namespace tmt::particle
 {
-    float duration = 5;
-    bool looping = true;
+    struct Particle;
+}
 
-    float startSpeed = 1;
-    float startSize = 0.1;
-    float startLifetime = 5;
 
-    render::Color startColor;
+namespace tmt::particle
+{
 
-    struct SystemEmission
+    struct ParticleSystem;
+    struct Particle;
+    struct ParticleEmitter;
+
+    struct ParticleSystem
     {
-        float rateOverTime = 10;
-    } emission;
+        float duration = 5;
+        bool looping = true;
 
-    struct SystemShape
-    {
-        enum Shape
+        float startSpeed = 1;
+        float startSize = 0.1;
+        float startLifetime = 5;
+
+        render::Color startColor;
+
+        struct SystemEmission
         {
-            Cone
-        } type;
+            float rateOverTime = 10;
+        } emission;
 
-        float radius = 1;
-        float angle = 35;
-    } shape;
-
-    struct SystemCollision
-    {
-        bool useColliders;
-        physics::CollisionShape shape;
-        float mass = 1;
-
-        float lifetimeLoss;
-    } collision;
-
-    struct SystemRenderer
-    {
-        enum Mode
+        struct SystemShape
         {
-            Mesh
-        } mode;
+            enum Shape
+            {
+                Cone
+            } type;
 
-        render::Mesh *mesh = GetPrimitive(prim::Sphere);
+            float radius = 1;
+            float angle = 35;
+        } shape;
 
-        render::Material *material;
-    } renderer;
+        struct SystemCollision
+        {
+            bool useColliders;
+            physics::CollisionShape shape;
+            float mass = 1;
 
-    float maxParticles = 100;
+            float lifetimeLoss;
+        } collision;
 
-    bool playOnStart = true;
-};
+        struct SystemRenderer
+        {
+            enum Mode
+            {
+                Mesh
+            } mode;
 
-struct Particle
-{
-    glm::vec3 position, scale;
-    glm::quat rotation;
-    glm::vec3 velocity;
-    render::Color color;
-    float lifetime = 0;
+            render::Mesh* mesh = GetPrimitive(prim::Sphere);
 
-    glm::mat4 getTransform();
+            render::Material* material;
+        } renderer;
 
-    glm::vec3 GetUp();
-    glm::vec3 GetRight();
-    glm::vec3 GetForward();
+        float maxParticles = 100;
 
-    ParticleEmitter *emitterParent;
+        bool playOnStart = true;
+    };
 
-    void OnCollision(physics::Collision c);
-    void OnParticleCollision(physics::ParticleCollision c);
+    struct Particle
+    {
+        glm::vec3 position, scale;
+        glm::quat rotation;
+        glm::vec3 velocity;
+        render::Color color;
+        float lifetime = 0;
 
-    int pId = -1;
-    u16 cPID = -1;
-    physics::ParticleCollisionCallback _callback;
-};
+        glm::mat4 getTransform();
 
-struct ParticleEmitter : obj::Object
-{
-    ParticleSystem *system;
+        glm::vec3 GetUp();
+        glm::vec3 GetRight();
+        glm::vec3 GetForward();
 
-    ParticleEmitter();
+        ParticleEmitter* emitterParent;
 
-    void Emit(int amount = 1);
-    void Update() override;
+        void OnCollision(physics::Collision c);
+        void OnParticleCollision(physics::ParticleCollision c);
 
-  private:
-    friend Particle;
+        int pId = -1;
+        u16 cPID = -1;
+#ifndef __SWITCH__
+        physics::ParticleCollisionCallback _callback;
+#endif
+    };
 
-    std::vector<Particle *> particles;
-    float time = 0;
-    bool isPlaying = false;
-    float time_alloc = 0;
+    struct ParticleEmitter : obj::Object
+    {
+        ParticleSystem* system;
 
-    std::vector<std::function<void(physics::Collision)>> collisionEvents;
+        ParticleEmitter();
 
-    void OnCollision(physics::Collision c, Particle *p);
-};
-;
+        void Emit(int amount = 1);
+        void Update() override;
+
+    private:
+        friend Particle;
+
+        std::vector<Particle*> particles;
+        float time = 0;
+        bool isPlaying = false;
+        float time_alloc = 0;
+
+        std::vector<std::function<void(physics::Collision)>> collisionEvents;
+
+        void OnCollision(physics::Collision c, Particle* p);
+    };
+    ;
 
 }
 
