@@ -46,6 +46,7 @@ namespace tmt::audio
 
         void Play();
         void Stop();
+        void Pause();
 
     private:
         friend struct AudioPlayer;

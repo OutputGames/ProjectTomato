@@ -1,7 +1,7 @@
 #include "audio.hpp"
 
+#include "AudioFile.h"
 #include "Time/time.hpp"
-
 
 using namespace tmt::audio;
 
@@ -26,7 +26,8 @@ AudioDevice::AudioDevice()
 
 AudioDevice::~AudioDevice()
 {
-
+    alcDestroyContext(context);
+    alcCloseDevice(device);
 }
 
 void AudioDevice::Update()
@@ -61,7 +62,26 @@ void AudioDevice::RemoveListener(SoundListener* _listener)
 
 Sound::Sound(string path, SoundInitInfo info)
 {
+    AudioFile<s16> audioFile(path);
 
+    var buffer = new s16[audioFile.getNumSamplesPerChannel() * 1];
+
+    int channel = 0;
+    int numSamples = audioFile.getNumSamplesPerChannel();
+
+    for (int i = 0; i < numSamples; i++)
+    {
+        s16 currentSample = audioFile.samples[channel][i];
+
+        buffer[i] = currentSample;
+    }
+
+    alGenBuffers(1, &this->buffer);
+    alGenSources(1, &source);
+
+    alBufferData(this->buffer, AL_FORMAT_MONO16, buffer, audioFile.getNumSamplesPerChannel() * sizeof(s16),
+                 audioFile.getSampleRate());
+    alSourcei(source, AL_BUFFER, this->buffer);
 
     fs::ResourceManager::pInstance->loaded_sounds[info.name] = this;
 }
@@ -104,12 +124,17 @@ Sound::~Sound()
 
 void Sound::Play()
 {
-
+    alSourcePlay(source);
 }
 
 void Sound::Stop()
 {
+    alSourceStop(source);
+}
 
+void Sound::Pause()
+{
+    alSourcePause(source);
 }
 
 SoundListener::SoundListener() { mInstance->AddListener(this); }
