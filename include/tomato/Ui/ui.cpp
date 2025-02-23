@@ -9,7 +9,7 @@ SpriteObject* MakeCorner(glm::vec2 pos)
     var sprite = new SpriteObject();
     sprite->scale = glm::vec3(10);
     sprite->position = glm::vec3(pos, 0);
-    sprite->mainColor = tmt::render::Color::Red;
+    sprite->mainColor = tmt::render::Color::Blue;
 
     return sprite;
 }
@@ -478,8 +478,6 @@ void TextObject::Update()
         var c = font->characters[value];
 
 
-        x -= (static_cast<int>(c.advance) >> 6) * scl;
-
         var drawCall = render::DrawCall();
 
         drawCall.layer = layer;
@@ -491,8 +489,10 @@ void TextObject::Update()
         float xPos = x + c.bearing.x * scl;
         float yPos = y - (c.size.y - c.bearing.y) * scl;
 
-        //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
 
+        x -= static_cast<float>(static_cast<int>(c.advance) >> 6) * scl;
+
+        //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
         drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(size));
 
