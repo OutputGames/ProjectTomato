@@ -3,6 +3,17 @@
 
 using namespace tmt::ui;
 
+
+SpriteObject* MakeCorner(glm::vec2 pos)
+{
+    var sprite = new SpriteObject();
+    sprite->scale = glm::vec3(10);
+    sprite->position = glm::vec3(pos, 0);
+    sprite->mainColor = tmt::render::Color::Red;
+
+    return sprite;
+}
+
 glm::vec2 Rect::getMin()
 {
     return glm::vec2(x + (width / 2), y + (height / 2));
@@ -122,6 +133,31 @@ bool Rect::isRectColliding(Rect r)
     return true;
 }
 
+void SpriteObject::Start()
+{
+    Object::Start();
+
+    /*
+    if (name == "menu")
+    {
+
+        var gpos = GetGlobalPosition();
+        var gscl = GetGlobalScale();
+        var rect = Rect{gpos.x, gpos.y, gscl.x, gscl.y};
+
+        var min = rect.getMin();
+        var max = rect.getMax();
+
+        // var corner1 = MakeCorner(glm::vec2(min.x, min.y));
+        // var corner2 = MakeCorner(glm::vec2(max.x, min.y));
+        // var corner3 = MakeCorner(glm::vec2(max.x, max.y));
+        // var corner4 = MakeCorner(glm::vec2(min.x, max.y));
+
+        var center = MakeCorner(mix(min, max, 0.5));
+    }
+    */
+}
+
 SpriteObject::SpriteObject()
 {
     var initInfo = render::ShaderInitInfo{
@@ -216,15 +252,6 @@ void SpriteObject::Update()
     Object::Update();
 }
 
-SpriteObject* MakeCorner(glm::vec2 pos)
-{
-    var sprite = new SpriteObject();
-    sprite->scale = glm::vec3(10);
-    sprite->position = glm::vec3(pos, 0);
-    sprite->mainColor = tmt::render::Color::Red;
-
-    return sprite;
-}
 
 void ButtonObject::Start()
 {

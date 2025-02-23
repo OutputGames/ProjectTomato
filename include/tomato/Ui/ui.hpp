@@ -40,6 +40,7 @@ namespace tmt::ui
         bool copyAlpha = true;
         int layer = 0;
 
+        void Start() override;
         SpriteObject();
         SpriteObject(string path);
         void Update() override;
