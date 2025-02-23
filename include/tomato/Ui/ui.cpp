@@ -235,12 +235,12 @@ void ButtonObject::Start()
     var min = rect.getMin();
     var max = rect.getMax();
 
-    var corner1 = MakeCorner(glm::vec2(min.x, min.y));
-    var corner2 = MakeCorner(glm::vec2(max.x, min.y));
-    var corner3 = MakeCorner(glm::vec2(max.x, max.y));
-    var corner4 = MakeCorner(glm::vec2(min.x, max.y));
+    //var corner1 = MakeCorner(glm::vec2(min.x, min.y));
+    //var corner2 = MakeCorner(glm::vec2(max.x, min.y));
+    //var corner3 = MakeCorner(glm::vec2(max.x, max.y));
+    //var corner4 = MakeCorner(glm::vec2(min.x, max.y));
 
-    var center = MakeCorner(mix(min, max, 0.5));
+    //var center = MakeCorner(mix(min, max, 0.5));
 
     sprite = dynamic_cast<SpriteObject*>(parent);
     origTexture = sprite->mainTexture;
