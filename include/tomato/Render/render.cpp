@@ -2431,7 +2431,7 @@ Texture::Texture(aiTexel* texels, int width, int height)
 Texture::Texture(string path, bool isCubemap)
 {
 
-    uint64_t textureFlags = TMGL_SAMPLER_U_MIRROR | TMGL_SAMPLER_V_MIRROR | TMGL_SAMPLER_POINT;
+    uint64_t textureFlags = TMGL_SAMPLER_POINT;
     // Adjust as needed
     if (!isCubemap)
     {

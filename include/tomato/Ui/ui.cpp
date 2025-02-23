@@ -240,7 +240,7 @@ void ButtonObject::Start()
     var corner3 = MakeCorner(glm::vec2(max.x, max.y));
     var corner4 = MakeCorner(glm::vec2(min.x, max.y));
 
-    //cursor = MakeCorner(glm::vec2(0));
+    var center = MakeCorner(mix(min, max, 0.5));
 
     sprite = dynamic_cast<SpriteObject*>(parent);
     origTexture = sprite->mainTexture;
