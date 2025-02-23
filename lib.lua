@@ -11,6 +11,7 @@ local GLFW_DIR = "vendor/glfw/"
 local IMGUI_DIR = "vendor/dear-imgui/"
 local MINI_DIR = "vendor/miniaudio/"
 local RECAST_DIR = "C:/RecastNavigation/"
+local AL_DIR = "C:/Program Files (x86)/OpenAL"
 local TMGL_DIR = "D:/Code/ImportantRepos/tmgl/"
 
 local BULLET_LIBS = {
@@ -69,6 +70,7 @@ end
             path.join(BGFX_DIR, "include"),
             path.join(GLFW_DIR, "include"),
             path.join(TMGL_DIR, "include"),
+            path.join(AL_DIR, "include"),
             path.join(MINI_DIR,"extras/miniaudio_split/"),
             "include/",
             "vendor/glm/",
@@ -80,10 +82,11 @@ end
             --IMGUI_DIR,
             "vendor/enet/include/",
             "vendor/box2d/include/",
-            "vendor/freetype/"
+            "vendor/freetype/",
+            
         }
 
-        libdirs { "vendor/bgfx/.build/win64_vs2022/bin/" }
+        libdirs { "vendor/bgfx/.build/win64_vs2022/bin/", path.join(AL_DIR, "libs/Win64/"), }
     
 
         defines {"_CRT_SECURE_NO_WARNINGS", "GENERATOR_USE_GLM",  "TOMATO_DLLBUILD",'MONO_HOME="C:/Program Files/Mono/"', 'MSBUILD_HOME="C:/Windows/Microsoft.NET/Framework/v4.0.30319/"', 'RENDERDOC_HOME="C:/Program Files/RenderDoc"'}
@@ -98,7 +101,7 @@ end
 
         
         libdirs { "vendor/freetype/lib/" }
-        links {"freetype"}
+        links {"freetype", "OpenAL32"}
 
         removefiles { "include/testproject/**"}
 
@@ -130,7 +133,6 @@ end
             libdirs {"vendor/assimp/lib/Debug/", "vendor/bullet3/lib/Debug/"}
             
             for _, lib in ipairs(BULLET_LIBS) do
-                print(lib)
                 links { lib .. "_Debug" }
             end
 

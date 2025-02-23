@@ -18,6 +18,10 @@ AudioDevice::AudioDevice()
 {
     mInstance = this;
 
+
+    device = alcOpenDevice(nullptr);
+    context = alcCreateContext(device, nullptr);
+    alcMakeContextCurrent(context);
 }
 
 AudioDevice::~AudioDevice()
@@ -60,6 +64,20 @@ Sound::Sound(string path, SoundInitInfo info)
 
 
     fs::ResourceManager::pInstance->loaded_sounds[info.name] = this;
+}
+
+AudioBuffer::AudioBuffer(s16* buffer, u16 size, u16 frequency)
+{
+    alGenBuffers(1, &this->buffer);
+    alGenSources(1, &source);
+
+    alBufferData(this->buffer, AL_FORMAT_MONO16, buffer, size, frequency);
+    alSourcei(source, AL_BUFFER, this->buffer);
+}
+
+void AudioBuffer::push()
+{
+    alSourcePlay(source);
 }
 
 Sound* Sound::CreateSound(string path, SoundInitInfo info)

@@ -4,11 +4,14 @@
 
 #include <tomato/utils.hpp>
 
+#include <al.h>
+#include <alc.h>
 #include "Obj/obj.hpp"
 
 namespace tmt::audio
 {
     struct SoundListener;
+
 
     struct AudioDevice
     {
@@ -23,6 +26,9 @@ namespace tmt::audio
 
     private:
         std::vector<SoundListener*> listeners;
+
+        ALCdevice* device;
+        ALCcontext* context;
 
     };
 
@@ -45,7 +51,20 @@ namespace tmt::audio
         friend struct AudioPlayer;
         Sound(string path, SoundInitInfo info);
 
+        ALuint buffer, source;
 
+    };
+
+    struct AudioBuffer
+    {
+        AudioBuffer(s16* buffer, u16 size, u16 frequency);
+
+        void push();
+
+    private:
+        friend struct AudioPLayer;
+
+        ALuint buffer, source;
     };
 
     struct SoundListener : obj::Object
