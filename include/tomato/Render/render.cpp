@@ -1,10 +1,10 @@
 #include "render.hpp"
 #include "globals.hpp"
 #include "vertex.h"
-//#include "common/imgui/imgui.h"
 
 #include <ft2build.h>
 #include <bx/timer.h>
+
 
 #include FT_FREETYPE_H
 
@@ -2466,6 +2466,20 @@ Texture::Texture(string path, bool isCubemap)
             }
             rgbaData = data;
         }
+        else if (nrChannels == 2)
+        {
+            delete[] rgbaData;
+            dataSize = width * height * 4;
+            rgbaData = new unsigned char[dataSize];
+            for (int i = 0; i < width * height; ++i)
+            {
+                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+                rgbaData[i * 4 + 2] = 0.0f;
+                rgbaData[i * 4 + 3] = 1.0f;
+            }
+            rgbaData = data;
+        }
 
 
         tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
@@ -3179,31 +3193,31 @@ void tmt::render::update()
         }
     }
     tmgl::setDebug(TMGL_DEBUG_TEXT);
+    */
+
 
     u8 btn = ((input::Mouse::GetMouseButton(input::Mouse::Left, true) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
         ((input::Mouse::GetMouseButton(input::Mouse::Right, true) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |
         ((input::Mouse::GetMouseButton(input::Mouse::Middle, true) == input::Mouse::Hold) ? IMGUI_MBUT_MIDDLE : 0);
     glfwGetWindowSize(renderer->window, &renderer->windowWidth, &renderer->windowHeight);
 
-    
+
     if (renderer->useImgui)
     {
-
-
-        imguiBeginFrame(mousep.x, mousep.y, btn, input::Mouse::GetMouseScroll().y,
-                        static_cast<u16>(renderer->windowWidth),
-                        static_cast<u16>(renderer->windowHeight), input::GetLastKey());
-
+        tmgl::imgui::beginFrame(mousep.x, mousep.y, btn, input::Mouse::GetMouseScroll().y,
+                                static_cast<u16>(renderer->windowWidth), static_cast<u16>(renderer->windowHeight),
+                                input::GetLastKey());
         {
+
             for (auto debug_func : debugFuncs)
             {
                 debug_func();
             }
         }
 
-        imguiEndFrame();
+        tmgl::imgui::endFrame();
     }
-    */
+
 
     float proj[16];
     float ortho[16];
