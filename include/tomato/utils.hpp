@@ -49,6 +49,7 @@
 #define RAD2DEG (180.0f/PI)
 #endif
 #include <cstdint>
+#include <glm/fwd.hpp>
 
 using u8 = uint8_t;
 using u16 = uint16_t;
@@ -59,6 +60,8 @@ using s8 = int8_t;
 using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
+
+using f32 = glm::float32_t;
 
 //using ulong = unsigned long long;
 using uint = unsigned int;
