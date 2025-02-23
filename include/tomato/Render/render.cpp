@@ -2451,7 +2451,7 @@ Texture::Texture(string path, bool isCubemap)
                 rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
                 rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
                 rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
-                rgbaData[i * 4 + 3] = 1.0f; // Add alpha channel with value 1.0
+                rgbaData[i * 4 + 3] = 255; // Add alpha channel with value 1.0
             }
             nrChannels = 4;
         }
@@ -2475,14 +2475,15 @@ Texture::Texture(string path, bool isCubemap)
             {
                 rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
                 rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
-                rgbaData[i * 4 + 2] = 0.0f;
-                rgbaData[i * 4 + 3] = 1.0f;
+                rgbaData[i * 4 + 2] = 0;
+                rgbaData[i * 4 + 3] = data[i * nrChannels + 1];
             }
-            rgbaData = data;
         }
 
 
         tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
+
+        var s = sizeof(rgbaData);
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
