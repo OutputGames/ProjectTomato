@@ -2788,7 +2788,7 @@ Font::Font(string path)
 
     FT_GlyphSlot slot = face->glyph; // <-- This is new
 
-    for (unsigned char c = 0; c < 100; c++)
+    for (unsigned char c = 0; c < 128; c++)
     {
         // load character glyph
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
@@ -3083,10 +3083,11 @@ RendererInfo* tmt::render::init(int width, int height)
 
     tmgl::Init init;
 
-    #ifdef _WIN32_
+
+#ifdef WIN32
     init.platformData.nwh = glfwGetWin32Window(window);
     //init.platformData.ndt = glfwGetWin32Window(window);
-    #endif
+#endif
 
     init.windowWidth = static_cast<uint32_t>(width);
     init.windowHeight = static_cast<uint32_t>(height);
