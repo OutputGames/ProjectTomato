@@ -469,11 +469,6 @@ void TextObject::Update()
 
     for (char value : text)
     {
-        if (value == ' ' || value == '\0')
-        {
-            x -= (20 * spacing);
-            continue;
-        }
 
         var c = font->characters[value];
 
@@ -486,11 +481,17 @@ void TextObject::Update()
 
         drawCall.transformMatrix = transform;
 
-        float xPos = x + c.bearing.x * scl;
+
+        float xPos = x - c.bearing.x * scl;
         float yPos = y - (c.size.y - c.bearing.y) * scl;
 
+        x -= (c.advance >> 6) * scl;
 
-        x -= static_cast<float>(static_cast<int>(c.advance) >> 6) * scl;
+        if (value == ' ' || value == '\0')
+        {
+            //x -= (20 * spacing);
+            continue;
+        }
 
         //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));

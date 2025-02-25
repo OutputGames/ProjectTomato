@@ -2715,15 +2715,15 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
 
     for (char value : text)
     {
-        if (value == ' ' || value == '\0')
-        {
-            size += (20) * scl;
-            continue;
-        }
+
 
         var c = characters[value];
 
-        size += (static_cast<int>(c.advance) >> 6) * scl;
+        float xPos = size - c.bearing.x * scl;
+
+        //size -= xPos;
+
+        size -= (c.advance >> 6) * scl;
     }
 
     size -= fontSize;
@@ -2857,10 +2857,8 @@ Font::Font(string path)
 
         var vbh = createVertexBuffer(tmgl::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
 
-        float advance = static_cast<float>(face->glyph->advance.x);
-
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), advance,
+                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
                                tex, vbh};
         characters.insert(std::pair<char, Character>(c, character));
     }
