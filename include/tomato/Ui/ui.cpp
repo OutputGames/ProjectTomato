@@ -455,9 +455,11 @@ void TextObject::Update()
     var textSize = font->CalculateTextSize(text, size, spacing);
 
     if (HorizontalAlign == Left)
-        x += (textSize / 2);
+        x -= (textSize / 2);
     else if (HorizontalAlign == Right)
-        x += textSize / 2;
+        x += (textSize / 2) + size;
+    else if (HorizontalAlign == Center)
+        x += (size / 2);
 
     float y = 0;
 
