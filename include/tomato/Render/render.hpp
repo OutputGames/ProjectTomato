@@ -624,7 +624,7 @@ namespace tmt::render
         {
             glm::ivec2 size;
             glm::ivec2 bearing;
-            uint advance;
+            unsigned int advance;
             Texture* handle;
             tmgl::VertexBufferHandle vbh;
         };

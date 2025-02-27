@@ -2716,6 +2716,12 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
     for (char value : text)
     {
 
+        if (value == ' ' || value == '\0')
+        {
+            size -= (size * spacing) * (1.0 / scl);
+            continue;
+        }
+
 
         var c = characters[value];
 
@@ -2728,7 +2734,7 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
 
     size -= fontSize;
 
-    //size = 0;
+    size = -size;
 
     return size;
 }

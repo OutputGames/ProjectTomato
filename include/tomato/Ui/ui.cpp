@@ -454,10 +454,10 @@ void TextObject::Update()
     float x = 0;
     var textSize = font->CalculateTextSize(text, size, spacing);
 
-    if (HorizontalAlign == Center)
-        x += textSize / 2;
+    if (HorizontalAlign == Left)
+        x += (textSize / 2);
     else if (HorizontalAlign == Right)
-        x += textSize;
+        x += textSize / 2;
 
     float y = 0;
 
@@ -467,8 +467,17 @@ void TextObject::Update()
 
     scl *= (size / 16);
 
+    //scl = 1;
+
+    int textIdx = 0;
     for (char value : text)
     {
+
+        if (value == ' ' || value == '\0')
+        {
+            x -= (size * spacing) * (1.0 / scl);
+            continue;
+        }
 
         var c = font->characters[value];
 
@@ -482,16 +491,11 @@ void TextObject::Update()
         drawCall.transformMatrix = transform;
 
 
-        float xPos = x - c.bearing.x * scl;
+        float xPos = x + c.bearing.x * scl;
         float yPos = y - (c.size.y - c.bearing.y) * scl;
 
         x -= (c.advance >> 6) * scl;
 
-        if (value == ' ' || value == '\0')
-        {
-            //x -= (20 * spacing);
-            continue;
-        }
 
         //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
@@ -521,6 +525,8 @@ void TextObject::Update()
             drawCall.overrides = nullptr;
 
         pushDrawCall(drawCall);
+
+        textIdx++;
     }
 
     Object::Update();
