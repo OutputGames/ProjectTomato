@@ -179,6 +179,8 @@ SpriteObject::SpriteObject(string path) :
     SpriteObject()
 {
     mainTexture = render::Texture::CreateTexture(path);
+
+    scale = {mainTexture->width, mainTexture->height, 1};
 }
 
 void SpriteObject::Update()
