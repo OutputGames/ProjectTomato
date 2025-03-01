@@ -454,7 +454,7 @@ namespace tmt::render
             std::vector<Node*> GetAllChildren();
         };
 
-        string name;
+        string name, path;
         std::vector<Model*> models;
         Node* rootNode = nullptr;
 

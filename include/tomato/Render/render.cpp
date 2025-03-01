@@ -1016,6 +1016,8 @@ SceneDescription::SceneDescription(string path)
         std::cout << "Scene does not exist! " << path << std::endl;
     }
 
+    this->path = path;
+
     if (path.ends_with(".tmdl"))
     {
         var reader = new fs::BinaryReader(path);
@@ -1909,28 +1911,62 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                         var _tex = scene->GetEmbeddedTexture(path.C_Str());
 
 
-                        if (!_tex)
-                        {
+                        Texture* tex = nullptr;
 
-                            continue;
+                        if (_tex)
+                        {
+                            tex = GetTextureFromName(_tex->mFilename.C_Str());
+
+                            if (!tex)
+                            {
+                                tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
+
+                                if (isValid(tex->handle))
+                                {
+                                    tex->name = _tex->mFilename.C_Str();
+
+                                    textures.push_back(tex);
+                                }
+                                else
+                                {
+                                    tex = nullptr;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (description)
+                            {
+                                var fpath = std::filesystem::path(description->path).parent_path();
+
+                                string _path = path.C_Str();
+
+                                if (type == aiTextureType_DIFFUSE && _path.ends_with("_NRM.png"))
+                                {
+                                    _path.erase(_path.find("_NRM"), 4);
+                                }
+
+                                var file = std::filesystem::path(_path);
+
+
+                                tex = Texture::CreateTexture(fpath.string() + "/" + file.string());
+
+                                if (tex)
+                                {
+
+
+                                    if (isValid(tex->handle))
+                                    {
+
+                                        textures.push_back(tex);
+                                    }
+                                }
+
+                            }
+
+
                         }
 
-                        Texture* tex = GetTextureFromName(_tex->mFilename.C_Str());
-                        if (!tex)
-                        {
-                            tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
-
-                            if (isValid(tex->handle))
-                            {
-                                tex->name = _tex->mFilename.C_Str();
-
-                                textures.push_back(tex);
-                            }
-                            else
-                            {
-                                tex = nullptr;
-                            }
-                        }
                         if (tex)
                             desc->Textures.insert(std::make_pair(typeName, tex->name));
                     }
@@ -2639,6 +2675,9 @@ Texture* Texture::CreateTexture(string path, bool isCubemap)
         return ResMgr->loaded_textures[path];
     }
 
+    if (!std::filesystem::exists(path))
+        return nullptr;
+
     return new Texture(path, isCubemap);
 }
 
@@ -2725,7 +2764,8 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
 
         if (value == ' ' || value == '\0')
         {
-            size -= (size * forcedSpacing) * (1.0 / scl);
+            var d = (fontSize * forcedSpacing) * (1.0f / scl);
+            size -= d;
             continue;
         }
 
@@ -3540,4 +3580,3 @@ void tmgl::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 
     delete[] arr;
 }
-                         
