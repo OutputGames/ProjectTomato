@@ -2534,7 +2534,7 @@ Texture::Texture(string path, bool isCubemap)
         format = textureFormat;
 
         var fpath = std::filesystem::path(path);
-        name = fpath.filename().string();
+        name = fpath.stem().string();
 
         stbi_image_free(data);
     }
@@ -2542,6 +2542,8 @@ Texture::Texture(string path, bool isCubemap)
     {
 
     }
+
+    fs::ResourceManager::pInstance->loaded_textures.insert(std::make_pair(name, this));
 
 }
 

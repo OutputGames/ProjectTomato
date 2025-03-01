@@ -138,6 +138,17 @@ namespace std
         return random_string;
     }
 
+    namespace filesystem
+    {
+        inline std::string getFilenameWithoutExtension(const std::string& pathString)
+        {
+            path filePath(pathString);
+            std::string filename = filePath.filename().string();
+            std::string stem = filePath.stem().string();
+            return stem;
+        }
+    }
+
 }
 
 namespace glm
