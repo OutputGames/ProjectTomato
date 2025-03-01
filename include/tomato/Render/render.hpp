@@ -575,19 +575,19 @@ namespace tmt::render
 
         int width, height;
 
-        static Texture* CreateTexture(string path, bool isCubemap = false);
+        static Texture* CreateTexture(string path, bool isCubemap = false, u64 textureFlags = 0);
 
         Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags = 0, const tmgl::Memory* mem = nullptr,
                 string name = "");
 
         Texture(tmgl::TextureHandle handle);
-        Texture(aiTexel* texels, int width, int height);
+        Texture(aiTexel* texels, int width, u64 flags = 0);
 
         ~Texture();
 
     private:
         friend struct TextureAtlas;
-        Texture(string path, bool isCubemap = false);
+        Texture(string path, bool isCubemap = false, u64 flags = 0);
         Texture();
     };
 

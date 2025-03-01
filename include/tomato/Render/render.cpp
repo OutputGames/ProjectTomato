@@ -1906,6 +1906,32 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
                     aiReturn result = mat->GetTexture(type, j, &path, &mapping, &uvindex, &blend, &op, mapmode);
 
+                    u64 flags = 0;
+
+                    switch (mapmode[0])
+                    {
+                        case aiTextureMapMode_Clamp:
+                            flags |= TMGL_SAMPLER_U_CLAMP;
+                            break;
+                        case aiTextureMapMode_Mirror:
+                            flags |= TMGL_SAMPLER_U_MIRROR;
+                            break;
+                        case aiTextureMapMode_Wrap:
+                            break;
+                    }
+
+                    switch (mapmode[1])
+                    {
+                        case aiTextureMapMode_Clamp:
+                            flags |= TMGL_SAMPLER_V_CLAMP;
+                            break;
+                        case aiTextureMapMode_Mirror:
+                            flags |= TMGL_SAMPLER_V_MIRROR;
+                            break;
+                        case aiTextureMapMode_Wrap:
+                            break;
+                    }
+
                     if (result == aiReturn_SUCCESS)
                     {
                         var _tex = scene->GetEmbeddedTexture(path.C_Str());
@@ -1919,7 +1945,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
 
                             if (!tex)
                             {
-                                tex = new Texture(_tex->pcData, _tex->mWidth, _tex->mHeight);
+                                tex = new Texture(_tex->pcData, _tex->mWidth, flags);
 
                                 if (isValid(tex->handle))
                                 {
@@ -1949,7 +1975,7 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                                 var file = std::filesystem::path(_path);
 
 
-                                tex = Texture::CreateTexture(fpath.string() + "/" + file.string());
+                                tex = Texture::CreateTexture(fpath.string() + "/" + file.string(), flags);
 
                                 if (tex)
                                 {
@@ -2436,7 +2462,7 @@ tmt::obj::Object* Model::CreateObject(Shader* shdr)
     return mdlObj;
 }
 
-Texture::Texture(aiTexel* texels, int width, int height)
+Texture::Texture(aiTexel* texels, int width, u64 flags)
 {
 
     var caps = tmgl::getCaps();
@@ -2456,7 +2482,7 @@ Texture::Texture(aiTexel* texels, int width, int height)
 
 
         tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
-        uint64_t textureFlags = 0; // Adjust as needed
+        uint64_t textureFlags = flags; // Adjust as needed
 
         // Create the texture in bgfx, passing the image data directly
         handle = createTexture2D(static_cast<u16>(this->width), static_cast<u16>(this->height), false, 1, textureFormat,
@@ -2471,10 +2497,10 @@ Texture::Texture(aiTexel* texels, int width, int height)
     stbi_image_free(data);
 }
 
-Texture::Texture(string path, bool isCubemap)
+Texture::Texture(string path, bool isCubemap, u64 flags)
 {
 
-    uint64_t textureFlags = 0;
+    uint64_t textureFlags = flags;
     // Adjust as needed
     if (!isCubemap)
     {
@@ -2670,7 +2696,7 @@ TextureAtlas::TextureAtlas(std::vector<string> paths)
     setName(handle, "atlas");
 }
 
-Texture* Texture::CreateTexture(string path, bool isCubemap)
+Texture* Texture::CreateTexture(string path, bool isCubemap, u64 flags)
 {
     if (IN_MAP(ResMgr->loaded_textures, path))
     {
@@ -2680,7 +2706,7 @@ Texture* Texture::CreateTexture(string path, bool isCubemap)
     if (!std::filesystem::exists(path))
         return nullptr;
 
-    return new Texture(path, isCubemap);
+    return new Texture(path, isCubemap, flags);
 }
 
 Texture::Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags, const tmgl::Memory* mem, string name)
