@@ -1908,6 +1908,13 @@ void Model::LoadFromAiScene(const aiScene* scene, SceneDescription* description)
                     {
                         var _tex = scene->GetEmbeddedTexture(path.C_Str());
 
+
+                        if (!_tex)
+                        {
+
+                            continue;
+                        }
+
                         Texture* tex = GetTextureFromName(_tex->mFilename.C_Str());
                         if (!tex)
                         {
@@ -3533,3 +3540,4 @@ void tmgl::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 
     delete[] arr;
 }
+                         
