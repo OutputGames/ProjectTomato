@@ -754,6 +754,8 @@ namespace tmt::render
 
     void pushDrawCall(DrawCall d);
 
+    void takeScreenshot(string path = "null");
+
     void pushLight(light::Light* light);
 
     RendererInfo* init(int width, int height);

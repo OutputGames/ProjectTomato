@@ -3144,6 +3144,14 @@ void tmt::render::pushDrawCall(DrawCall d)
     calls.push_back(d);
 }
 
+void tmt::render::takeScreenshot(string path)
+{
+    if (path == "null")
+    {
+        path = "Screenshot.png";
+    }
+}
+
 void tmt::render::pushLight(light::Light* light)
 {
     lights.push_back(light);
