@@ -40,6 +40,21 @@ namespace tmt::ui
         bool copyAlpha = true;
         int layer = 0;
 
+        enum Anchor
+        {
+            TopLeft,
+            TopCenter,
+            TopRight,
+            CenterLeft,
+            Center,
+            CenterRight,
+            BottomLeft,
+            BottomCenter,
+            BottomRight
+        };
+
+        Anchor anchor = Center;
+
         void Start() override;
         SpriteObject();
         SpriteObject(string path);

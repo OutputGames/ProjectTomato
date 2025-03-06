@@ -223,6 +223,41 @@ void SpriteObject::Update()
         //position.y += renderer->windowHeight / 2.0f;
 
     }
+    else
+    {
+
+
+        switch (anchor)
+        {
+            case TopLeft:
+            case CenterLeft:
+            case BottomLeft:
+                position.x += (static_cast<float>(renderer->windowWidth) / 2) - (scale.x / 2);
+                break;
+            case TopRight:
+            case CenterRight:
+            case BottomRight:
+                position.x = -position.x;
+                position.x -= (static_cast<float>(renderer->windowWidth) / 2) - (scale.x / 2);
+                break;
+        }
+
+        switch (anchor)
+        {
+            case TopLeft:
+            case TopCenter:
+            case TopRight:
+                position.y = -position.y;
+                position.y += (static_cast<float>(renderer->windowHeight) / 2) - (scale.y / 2);
+                break;
+            case BottomLeft:
+            case BottomCenter:
+            case BottomRight:
+                position.y -= (static_cast<float>(renderer->windowHeight) / 2) - (scale.y / 2);
+                break;
+        }
+    }
+
     position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
 
     var transform = GetLocalTransform();
