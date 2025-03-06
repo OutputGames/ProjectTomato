@@ -1622,6 +1622,8 @@ Model::Model(string path)
         }
 
         LoadFromAiScene(scene);
+
+        import.FreeScene();
     }
 }
 
