@@ -156,6 +156,9 @@ void SpriteObject::Start()
         var center = MakeCorner(mix(min, max, 0.5));
     }
     */
+
+    if (!button)
+        button = GetObjectFromType<ButtonObject>();
 }
 
 SpriteObject::SpriteObject()
@@ -232,12 +235,12 @@ void SpriteObject::Update()
             case TopLeft:
             case CenterLeft:
             case BottomLeft:
+                position.x = -position.x;
                 position.x += (static_cast<float>(renderer->windowWidth) / 2) - (scale.x / 2);
                 break;
             case TopRight:
             case CenterRight:
             case BottomRight:
-                position.x = -position.x;
                 position.x -= (static_cast<float>(renderer->windowWidth) / 2) - (scale.x / 2);
                 break;
         }
@@ -289,6 +292,19 @@ void SpriteObject::Update()
     Object::Update();
 }
 
+ButtonObject* SpriteObject::MakeButton()
+{
+    button = new ButtonObject;
+    button->SetParent(this);
+
+    return button;
+}
+
+ButtonObject* SpriteObject::GetButton()
+{
+    return button;
+}
+
 
 void ButtonObject::Start()
 {
@@ -306,7 +322,7 @@ void ButtonObject::Start()
 
     //var center = MakeCorner(mix(min, max, 0.5));
 
-    sprite = dynamic_cast<SpriteObject*>(parent);
+    sprite = parent->Cast<SpriteObject>();
     origTexture = sprite->mainTexture;
 
     Object::Start();
@@ -345,6 +361,40 @@ void ButtonObject::Update()
 
     var gpos = GetGlobalPosition();
     var gscl = GetGlobalScale();
+
+    if (sprite)
+    {
+
+        switch (sprite->anchor)
+        {
+            case SpriteObject::TopLeft:
+            case SpriteObject::CenterLeft:
+            case SpriteObject::BottomLeft:
+                gpos.x = -gpos.x;
+                gpos.x += (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                break;
+            case SpriteObject::TopRight:
+            case SpriteObject::CenterRight:
+            case SpriteObject::BottomRight:
+                gpos.x -= (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                break;
+        }
+
+        switch (sprite->anchor)
+        {
+            case SpriteObject::TopLeft:
+            case SpriteObject::TopCenter:
+            case SpriteObject::TopRight:
+                gpos.y = -gpos.y;
+                gpos.y += (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
+                break;
+            case SpriteObject::BottomLeft:
+            case SpriteObject::BottomCenter:
+            case SpriteObject::BottomRight:
+                gpos.y -= (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
+                break;
+        }
+    }
     var rect = Rect{gpos.x, gpos.y, gscl.x, gscl.y};
 
     bool hover = rect.isPointInRect(pos);
@@ -397,6 +447,17 @@ void ButtonObject::Update()
 
     hoverLast = hover;
     clickLast = click;
+}
+
+void ButtonObject::SetParent(Object* o)
+{
+
+    if (o->Cast<SpriteObject>())
+    {
+        sprite = o->Cast<SpriteObject>();
+    }
+
+    Object::SetParent(o);
 }
 
 int ButtonObject::AddHoverEvent(std::function<void()> f)
@@ -574,12 +635,11 @@ void TextObject::Update()
 TextButtonObject::TextButtonObject(Rect r, render::Font* font)
 {
     sprite = new SpriteObject();
-    button = new ButtonObject;
+    button = sprite->MakeButton();
     text = new TextObject();
     text->font = font;
 
     text->SetParent(sprite);
-    button->SetParent(sprite);
 
     sprite->SetParent(this);
 

@@ -60,16 +60,26 @@ namespace tmt::ui
         SpriteObject(string path);
         void Update() override;
 
+        ButtonObject* MakeButton();
+        ButtonObject* GetButton();
+
         string GetDefaultName() override
         {
             return "Sprite";
         }
+
+    private:
+        ButtonObject* button;
     };
 
     struct ButtonObject : obj::Object
     {
+        SpriteObject* sprite;
+
         void Start() override;
         void Update() override;
+
+        void SetParent(Object* o);
 
         string GetDefaultName() override
         {
@@ -82,8 +92,7 @@ namespace tmt::ui
     private:
         std::vector<std::function<void()>> hovers, clicks;
 
-        bool hoverLast, clickLast;
-        SpriteObject* sprite;
+        bool hoverLast = false, clickLast = false;
 
         render::Texture* origTexture;
     };
