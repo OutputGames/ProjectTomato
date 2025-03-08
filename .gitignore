@@ -13,3 +13,8 @@ Makefile
 runtime/
 temp/
 obj/
+release/
+debug/
+lib/
+obj/
+contrib/
