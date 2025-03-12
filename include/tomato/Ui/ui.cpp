@@ -172,7 +172,8 @@ SpriteObject::SpriteObject()
 
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
     material->state.writeA = true;
-    material->state.depth = render::MaterialState::LessEqual;
+    //material->state.writeZ = false;
+    material->state.depth = render::MaterialState::Always;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
@@ -211,7 +212,7 @@ void SpriteObject::Update()
 
     var drawCall = render::DrawCall();
 
-    drawCall.layer = layer;
+    drawCall.layer = layer + 1;
     drawCall.mesh = spriteMesh;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;
@@ -483,7 +484,7 @@ TextObject::TextObject()
     material->Reload(render::Shader::CreateShader("text/vert", "text/frag"));
 
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
-    material->state.depth = render::MaterialState::LessEqual;
+    material->state.depth = render::MaterialState::Always;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
@@ -584,7 +585,7 @@ void TextObject::Update()
 
         var drawCall = render::DrawCall();
 
-        drawCall.layer = layer;
+        drawCall.layer = layer + 1;
         drawCall.state = material->GetMaterialState();
         drawCall.matrixMode = render::MaterialState::OrthoProj;
 
