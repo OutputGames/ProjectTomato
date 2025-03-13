@@ -173,7 +173,7 @@ SpriteObject::SpriteObject()
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
     material->state.writeA = true;
     //material->state.writeZ = false;
-    material->state.depth = render::MaterialState::Always;
+    material->state.depth = render::MaterialState::LessEqual;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
@@ -212,7 +212,7 @@ void SpriteObject::Update()
 
     var drawCall = render::DrawCall();
 
-    drawCall.layer = layer + 1;
+    drawCall.layer = layer + 9;
     drawCall.mesh = spriteMesh;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;
