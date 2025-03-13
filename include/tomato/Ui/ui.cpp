@@ -484,7 +484,7 @@ TextObject::TextObject()
     material->Reload(render::Shader::CreateShader("text/vert", "text/frag"));
 
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
-    material->state.depth = render::MaterialState::Always;
+    material->state.depth = render::MaterialState::LessEqual;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
