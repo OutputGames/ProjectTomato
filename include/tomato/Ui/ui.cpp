@@ -598,11 +598,11 @@ void TextObject::Update()
 
     position = og_pos;
 
-    float x = (-size) / 2;
+    float x = 0;
     var textSize = font->CalculateTextSize(text, size, spacing);
 
     if (HorizontalAlign == Right)
-        x += textSize;
+        x -= textSize;
 
     //x = 0;
 
@@ -610,7 +610,7 @@ void TextObject::Update()
     float y = 0;
 
     if (VerticalAlign == Top)
-        y -= (textSize / 2);
+        y -= size;
     else if (VerticalAlign == Bottom)
         y += (textSize / 2) + size;
 
@@ -637,7 +637,7 @@ void TextObject::Update()
 
         float adv = c.advance >> 6;
 
-        x -= (adv) * scl;
+        x += (adv) * scl;
 
         if (value == ' ' || value == '\0')
         {
@@ -652,6 +652,7 @@ void TextObject::Update()
         drawCall.matrixMode = render::MaterialState::OrthoProj;
 
         drawCall.transformMatrix = transform;
+        drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(-1, 1, 0));
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
         drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(scl, scl, 0));
 

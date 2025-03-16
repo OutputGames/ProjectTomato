@@ -475,7 +475,7 @@ u64 Material::GetMaterialState()
     if (state.writeZ)
         v |= TMGL_STATE_WRITE_Z;
 
-    //v |= TMGL_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
+    v |= TMGL_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
     v |= TMGL_STATE_BLEND_ALPHA;
 
 
