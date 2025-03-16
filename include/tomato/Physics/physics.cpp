@@ -246,7 +246,7 @@ void ResolveCollision(OBB* a, OBB* b, const glm::vec3& mtv)
 
 void PhysicalWorld::Update()
 {
-#ifndef __SWITCH__
+#if !defined(__SWITCH__) and !defined(WIN32)
     if (!dynamicsWorld)
         return;
     dynamicsWorld->stepSimulation(1.0 / 6.0f, 1);
