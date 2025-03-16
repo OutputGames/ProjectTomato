@@ -212,7 +212,7 @@ void SpriteObject::Update()
 
     var drawCall = render::DrawCall();
 
-    drawCall.layer = layer + 9;
+    drawCall.layer = layer + 1;
     drawCall.mesh = spriteMesh;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;

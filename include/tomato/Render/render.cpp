@@ -289,7 +289,7 @@ void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
         }
     }
 
-    submit(program);
+    submit(viewId, program);
 
     delete[] overrides;
 }
@@ -475,7 +475,8 @@ u64 Material::GetMaterialState()
     if (state.writeZ)
         v |= TMGL_STATE_WRITE_Z;
 
-    v |= TMGL_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
+    //v |= TMGL_STATE_BLEND_FUNC(state.srcAlpha, state.dstAlpha);
+    v |= TMGL_STATE_BLEND_ALPHA;
 
 
     return v;
@@ -3208,7 +3209,10 @@ RendererInfo* tmt::render::init(int width, int height)
 
     tmgl::init(init);
 
-    tmgl::setViewClear(TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
+    for (int i = 0; i < 1000; ++i)
+    {
+        tmgl::setViewClear(0, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
+    }
 
     renderer = new RendererInfo();
     calls = std::vector<DrawCall>();
@@ -3253,8 +3257,8 @@ RendererInfo* tmt::render::init(int width, int height)
 void tmt::render::update()
 {
     // Set view 0 default viewport.
-    tmgl::setViewRect(0, 0, static_cast<uint16_t>(renderer->windowWidth),
-                      static_cast<uint16_t>(renderer->windowHeight));
+    tmgl::setViewRect(0, 0, 0,
+                      static_cast<uint16_t>(renderer->windowWidth), static_cast<uint16_t>(renderer->windowHeight));
 
 
     // This dummy draw call is here to make sure that view 0 is cleared
@@ -3336,7 +3340,7 @@ void tmt::render::update()
                      -100, 100.0f, 0, tmgl::getCaps()->homogeneousDepth);
 
 
-        tmgl::setViewTransform(mainCamera->GetView(), proj);
+        tmgl::setViewTransform(0, mainCamera->GetView(), proj);
     }
 
     if (!subHandlesLoaded)
@@ -3358,9 +3362,18 @@ void tmt::render::update()
 
     std::sort(calls.begin(), calls.end(), [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
 
-
-    for (const auto& call : calls)
+    /*
+    for (const auto& draw : calls)
     {
+        printf("Submitting draw call: Layer %d\n", draw.layer);
+    }
+    */
+
+    setViewMode(0, bgfx::ViewMode::Sequential);
+
+    for (int i = 0; i < calls.size(); i++)
+    {
+        const var& call = calls[i];
         //tmgl::setTransform(call.transformMatrix);
 
         if (!call.program)
@@ -3371,7 +3384,8 @@ void tmt::render::update()
             switch (call.matrixMode)
             {
                 case MaterialState::ViewProj:
-                    tmgl::setViewTransform(value_ptr(mainCamera->GetView_m4()),
+                    tmgl::setViewTransform(0,
+                                           value_ptr(mainCamera->GetView_m4()),
                                            value_ptr(mainCamera->GetProjection_m4()));
                     break;
                 case MaterialState::View:
@@ -3385,8 +3399,8 @@ void tmt::render::update()
                     break;
                 case MaterialState::ViewOrthoProj:
                     // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
-                    tmgl::setViewTransform(value_ptr(mainCamera->GetView_m4()),
-                                           ortho);
+                    tmgl::setViewTransform(0,
+                                           value_ptr(mainCamera->GetView_m4()), ortho);
                     break;
                 case MaterialState::OrthoProj:
                 {
@@ -3452,7 +3466,6 @@ void tmt::render::update()
         }
 
         tmgl::setState(call.state);
-
 
         call.program->Push(0, call.overrides, call.overrideCt);
 
