@@ -690,6 +690,23 @@ namespace tmt::render
             this->a = a;
         }
 
+        Color(double s)
+        {
+
+            r = s;
+            g = s;
+            b = s;
+
+            if (r > 1)
+                r /= 255;
+            if (g > 1)
+                g /= 255;
+            if (b > 1)
+                b /= 255;
+            if (a > 1)
+                a /= 255;
+        }
+
         glm::vec4 getData() const
         {
             return glm::vec4{r, g, b, a};
