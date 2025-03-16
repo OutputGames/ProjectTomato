@@ -651,6 +651,12 @@ namespace tmt::render
         float NearPlane = 0.001f;
         float FarPlane = 1000.0f;
 
+        enum CameraMode
+        {
+            Perspective,
+            Orthographic
+        } mode = Perspective;
+
         float* GetView();
         const float* GetProjection();
 

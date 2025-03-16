@@ -2969,7 +2969,10 @@ const float* Camera::GetProjection()
 
 glm::mat4 Camera::GetView_m4()
 {
+    //if (mode == Perspective)
     return lookAt(position, position + GetFront(), GetUp());
+
+    return glm::mat4(1.0);
 }
 
 glm::mat4 Camera::GetProjection_m4()
@@ -2979,9 +2982,20 @@ glm::mat4 Camera::GetProjection_m4()
         return glm::mat4(1.0);
     }
 
-    return glm::perspective(glm::radians(FOV),
-                            static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
-                            NearPlane, FarPlane);
+    if (mode == Perspective)
+        return glm::perspective(glm::radians(FOV),
+                                static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
+                                NearPlane, FarPlane);
+
+    float rad = glm::radians(mainCamera->FOV);
+
+    float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
+    float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
+
+    return glm::ortho(left, -left, bottom, -bottom, -100.f, 100.f);
+
+    return GetOrthoProjection_m4();
+
 }
 
 glm::mat4 Camera::GetOrthoProjection_m4()
@@ -2991,7 +3005,15 @@ glm::mat4 Camera::GetOrthoProjection_m4()
         return glm::mat4(1.0);
     }
 
-    return glm::ortho(0, renderer->windowWidth, renderer->windowHeight, 0, -1, 1);
+    float rad = glm::radians(mainCamera->FOV);
+
+    if (!application->is2D)
+        rad = 1;
+
+    float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
+    float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
+
+    return glm::ortho(left, -left, bottom, -bottom, -100.f, 100.f);
 }
 
 glm::vec3 Camera::GetFront()
@@ -3403,7 +3425,7 @@ void tmt::render::update()
                 case MaterialState::OrthoProj:
                 {
                     // tmgl::setViewTransform(0, oneMat, ortho);
-                    setUniform(orthoHandle, ortho);
+                    setUniform(orthoHandle, value_ptr(mainCamera->GetOrthoProjection_m4()));
                 }
                 break;
             }
