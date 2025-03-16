@@ -29,6 +29,19 @@ namespace tmt::ui
     };
 
 
+    enum Anchor
+    {
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
+        Center,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight
+    };
+
     struct SpriteObject : obj::Object
     {
         render::Texture* mainTexture = nullptr;
@@ -39,19 +52,6 @@ namespace tmt::ui
         bool useAlpha = true;
         bool copyAlpha = true;
         int layer = 0;
-
-        enum Anchor
-        {
-            TopLeft,
-            TopCenter,
-            TopRight,
-            CenterLeft,
-            Center,
-            CenterRight,
-            BottomLeft,
-            BottomCenter,
-            BottomRight
-        };
 
         Anchor anchor = Center;
 

@@ -525,7 +525,19 @@ namespace tmt::fs
 
         u8 ReadU8() { return Read<u8>(); }
 
+        u8 ReadU8(size_t pos)
+        {
+            SeekBegin(pos);
+            return Read<u8>();
+        }
+
         u16 ReadUInt16() { return Read<u16>(); }
+
+        u16 ReadUInt16(size_t pos)
+        {
+            SeekBegin(pos);
+            return Read<u16>();
+        }
 
         s16 ReadInt16() { return Read<s16>(); }
 

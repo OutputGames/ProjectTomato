@@ -290,6 +290,15 @@ void SpriteObject::Update()
 
     pushDrawCall(drawCall);
 
+    for (auto child : children)
+    {
+        var s = child->Cast<SpriteObject>();
+        if (s)
+        {
+            s->anchor = anchor;
+        }
+    }
+
     Object::Update();
 }
 
@@ -368,30 +377,30 @@ void ButtonObject::Update()
 
         switch (sprite->anchor)
         {
-            case SpriteObject::TopLeft:
-            case SpriteObject::CenterLeft:
-            case SpriteObject::BottomLeft:
+            case TopLeft:
+            case CenterLeft:
+            case BottomLeft:
                 gpos.x = -gpos.x;
                 gpos.x += (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
                 break;
-            case SpriteObject::TopRight:
-            case SpriteObject::CenterRight:
-            case SpriteObject::BottomRight:
+            case TopRight:
+            case CenterRight:
+            case BottomRight:
                 gpos.x -= (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
                 break;
         }
 
         switch (sprite->anchor)
         {
-            case SpriteObject::TopLeft:
-            case SpriteObject::TopCenter:
-            case SpriteObject::TopRight:
+            case TopLeft:
+            case TopCenter:
+            case TopRight:
                 gpos.y = -gpos.y;
                 gpos.y += (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
                 break;
-            case SpriteObject::BottomLeft:
-            case SpriteObject::BottomCenter:
-            case SpriteObject::BottomRight:
+            case BottomLeft:
+            case BottomCenter:
+            case BottomRight:
                 gpos.y -= (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
                 break;
         }
@@ -484,8 +493,9 @@ TextObject::TextObject()
     material->Reload(render::Shader::CreateShader("text/vert", "text/frag"));
 
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
+    material->state.writeA = true;
     material->state.writeZ = true;
-    material->state.depth = render::MaterialState::LessEqual;
+    material->state.depth = render::MaterialState::GreaterEqual;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
@@ -531,6 +541,9 @@ void TextObject::Update()
     // material->state.write = BGFX_STATE_WRITE_RGB;
     // material->state.depth = render::MaterialState::Always;
 
+    var gpos = GetGlobalPosition();
+    var gscl = GetGlobalScale();
+
     var og_pos = position;
 
     if (!isUI)
@@ -539,6 +552,40 @@ void TextObject::Update()
         position = GetGlobalPosition() - mainCameraObject->position;
         // position.x -= renderer->windowWidth / 2.0f;
         // position.y += renderer->windowHeight / 2.0f;
+    }
+    else
+    {
+
+
+        switch (anchor)
+        {
+            case TopLeft:
+            case CenterLeft:
+            case BottomLeft:
+                position.x = -position.x;
+                position.x += (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                break;
+            case TopRight:
+            case CenterRight:
+            case BottomRight:
+                position.x -= (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                break;
+        }
+
+        switch (anchor)
+        {
+            case TopLeft:
+            case TopCenter:
+            case TopRight:
+                position.y = -position.y;
+                position.y += (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
+                break;
+            case BottomLeft:
+            case BottomCenter:
+            case BottomRight:
+                position.y -= (static_cast<float>(renderer->windowHeight) / 2) - (gscl.y / 2);
+                break;
+        }
     }
     position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
 
