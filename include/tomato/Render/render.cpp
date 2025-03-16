@@ -2786,26 +2786,16 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
     if (forcedSpacing == FLT_MAX)
         forcedSpacing = spacing;
 
-    var scl = forcedSpacing;
+    var scl = 1.0f;
 
-    scl *= (fontSize / 16);
+    scl = (fontSize / 48);
 
     for (char value : text)
     {
 
-        if (value == ' ' || value == '\0')
-        {
-            var d = (fontSize * forcedSpacing) * (1.0f / scl);
-            size -= d;
-            continue;
-        }
-
-
         var c = characters[value];
 
         float xPos = size - c.bearing.x * scl;
-
-        //size -= xPos;
 
         size -= (c.advance >> 6) * scl;
     }
@@ -2906,7 +2896,14 @@ Font::Font(string path)
         var height = face->glyph->bitmap.rows;
 
         if (width == 0 || height == 0)
+        {
+            Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                                   glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+                                   face->glyph->advance.x, nullptr,TMGL_INVALID_HANDLE};
+            characters.insert(std::pair<char, Character>(c, character));
             continue;
+        }
+
 
         var size = width * height;
 
@@ -2929,8 +2926,8 @@ Font::Font(string path)
 
         std::vector<glm::vec4> vertices;
 
-        var v_width = static_cast<float>(width) / face->size->metrics.x_ppem;
-        var v_height = static_cast<float>(height) / face->size->metrics.y_ppem;
+        var v_width = static_cast<float>(width);
+        var v_height = static_cast<float>(height);
 
         vertices.emplace_back(0, 0, v_width, v_height);
         vertices.emplace_back(v_width, 0, v_width, v_height);

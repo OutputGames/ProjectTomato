@@ -495,7 +495,7 @@ TextObject::TextObject()
     material->state.SetWrite(TMGL_STATE_WRITE_RGB);
     material->state.writeA = true;
     material->state.writeZ = true;
-    material->state.depth = render::MaterialState::GreaterEqual;
+    material->state.depth = render::MaterialState::LessEqual;
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
@@ -531,9 +531,6 @@ void TextObject::Update()
             col.a *= s_parent->mainColor.a;
         }
     }
-
-    if (c)
-        c->position = position;
 
     color->v4 = col.getData();
     tex->tex = mainTexture;
@@ -589,6 +586,9 @@ void TextObject::Update()
     }
     position -= glm::vec3(scale.x / 2, scale.y / 2, 0);
 
+    if (c)
+        c->position = position;
+
     var transform = GetLocalTransform(false);
 
     if (isUI)
@@ -605,30 +605,45 @@ void TextObject::Update()
         x -= (textSize / 2);
     else if (HorizontalAlign == Right)
         x += (textSize / 2) + size;
-    else if (HorizontalAlign == Center)
+    else if (HorizontalAlign == HCenter)
         x += (size / 2);
+    //x = 0;
+
 
     float y = 0;
 
+    if (VerticalAlign == Top)
+        y -= (textSize / 2);
+    else if (VerticalAlign == Bottom)
+        y += (textSize / 2) + size;
+
     float scl = 1;
 
-    scl = spacing;
+    //scl = 0.35;
 
-    scl *= (size / 16);
+    scl *= (size / 48);
+
+    //scl = size;
 
     //scl = 1;
+
+    //scl *= -1;
 
     int textIdx = 0;
     for (char value : text)
     {
 
+        var c = font->characters[value];
+
+        float xPos = x - c.bearing.x * scl;
+        float yPos = y - (c.size.y - c.bearing.y) * scl;
+
+        x -= (c.advance >> 6) * scl;
+
         if (value == ' ' || value == '\0')
         {
-            x -= (size * spacing) * (1.0 / scl);
             continue;
         }
-
-        var c = font->characters[value];
 
 
         var drawCall = render::DrawCall();
@@ -638,17 +653,8 @@ void TextObject::Update()
         drawCall.matrixMode = render::MaterialState::OrthoProj;
 
         drawCall.transformMatrix = transform;
-
-
-        float xPos = x + c.bearing.x * scl;
-        float yPos = y - (c.size.y - c.bearing.y) * scl;
-
-        x -= (c.advance >> 6) * scl;
-
-
-        //yPos -= ((static_cast<float>(c.size.y) / 48) * size) / 2;
         drawCall.transformMatrix = translate(drawCall.transformMatrix, glm::vec3(xPos, yPos, 0));
-        drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(size));
+        drawCall.transformMatrix = glm::scale(drawCall.transformMatrix, glm::vec3(scl, scl, 0));
 
         drawCall.vbh = c.vbh;
         drawCall.ibh = font->ibh;

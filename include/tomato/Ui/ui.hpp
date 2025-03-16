@@ -100,14 +100,22 @@ namespace tmt::ui
     struct TextObject : SpriteObject
     {
 
-        enum TextAlign
+        enum HTextAlign
         {
             Left,
-            Center,
+            HCenter,
             Right
         };
 
-        TextAlign HorizontalAlign = Center, VerticalAlign = Center;
+        enum VTextAlign
+        {
+            Top,
+            VCenter,
+            Bottom
+        };
+
+        HTextAlign HorizontalAlign = HCenter;
+        VTextAlign VerticalAlign = VCenter;
 
         string text;
         render::Font* font;
