@@ -2937,7 +2937,8 @@ Font::Font(string path)
         var vbh = createVertexBuffer(tmgl::copy(vertices.data(), (vertices.size() * sizeof(glm::vec4))), layout);
 
         Character character = {glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                               glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top), face->glyph->advance.x,
+                               glm::ivec2(glm::abs(face->glyph->bitmap_left), face->glyph->bitmap_top),
+                               face->glyph->advance.x,
                                tex, vbh};
         characters.insert(std::pair<char, Character>(c, character));
     }

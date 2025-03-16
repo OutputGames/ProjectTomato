@@ -560,12 +560,12 @@ void TextObject::Update()
             case CenterLeft:
             case BottomLeft:
                 position.x = -position.x;
-                position.x += (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                position.x += (static_cast<float>(renderer->windowWidth) / 2);
                 break;
             case TopRight:
             case CenterRight:
             case BottomRight:
-                position.x -= (static_cast<float>(renderer->windowWidth) / 2) - (gscl.x / 2);
+                position.x -= (static_cast<float>(renderer->windowWidth) / 2);
                 break;
         }
 
@@ -598,15 +598,12 @@ void TextObject::Update()
 
     position = og_pos;
 
-    float x = 0;
+    float x = (-size) / 2;
     var textSize = font->CalculateTextSize(text, size, spacing);
 
-    if (HorizontalAlign == Left)
-        x -= (textSize / 2);
-    else if (HorizontalAlign == Right)
-        x += (textSize / 2) + size;
-    else if (HorizontalAlign == HCenter)
-        x += (size / 2);
+    if (HorizontalAlign == Right)
+        x += textSize;
+
     //x = 0;
 
 
@@ -638,7 +635,9 @@ void TextObject::Update()
         float xPos = x - c.bearing.x * scl;
         float yPos = y - (c.size.y - c.bearing.y) * scl;
 
-        x -= (c.advance >> 6) * scl;
+        float adv = c.advance >> 6;
+
+        x -= (adv) * scl;
 
         if (value == ' ' || value == '\0')
         {
