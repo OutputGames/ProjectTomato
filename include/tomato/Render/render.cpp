@@ -2776,7 +2776,10 @@ RenderTexture::RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum fo
     //tmgl::setViewRect(vid, 0, 0, width, height);
     //setViewFrameBuffer(vid, handle);
 
+    viewId = renderer->viewCache.size();
+    setViewFrameBuffer(viewId, handle);
 
+    renderer->viewCache.push_back(this);
 }
 
 RenderTexture::RenderTexture()
@@ -3559,3 +3562,4 @@ void tmgl::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 
     delete[] arr;
 }
+      
