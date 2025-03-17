@@ -2755,12 +2755,20 @@ RenderTexture::RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum fo
         // mem = tmgl::copy(pixels.data(), width * height* 4);
     }
 
+    u64 textureFlags = TMGL_TEXTURE_RT_WRITE_ONLY;
+
+    bgfx::TextureFormat::Enum depthFormat = isTextureValid(0, false, 1, bgfx::TextureFormat::D16, textureFlags)
+        ? bgfx::TextureFormat::D16
+        : isTextureValid(0, false, 1, bgfx::TextureFormat::D24S8, textureFlags)
+        ? bgfx::TextureFormat::D24S8
+        : bgfx::TextureFormat::D32;
+
     realTexture = new Texture(width, height, format,
-                              TMGL_TEXTURE_COMPUTE_WRITE | TMGL_TEXTURE_RT | TMGL_SAMPLER_MIN_POINT |
-                              TMGL_SAMPLER_MAG_POINT | TMGL_SAMPLER_U_CLAMP | TMGL_SAMPLER_V_CLAMP
+                              textureFlags
                               , mem);
 
-    //handle = createFrameBuffer(1, &realTexture->handle, true);
+
+    handle = createFrameBuffer(1, &realTexture->handle, true);
     this->format = format;
 
     //tmgl::setViewName(vid, "RenderTexture");

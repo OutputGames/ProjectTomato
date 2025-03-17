@@ -4,12 +4,6 @@
 #include <complex.h>
 
 #include "utils.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
 #include "Fs/fs.hpp"
 #include "Obj/obj.hpp"
 
