@@ -18,7 +18,6 @@
 
 void glfw_errorCallback(int error, const char* description);
 extern tmt::render::RendererInfo* renderer;
-extern std::vector<tmt::render::DrawCall> calls;
 extern std::vector<tmt::debug::DebugCall> debugCalls;
 extern std::vector<tmt::light::Light*> lights;
 extern std::vector<std::function<void()>> debugFuncs;

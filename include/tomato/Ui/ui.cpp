@@ -288,7 +288,7 @@ void SpriteObject::Update()
     else
         drawCall.overrides = nullptr;
 
-    pushDrawCall(drawCall);
+    pushDrawCall(drawCall, 0);
 
     for (auto child : children)
     {
@@ -679,7 +679,7 @@ void TextObject::Update()
         else
             drawCall.overrides = nullptr;
 
-        pushDrawCall(drawCall);
+        pushDrawCall(drawCall, 0);
 
         textIdx++;
     }

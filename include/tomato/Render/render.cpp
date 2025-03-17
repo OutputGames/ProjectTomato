@@ -19,6 +19,15 @@ Color Color::Red = {1, 0, 0, 1};
 Color Color::Black = {0, 0, 0, 1};
 Color Color::Gray = {0.5, 0.5, 0.5, 1};
 
+const void* getTimeUniform()
+{
+
+    float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
+                  static_cast<float>(glm::cos(counterTime)), static_cast<float>(renderer->usePosAnim)};
+
+    return t;
+}
+
 RendererInfo* RendererInfo::GetRendererInfo()
 {
     return renderer;
@@ -565,7 +574,7 @@ void Mesh::use()
     }
 }
 
-void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::vector<glm::mat4> anims)
+void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, u32 view, std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
 
@@ -609,7 +618,7 @@ void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::ve
     else
         drawCall.overrides = nullptr;
 
-    pushDrawCall(drawCall);
+    pushDrawCall(drawCall, view);
 }
 
 Texture* Model::GetTextureFromName(string name)
@@ -2762,6 +2771,145 @@ RenderTexture::RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum fo
 
 }
 
+RenderTexture::RenderTexture()
+{
+    viewId = renderer->viewCache.size();
+    if (viewId == 0)
+    {
+        tmgl::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+    }
+
+    renderer->viewCache.push_back(this);
+}
+
+void RenderTexture::redraw()
+{
+
+    if (viewId == 0)
+    {
+        this->mainCamera = ::mainCamera;
+    }
+
+    if (!name.empty())
+    {
+        tmgl::setViewName(viewId, name.c_str());
+    }
+
+    std::sort(draw_cache.begin(), draw_cache.end(), [](const DrawCall& a, const DrawCall& b)
+    {
+        return a.layer < b.layer;
+    });
+
+    /*
+    for (const auto& draw : calls)
+    {
+        printf("Submitting draw call: Layer %d\n", draw.layer);
+    }
+    */
+
+    setViewMode(viewId, bgfx::ViewMode::Sequential);
+
+    for (int i = 0; i < draw_cache.size(); i++)
+    {
+        const var& call = draw_cache[i];
+        // tmgl::setTransform(call.transformMatrix);
+
+        if (!call.program)
+            continue;
+
+        if (mainCamera)
+        {
+            switch (call.matrixMode)
+            {
+                case MaterialState::ViewProj:
+                    tmgl::setViewTransform(viewId, value_ptr(mainCamera->GetView_m4()),
+                                           value_ptr(mainCamera->GetProjection_m4()));
+                    break;
+                case MaterialState::View:
+                    // tmgl::setViewTransform(0, mainCamera->GetView(), oneMat);
+                    break;
+                case MaterialState::Proj:
+                    // tmgl::setViewTransform(0, oneMat, proj);
+                    break;
+                case MaterialState::None:
+                    // tmgl::setViewTransform(0, oneMat, oneMat);
+                    break;
+                case MaterialState::ViewOrthoProj:
+                    // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
+                    tmgl::setViewTransform(viewId, value_ptr(mainCamera->GetView_m4()),
+                                           value_ptr(mainCamera->GetOrthoProjection_m4()));
+                    break;
+                case MaterialState::OrthoProj:
+                {
+                    // tmgl::setViewTransform(0, oneMat, ortho);
+                    setUniform(orthoHandle, value_ptr(mainCamera->GetOrthoProjection_m4()));
+                }
+                break;
+            }
+        }
+
+        setUniform(timeHandle, getTimeUniform());
+        if (mainCamera)
+        {
+            setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
+        }
+
+        if (call.animationMatrices.size() > 0)
+        {
+            // tmgl::setUniform(animHandle, call.animationMatrices);
+
+            var matrixCount = call.animationMatrices.size() + 1;
+
+            std::vector<float> matrixData;
+            matrixData.reserve(matrixCount * 16);
+
+            {
+                const float* transformPtr = value_ptr(call.transformMatrix);
+                matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
+            }
+
+            for (const auto& full_vec : call.animationMatrices)
+            {
+                const float* matPtr = value_ptr(full_vec);
+                matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
+            }
+
+
+            // tmgl::setTransform(glm::value_ptr(fullVec[0]));
+            tmgl::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
+        }
+        else
+        {
+            var matrix = call.transformMatrix;
+            if (call.matrixMode == MaterialState::OrthoProj)
+            {
+            }
+            tmgl::setTransform(value_ptr(matrix));
+        }
+
+        if (lights.size() > 0)
+            lightUniforms->Apply(lights);
+
+        if (call.mesh)
+        {
+            call.mesh->use();
+        }
+        else
+        {
+            setVertexBuffer(0, call.vbh, 0, call.vertexCount);
+            setIndexBuffer(call.ibh, 0, call.indexCount);
+        }
+
+        tmgl::setState(call.state);
+
+        call.program->Push(viewId, call.overrides, call.overrideCt);
+
+        // tmgl::discard();
+    }
+    draw_cache.clear();
+
+}
+
 RenderTexture::~RenderTexture()
 {
     destroy(handle);
@@ -3162,9 +3310,9 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
     return mesh;
 }
 
-void tmt::render::pushDrawCall(DrawCall d)
+void tmt::render::pushDrawCall(DrawCall d, u32 view)
 {
-    calls.push_back(d);
+    renderer->viewCache[view]->draw_cache.push_back(d);
 }
 
 void tmt::render::takeScreenshot(string path)
@@ -3229,17 +3377,13 @@ RendererInfo* tmt::render::init(int width, int height)
 
     tmgl::init(init);
 
-    for (int i = 0; i < 1000; ++i)
-    {
-        tmgl::setViewClear(0, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
-    }
-
     renderer = new RendererInfo();
-    calls = std::vector<DrawCall>();
     renderer->window = window;
 
     renderer->windowWidth = width;
     renderer->windowHeight = height;
+
+    renderer->viewCache.push_back(new RenderTexture());
 
 
     ShaderInitInfo info = {
@@ -3331,38 +3475,6 @@ void tmt::render::update()
     }
 
 
-    float proj[16];
-    float ortho[16];
-    float oneMat[16];
-
-    for (int i = 0; i < 16; ++i)
-    {
-        proj[i] = 1;
-        oneMat[i] = 1;
-        ortho[i] = 1;
-    }
-
-    if (mainCamera)
-    {
-        bx::mtxProj(proj, mainCamera->FOV,
-                    static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight), 0.01f,
-                    100.0f, tmgl::getCaps()->homogeneousDepth);
-
-        float rad = glm::radians(mainCamera->FOV);
-
-        if (!application->is2D)
-            rad = 1;
-
-        float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
-        float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
-
-        bx::mtxOrtho(ortho, left, -left, bottom, -bottom,
-                     -100, 100.0f, 0, tmgl::getCaps()->homogeneousDepth);
-
-
-        tmgl::setViewTransform(0, mainCamera->GetView(), proj);
-    }
-
     if (!subHandlesLoaded)
     {
 
@@ -3376,206 +3488,11 @@ void tmt::render::update()
         subHandlesLoaded = true;
     }
 
-    float t[4] = {static_cast<float>(counterTime), static_cast<float>(glm::sin(counterTime)),
-                  static_cast<float>(glm::cos(counterTime)), static_cast<float>(renderer->usePosAnim)};
-    float d[4] = {static_cast<float>(lights.size()), 0, 0, 0};
 
-    std::sort(calls.begin(), calls.end(), [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
-
-    /*
-    for (const auto& draw : calls)
+    for (auto viewCache : renderer->viewCache)
     {
-        printf("Submitting draw call: Layer %d\n", draw.layer);
+        viewCache->redraw();
     }
-    */
-
-    setViewMode(0, bgfx::ViewMode::Sequential);
-
-    for (int i = 0; i < calls.size(); i++)
-    {
-        const var& call = calls[i];
-        //tmgl::setTransform(call.transformMatrix);
-
-        if (!call.program)
-            continue;
-
-        if (mainCamera)
-        {
-            switch (call.matrixMode)
-            {
-                case MaterialState::ViewProj:
-                    tmgl::setViewTransform(0,
-                                           value_ptr(mainCamera->GetView_m4()),
-                                           value_ptr(mainCamera->GetProjection_m4()));
-                    break;
-                case MaterialState::View:
-                    // tmgl::setViewTransform(0, mainCamera->GetView(), oneMat);
-                    break;
-                case MaterialState::Proj:
-                    // tmgl::setViewTransform(0, oneMat, proj);
-                    break;
-                case MaterialState::None:
-                    // tmgl::setViewTransform(0, oneMat, oneMat);
-                    break;
-                case MaterialState::ViewOrthoProj:
-                    // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
-                    tmgl::setViewTransform(0,
-                                           value_ptr(mainCamera->GetView_m4()), ortho);
-                    break;
-                case MaterialState::OrthoProj:
-                {
-                    // tmgl::setViewTransform(0, oneMat, ortho);
-                    setUniform(orthoHandle, value_ptr(mainCamera->GetOrthoProjection_m4()));
-                }
-                break;
-            }
-        }
-
-        setUniform(timeHandle, t);
-        if (mainCamera)
-        {
-            setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
-        }
-
-        if (call.animationMatrices.size() > 0)
-        {
-            //tmgl::setUniform(animHandle, call.animationMatrices);
-
-            var matrixCount = call.animationMatrices.size() + 1;
-
-            std::vector<float> matrixData;
-            matrixData.reserve(matrixCount * 16);
-
-            {
-                const float* transformPtr = value_ptr(call.transformMatrix);
-                matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
-            }
-
-            for (const auto& full_vec : call.animationMatrices)
-            {
-                const float* matPtr = value_ptr(full_vec);
-                matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
-            }
-
-
-            //tmgl::setTransform(glm::value_ptr(fullVec[0]));
-            tmgl::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
-
-        }
-        else
-        {
-            var matrix = call.transformMatrix;
-            if (call.matrixMode == MaterialState::OrthoProj)
-            {
-
-            }
-            tmgl::setTransform(value_ptr(matrix));
-        }
-
-        if (lights.size() > 0)
-            lightUniforms->Apply(lights);
-
-        if (call.mesh)
-        {
-            call.mesh->use();
-        }
-        else
-        {
-            setVertexBuffer(0, call.vbh, 0, call.vertexCount);
-            setIndexBuffer(call.ibh, 0, call.indexCount);
-        }
-
-        tmgl::setState(call.state);
-
-        call.program->Push(0, call.overrides, call.overrideCt);
-
-        // tmgl::discard();
-    }
-    calls.clear();
-
-    //tmgl::setViewTransform(0, value_ptr(mainCamera->GetView_m4()), ortho);
-
-    /*
-    auto dde = DebugDrawEncoder();
-
-    dde.begin(0);
-
-    for (auto d : debugCalls)
-    {
-        dde.setWireframe(false);
-        dde.setColor(d.color.getHex());
-        switch (d.type)
-        {
-            case debug::Line:
-            {
-                dde.push();
-
-                dde.moveTo(math::convertVec3(d.origin));
-                dde.lineTo(math::convertVec3(d.direction));
-
-                dde.pop();
-            }
-            break;
-            case debug::Sphere:
-            {
-                dde.push();
-
-                // dde.moveTo(math::convertVec3(d.origin));
-                dde.setWireframe(false);
-                dde.setTransform(value_ptr(d.matrix));
-                dde.drawOrb(d.origin.x, d.origin.y, d.origin.z, d.radius);
-
-                dde.pop();
-            }
-            break;
-            case debug::Box:
-            {
-                dde.push();
-
-                dde.setWireframe(true);
-                dde.setTransform(value_ptr(d.matrix));
-
-                var min = d.origin - (d.direction / 2.0f);
-                var max = d.origin + (d.direction / 2.0f);
-
-                var aabb = bx::Aabb(math::convertVec3(min), math::convertVec3(max));
-
-                dde.draw(aabb);
-
-                dde.pop();
-            }
-            break;
-            case debug::TriangleList:
-            {
-                dde.push();
-
-                dde.setWireframe(true);
-                dde.setTransform(value_ptr(d.matrix));
-
-                for (int i = 0; i < static_cast<int>(d.radius); ++i)
-                {
-                    var tri = d.triangles[i];
-
-                    var angle =
-                        bx::Triangle{math::convertVec3(tri.p1), math::convertVec3(tri.p2), math::convertVec3(tri.p3)};
-
-                    dde.draw(angle);
-                }
-
-                delete[] d.triangles;
-
-                dde.pop();
-
-            }
-            break;
-            default:
-                break;
-        }
-    }
-
-    dde.end();
-
-*/
 
     debugCalls.clear();
     debugFuncs.clear();
@@ -3596,23 +3513,6 @@ void tmt::render::update()
         fs::ResourceManager::pInstance->ReloadShaders();
     }
 
-    /*
-    static int64_t lastTime = bx::getHPCounter();
-    const static int64_t freq = bx::getHPFrequency(); // High precision timer frequency
-    constexpr int TARGET_FPS = 60;
-    constexpr int FRAME_TIME_MS = 1000 / TARGET_FPS; // 16ms per frame
-
-
-    int64_t currentTime = bx::getHPCounter();
-    float elapsedMs = static_cast<float>((currentTime - lastTime) * 1000) / freq;
-
-    if (elapsedMs < FRAME_TIME_MS)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_TIME_MS - static_cast<int>(elapsedMs)));
-    }
-
-    lastTime = bx::getHPCounter();
-    */
 }
 
 void tmt::render::shutdown()

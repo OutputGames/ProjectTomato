@@ -1,7 +1,15 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#include <complex.h>
+
 #include "utils.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
 #include "Fs/fs.hpp"
 #include "Obj/obj.hpp"
 
@@ -56,6 +64,7 @@ namespace tmt::render
         int windowWidth, windowHeight;
         bool useImgui = true;
         bool usePosAnim = true;
+        std::vector<RenderTexture*> viewCache;
 
         static RendererInfo* GetRendererInfo();
     };
@@ -294,7 +303,7 @@ namespace tmt::render
         void use();
 
         virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos,
-                          std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+                          unsigned int view, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
     };
 
 
@@ -606,16 +615,27 @@ namespace tmt::render
 
     struct RenderTexture
     {
-        tmgl::FrameBufferHandle handle;
+        tmgl::FrameBufferHandle handle = BGFX_INVALID_HANDLE;
         //tmgl::ViewId vid = 1;
-        Texture* realTexture;
-        Texture* depthTexture;
+        Texture* realTexture = nullptr;
+        Texture* depthTexture = nullptr;
+
+        string name = "";
 
         tmgl::TextureFormat::Enum format;
 
         RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum format, u16 clearFlags);
+        RenderTexture();
+
+        std::vector<DrawCall> draw_cache;
+        Camera* mainCamera;
+
+        void redraw();
 
         ~RenderTexture();
+
+    private:
+        u16 viewId;
     };
 
     struct Font
@@ -775,7 +795,7 @@ namespace tmt::render
     Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, tmgl::VertexLayout pcvDecl,
                      Model* model = nullptr, string name = "none");
 
-    void pushDrawCall(DrawCall d);
+    void pushDrawCall(DrawCall d, u32 view);
 
     void takeScreenshot(string path = "null");
 

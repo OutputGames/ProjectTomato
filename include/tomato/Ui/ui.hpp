@@ -46,7 +46,7 @@ namespace tmt::ui
     {
         render::Texture* mainTexture = nullptr;
         render::Material* material;
-        render::Color mainColor;
+        render::Color mainColor = render::Color::White;
         render::Mesh* spriteMesh = GetPrimitive(prim::Quad);
         bool isUI = true;
         bool useAlpha = true;
