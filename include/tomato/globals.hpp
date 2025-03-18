@@ -19,13 +19,14 @@
 void glfw_errorCallback(int error, const char* description);
 extern tmt::render::RendererInfo* renderer;
 extern std::vector<tmt::debug::DebugCall> debugCalls;
+extern std::vector<tmt::render::DrawCall> drawCalls;
 extern std::vector<tmt::light::Light*> lights;
 extern std::vector<std::function<void()>> debugFuncs;
 extern glm::vec2 mousep;
 extern glm::vec2 mousedelta;
 extern glm::vec2 mousescrl;
 extern int lastKey;
-extern tmt::render::Camera* mainCamera;
+//extern tmt::render::Camera* mainCamera;
 extern tmt::obj::Scene* mainScene;
 extern tmt::render::Shader* defaultShader;
 extern tmt::engine::Application* application;

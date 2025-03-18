@@ -299,8 +299,6 @@ void Shader::Push(int viewId, MaterialOverride* overrides, size_t oc)
     }
 
     submit(viewId, program);
-
-    delete[] overrides;
 }
 
 
@@ -574,7 +572,7 @@ void Mesh::use()
     }
 }
 
-void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, u32 view, std::vector<glm::mat4> anims)
+void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
 
@@ -618,7 +616,7 @@ void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, u32 vie
     else
         drawCall.overrides = nullptr;
 
-    pushDrawCall(drawCall, view);
+    pushDrawCall(drawCall);
 }
 
 Texture* Model::GetTextureFromName(string name)
@@ -2789,143 +2787,49 @@ RenderTexture::RenderTexture()
     {
         tmgl::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
     }
-
-    renderer->viewCache.push_back(this);
-}
-
-void RenderTexture::redraw()
-{
-
-    if (viewId == 0)
+    else
     {
-        this->mainCamera = ::mainCamera;
+
+        var width = renderer->windowWidth;
+        var height = renderer->windowHeight;
+
+        u64 textureFlags = TMGL_TEXTURE_RT;
+
+        bgfx::TextureFormat::Enum depthFormat = isTextureValid(0, false, 1, bgfx::TextureFormat::D16, textureFlags)
+            ? bgfx::TextureFormat::D16
+            : isTextureValid(0, false, 1, bgfx::TextureFormat::D24S8, textureFlags)
+            ? bgfx::TextureFormat::D24S8
+            : bgfx::TextureFormat::D32;
+
+        format = tmgl::TextureFormat::BGRA8;
+
+        realTexture = new Texture(width, height, format, textureFlags);
+
+
+        handle = createFrameBuffer(1, &realTexture->handle, true);
+        this->format = format;
+        setViewFrameBuffer(viewId, handle);
     }
+
 
     if (!name.empty())
     {
         tmgl::setViewName(viewId, name.c_str());
     }
 
-    std::sort(draw_cache.begin(), draw_cache.end(), [](const DrawCall& a, const DrawCall& b)
-    {
-        return a.layer < b.layer;
-    });
-
-    /*
-    for (const auto& draw : calls)
-    {
-        printf("Submitting draw call: Layer %d\n", draw.layer);
-    }
-    */
-
     setViewMode(viewId, bgfx::ViewMode::Sequential);
 
-    for (int i = 0; i < draw_cache.size(); i++)
-    {
-        const var& call = draw_cache[i];
-        // tmgl::setTransform(call.transformMatrix);
 
-        if (!call.program)
-            continue;
-
-        if (mainCamera)
-        {
-            switch (call.matrixMode)
-            {
-                case MaterialState::ViewProj:
-                    tmgl::setViewTransform(viewId, value_ptr(mainCamera->GetView_m4()),
-                                           value_ptr(mainCamera->GetProjection_m4()));
-                    break;
-                case MaterialState::View:
-                    // tmgl::setViewTransform(0, mainCamera->GetView(), oneMat);
-                    break;
-                case MaterialState::Proj:
-                    // tmgl::setViewTransform(0, oneMat, proj);
-                    break;
-                case MaterialState::None:
-                    // tmgl::setViewTransform(0, oneMat, oneMat);
-                    break;
-                case MaterialState::ViewOrthoProj:
-                    // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
-                    tmgl::setViewTransform(viewId, value_ptr(mainCamera->GetView_m4()),
-                                           value_ptr(mainCamera->GetOrthoProjection_m4()));
-                    break;
-                case MaterialState::OrthoProj:
-                {
-                    // tmgl::setViewTransform(0, oneMat, ortho);
-                    setUniform(orthoHandle, value_ptr(mainCamera->GetOrthoProjection_m4()));
-                }
-                break;
-            }
-        }
-
-        setUniform(timeHandle, getTimeUniform());
-        if (mainCamera)
-        {
-            setUniform(vposHandle, math::vec4toArray(glm::vec4(mainCamera->position, 0)));
-        }
-
-        if (call.animationMatrices.size() > 0)
-        {
-            // tmgl::setUniform(animHandle, call.animationMatrices);
-
-            var matrixCount = call.animationMatrices.size() + 1;
-
-            std::vector<float> matrixData;
-            matrixData.reserve(matrixCount * 16);
-
-            {
-                const float* transformPtr = value_ptr(call.transformMatrix);
-                matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
-            }
-
-            for (const auto& full_vec : call.animationMatrices)
-            {
-                const float* matPtr = value_ptr(full_vec);
-                matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
-            }
-
-
-            // tmgl::setTransform(glm::value_ptr(fullVec[0]));
-            tmgl::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
-        }
-        else
-        {
-            var matrix = call.transformMatrix;
-            if (call.matrixMode == MaterialState::OrthoProj)
-            {
-            }
-            tmgl::setTransform(value_ptr(matrix));
-        }
-
-        if (lights.size() > 0)
-            lightUniforms->Apply(lights);
-
-        if (call.mesh)
-        {
-            call.mesh->use();
-        }
-        else
-        {
-            setVertexBuffer(0, call.vbh, 0, call.vertexCount);
-            setIndexBuffer(call.ibh, 0, call.indexCount);
-        }
-
-        tmgl::setState(call.state);
-
-        call.program->Push(viewId, call.overrides, call.overrideCt);
-
-        // tmgl::discard();
-    }
-    draw_cache.clear();
-
+    renderer->viewCache.push_back(this);
 }
+
 
 RenderTexture::~RenderTexture()
 {
     destroy(handle);
     delete realTexture;
-    //tmgl::resetView(vid);
+    bgfx::resetView(viewId);
+    renderer->viewCache.erase(VEC_FIND(renderer->viewCache, this));
 }
 
 Font* Font::Create(string path)
@@ -2964,43 +2868,6 @@ float Font::CalculateTextSize(string text, float fontSize, float forcedSpacing)
     return size;
 }
 
-
-// Compute the squared Euclidean distance
-float euclideanDistance(int x1, int y1, int x2, int y2) { return sqrtf((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)); }
-
-// Convert a bitmap to an SDF
-std::vector<float> generateSDF(const FT_Bitmap& bitmap, int spread)
-{
-    int width = bitmap.width;
-    int height = bitmap.rows;
-    std::vector<float> sdf(width * height, spread);
-
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            bool isInside = bitmap.buffer[y * width + x] > 128;
-
-            // Find nearest edge pixel
-            for (int yy = 0; yy < height; ++yy)
-            {
-                for (int xx = 0; xx < width; ++xx)
-                {
-                    bool sampleInside = bitmap.buffer[yy * width + xx] > 128;
-                    if (sampleInside != isInside)
-                    {
-                        float dist = euclideanDistance(x, y, xx, yy);
-                        sdf[y * width + x] = std::min(sdf[y * width + x], dist);
-                    }
-                }
-            }
-
-            // Normalize [-1, 1] range
-            sdf[y * width + x] = (sdf[y * width + x] / spread) * (isInside ? -1.0f : 1.0f);
-        }
-    }
-    return sdf;
-}
 
 Font::Font(string path)
 {
@@ -3146,7 +3013,7 @@ glm::mat4 Camera::GetProjection_m4()
                                 static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
                                 NearPlane, FarPlane);
 
-    float rad = glm::radians(mainCamera->FOV);
+    float rad = glm::radians(FOV);
 
     float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
     float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
@@ -3164,7 +3031,7 @@ glm::mat4 Camera::GetOrthoProjection_m4()
         return glm::mat4(1.0);
     }
 
-    float rad = glm::radians(mainCamera->FOV);
+    float rad = glm::radians(FOV);
 
     if (!application->is2D)
         rad = 1;
@@ -3192,14 +3059,123 @@ glm::vec3 Camera::GetUp()
     return Up;
 }
 
+void Camera::redraw()
+{
+    std::sort(drawCalls.begin(), drawCalls.end(),
+              [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
+
+    /*
+    for (const auto& draw : calls)
+    {
+        printf("Submitting draw call: Layer %d\n", draw.layer);
+    }
+    */
+
+    for (int i = 0; i < drawCalls.size(); i++)
+    {
+        const var& call = drawCalls[i];
+        // tmgl::setTransform(call.transformMatrix);
+
+        if (!call.program)
+            continue;
+
+        switch (call.matrixMode)
+        {
+            case MaterialState::ViewProj:
+                tmgl::setViewTransform(renderTexture->viewId, value_ptr(GetView_m4()), value_ptr(GetProjection_m4()));
+                break;
+            case MaterialState::View:
+                // tmgl::setViewTransform(0, mainCamera->GetView(), oneMat);
+                break;
+            case MaterialState::Proj:
+                // tmgl::setViewTransform(0, oneMat, proj);
+                break;
+            case MaterialState::None:
+                // tmgl::setViewTransform(0, oneMat, oneMat);
+                break;
+            case MaterialState::ViewOrthoProj:
+                // tmgl::setViewTransform(0, mainCamera->GetView(), ortho);
+                tmgl::setViewTransform(renderTexture->viewId, value_ptr(GetView_m4()),
+                                       value_ptr(GetOrthoProjection_m4()));
+                break;
+            case MaterialState::OrthoProj:
+            {
+                // tmgl::setViewTransform(0, oneMat, ortho);
+                setUniform(orthoHandle, value_ptr(GetOrthoProjection_m4()));
+            }
+            break;
+        }
+
+        setUniform(timeHandle, getTimeUniform());
+        setUniform(vposHandle, math::vec4toArray(glm::vec4(position, 0)));
+
+        if (call.animationMatrices.size() > 0)
+        {
+            // tmgl::setUniform(animHandle, call.animationMatrices);
+
+            var matrixCount = call.animationMatrices.size() + 1;
+
+            std::vector<float> matrixData;
+            matrixData.reserve(matrixCount * 16);
+
+            {
+                const float* transformPtr = value_ptr(call.transformMatrix);
+                matrixData.insert(matrixData.end(), transformPtr, transformPtr + 16);
+            }
+
+            for (const auto& full_vec : call.animationMatrices)
+            {
+                const float* matPtr = value_ptr(full_vec);
+                matrixData.insert(matrixData.end(), matPtr, matPtr + 16);
+            }
+
+
+            // tmgl::setTransform(glm::value_ptr(fullVec[0]));
+            tmgl::setTransform(matrixData.data(), static_cast<uint16_t>(matrixCount));
+        }
+        else
+        {
+            var matrix = call.transformMatrix;
+            if (call.matrixMode == MaterialState::OrthoProj)
+            {
+            }
+            tmgl::setTransform(value_ptr(matrix));
+        }
+
+        if (lights.size() > 0)
+            lightUniforms->Apply(lights);
+
+        if (call.mesh)
+        {
+            call.mesh->use();
+        }
+        else
+        {
+            setVertexBuffer(0, call.vbh, 0, call.vertexCount);
+            setIndexBuffer(call.ibh, 0, call.indexCount);
+        }
+
+        tmgl::setState(call.state);
+
+        call.program->Push(renderTexture->viewId, call.overrides, call.overrideCt);
+
+        // tmgl::discard();
+    }
+}
+
 Camera* Camera::GetMainCamera()
 {
-    return mainCamera;
+    return renderer->cameraCache[0];
 }
 
 Camera::Camera()
 {
-    mainCamera = this;
+    renderer->cameraCache.push_back(this);
+}
+
+Camera::~Camera()
+{
+    renderer->cameraCache.erase(VEC_FIND(renderer->cameraCache, this));
 }
 
 Color Color::FromHex(string hex)
@@ -3321,9 +3297,9 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
     return mesh;
 }
 
-void tmt::render::pushDrawCall(DrawCall d, u32 view)
+void tmt::render::pushDrawCall(DrawCall d)
 {
-    renderer->viewCache[view]->draw_cache.push_back(d);
+    drawCalls.push_back(d);
 }
 
 void tmt::render::takeScreenshot(string path)
@@ -3393,8 +3369,6 @@ RendererInfo* tmt::render::init(int width, int height)
 
     renderer->windowWidth = width;
     renderer->windowHeight = height;
-
-    renderer->viewCache.push_back(new RenderTexture());
 
 
     ShaderInitInfo info = {
@@ -3500,10 +3474,17 @@ void tmt::render::update()
     }
 
 
-    for (auto viewCache : renderer->viewCache)
+    for (auto cameraCache : renderer->cameraCache)
     {
-        viewCache->redraw();
+        cameraCache->redraw();
     }
+
+    for (auto drawCall : drawCalls)
+    {
+        drawCall.clean();
+    }
+
+    drawCalls.clear();
 
     debugCalls.clear();
     debugFuncs.clear();
@@ -3524,6 +3505,11 @@ void tmt::render::update()
         fs::ResourceManager::pInstance->ReloadShaders();
     }
 
+}
+
+void DrawCall::clean()
+{
+    delete[] overrides;
 }
 
 void tmt::render::shutdown()
@@ -3562,4 +3548,3 @@ void tmgl::setUniform(UniformHandle handle, std::vector<glm::mat4> v)
 
     delete[] arr;
 }
-      

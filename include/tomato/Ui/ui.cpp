@@ -288,7 +288,7 @@ void SpriteObject::Update()
     else
         drawCall.overrides = nullptr;
 
-    pushDrawCall(drawCall, 0);
+    pushDrawCall(drawCall);
 
     for (auto child : children)
     {
@@ -352,7 +352,7 @@ void ButtonObject::Update()
     ndcMouse.y = (1.0f - (wmp.y / height)) * 2.0f - 1.0f; // Flip Y and normalize to [-1, 1]
 
     // Apply orthographic projection scaling based on FOV and screen dimensions.
-    float rad = glm::radians(mainCamera->FOV);
+    float rad = glm::radians(mainCameraObject->camera->FOV);
 
     if (!application->is2D)
         rad = 1;
@@ -679,7 +679,7 @@ void TextObject::Update()
         else
             drawCall.overrides = nullptr;
 
-        pushDrawCall(drawCall, 0);
+        pushDrawCall(drawCall);
 
         textIdx++;
     }

@@ -59,6 +59,7 @@ namespace tmt::render
         bool useImgui = true;
         bool usePosAnim = true;
         std::vector<RenderTexture*> viewCache;
+        std::vector<Camera*> cameraCache;
 
         static RendererInfo* GetRendererInfo();
     };
@@ -297,7 +298,7 @@ namespace tmt::render
         void use();
 
         virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos,
-                          unsigned int view, std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+                          std::vector<glm::mat4> anims = std::vector<glm::mat4>());
     };
 
 
@@ -621,14 +622,12 @@ namespace tmt::render
         RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum format, u16 clearFlags);
         RenderTexture();
 
-        std::vector<DrawCall> draw_cache;
-        Camera* mainCamera;
-
-        void redraw();
-
         ~RenderTexture();
 
     private:
+        friend Camera;
+
+
         u16 viewId;
     };
 
@@ -661,6 +660,9 @@ namespace tmt::render
     {
         glm::vec3 position;
         glm::quat rotation;
+
+        RenderTexture* renderTexture;
+
         float FOV = 90.0f;
         float NearPlane = 0.001f;
         float FarPlane = 1000.0f;
@@ -681,12 +683,15 @@ namespace tmt::render
         glm::vec3 GetFront();
         glm::vec3 GetUp();
 
+        void redraw();
+
         static Camera* GetMainCamera();
 
     private:
         friend obj::CameraObject;
 
         Camera();
+        ~Camera();
     };
 
     struct Color
@@ -782,14 +787,16 @@ namespace tmt::render
         MaterialState::MatrixMode matrixMode;
 
         float getDistance(Camera* cam);
+        void clean();
     };
+
 
     MatrixArray GetMatrixArray(glm::mat4 m);
 
     Mesh* createMesh(Vertex* data, u16* indices, u32 vertSize, u32 triSize, tmgl::VertexLayout pcvDecl,
                      Model* model = nullptr, string name = "none");
 
-    void pushDrawCall(DrawCall d, u32 view);
+    void pushDrawCall(DrawCall d);
 
     void takeScreenshot(string path = "null");
 

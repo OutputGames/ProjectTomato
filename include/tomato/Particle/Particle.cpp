@@ -203,7 +203,7 @@ void tmt::particle::ParticleEmitter::Update()
         }
         else
         {
-            system->renderer.mesh->draw(particle->getTransform(), system->renderer.material, particle->position, 0);
+            system->renderer.mesh->draw(particle->getTransform(), system->renderer.material, particle->position);
         }
     }
 

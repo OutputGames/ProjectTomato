@@ -12,6 +12,7 @@ void glfw_errorCallback(int error, const char* description)
 
 tmt::render::RendererInfo* renderer;
 std::vector<tmt::debug::DebugCall> debugCalls;
+std::vector<tmt::render::DrawCall> drawCalls;
 std::vector<tmt::light::Light*> lights;
 std::vector<std::function<void()>> debugFuncs;
 glm::vec2 mousep;
