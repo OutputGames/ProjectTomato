@@ -2793,20 +2793,11 @@ RenderTexture::RenderTexture()
         var width = renderer->windowWidth;
         var height = renderer->windowHeight;
 
-        u64 textureFlags = TMGL_TEXTURE_RT;
 
-        tmgl::TextureFormat::Enum depthFormat = tmgl::TextureFormat::D24S8;
-
+        depthFormat = tmgl::TextureFormat::D24S8;
         format = tmgl::TextureFormat::RGBA8;
 
-        realTexture = new Texture(width, height, format, textureFlags);
-        depthTexture = new Texture(width, height, depthFormat, textureFlags);
-
-        tmgl::TextureHandle handles[] = {realTexture->handle, depthTexture->handle};
-
-        handle = createFrameBuffer(2, handles, true);
-        this->format = format;
-        setViewFrameBuffer(viewId, handle);
+        resize(width, height);
     }
     tmgl::setViewClear(viewId, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
@@ -2826,6 +2817,30 @@ RenderTexture::~RenderTexture()
 {
     bgfx::resetView(viewId);
     renderer->viewCache.erase(VEC_FIND(renderer->viewCache, this));
+}
+
+void RenderTexture::resize(int width, int height)
+{
+    if (realTexture)
+        delete realTexture;
+    if (depthTexture)
+        delete depthTexture;
+    if (isValid(handle))
+    {
+        destroy(handle);
+    }
+
+    u64 textureFlags = TMGL_TEXTURE_RT;
+
+
+    realTexture = new Texture(width, height, format, textureFlags);
+    depthTexture = new Texture(width, height, depthFormat, textureFlags);
+
+    tmgl::TextureHandle handles[] = {realTexture->handle, depthTexture->handle};
+
+    handle = createFrameBuffer(2, handles, true);
+
+    setViewFrameBuffer(viewId, handle);
 }
 
 Font* Font::Create(string path)
@@ -2999,22 +3014,24 @@ glm::mat4 Camera::GetView_m4()
 
 glm::mat4 Camera::GetProjection_m4()
 {
-    if (renderer->windowWidth == 0 || renderer->windowHeight == 0)
+    float width = renderer->windowWidth;
+    float height = renderer->windowHeight;
+
+    if (renderTexture->realTexture)
+    {
+        width = renderTexture->realTexture->width;
+        height = renderTexture->realTexture->height;
+    }
+
+    if (width == 0 || height == 0)
     {
         return glm::mat4(1.0);
     }
 
     if (mode == Perspective)
         return glm::perspective(glm::radians(FOV),
-                                static_cast<float>(renderer->windowWidth) / static_cast<float>(renderer->windowHeight),
+                                width / height,
                                 NearPlane, FarPlane);
-
-    float rad = glm::radians(FOV);
-
-    float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
-    float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
-
-    return glm::ortho(left, -left, bottom, -bottom, -100.f, 100.f);
 
     return GetOrthoProjection_m4();
 
@@ -3022,7 +3039,16 @@ glm::mat4 Camera::GetProjection_m4()
 
 glm::mat4 Camera::GetOrthoProjection_m4()
 {
-    if (renderer->windowWidth == 0 || renderer->windowHeight == 0)
+    float width = renderer->windowWidth;
+    float height = renderer->windowHeight;
+
+    if (renderTexture->realTexture)
+    {
+        width = renderTexture->realTexture->width;
+        height = renderTexture->realTexture->height;
+    }
+
+    if (width == 0 || height == 0)
     {
         return glm::mat4(1.0);
     }
@@ -3032,8 +3058,8 @@ glm::mat4 Camera::GetOrthoProjection_m4()
     if (!application->is2D)
         rad = 1;
 
-    float left = (static_cast<float>(renderer->windowWidth) / 2) * rad;
-    float bottom = -(static_cast<float>(renderer->windowHeight) / 2) * rad;
+    float left = (width / 2) * rad;
+    float bottom = -(height / 2) * rad;
 
     return glm::ortho(left, -left, bottom, -bottom, -100.f, 100.f);
 }

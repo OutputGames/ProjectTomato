@@ -618,12 +618,14 @@ namespace tmt::render
 
         string name = "";
 
-        tmgl::TextureFormat::Enum format;
+        tmgl::TextureFormat::Enum format, depthFormat;
 
         RenderTexture(u16 width, u16 height, tmgl::TextureFormat::Enum format, u16 clearFlags);
         RenderTexture();
 
         ~RenderTexture();
+
+        void resize(int width, int height);
 
     private:
         friend Camera;
