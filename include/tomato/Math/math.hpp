@@ -135,9 +135,9 @@ namespace tmt::math
 
     float angleBetween(glm::vec2 a, glm::vec2 b);
 
-    uint64_t packU32ToU64(uint32_t high, uint32_t low) { return (static_cast<uint64_t>(high) << 32) | low; }
+    inline uint64_t packU32ToU64(uint32_t high, uint32_t low) { return (static_cast<uint64_t>(high) << 32) | low; }
 
-    void unpackU64ToU32(uint64_t packed, uint32_t& high, uint32_t& low)
+    inline void unpackU64ToU32(uint64_t packed, uint32_t& high, uint32_t& low)
     {
         high = static_cast<uint32_t>(packed >> 32); // Extract high 32 bits
         low = static_cast<uint32_t>(packed & 0xFFFFFFFF); // Extract low 32 bits

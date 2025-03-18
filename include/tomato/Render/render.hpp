@@ -4,12 +4,6 @@
 #include <complex.h>
 
 #include "utils.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
-#include "2D/2d.hpp"
 #include "Fs/fs.hpp"
 #include "Obj/obj.hpp"
 
@@ -303,11 +297,8 @@ namespace tmt::render
 
         void use();
 
-        virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos,
-                          u32 layer = 0,
-                          u32 renderLayer = 0,
-                          std::vector<glm::mat4> anims = std::vector<glm::mat4>()
-            );
+        virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos, u32 layer = 0, u32 renderLayer = 0,
+                          std::vector<glm::mat4> anims = std::vector<glm::mat4>());
     };
 
 

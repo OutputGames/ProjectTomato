@@ -419,6 +419,14 @@ void ButtonObject::Update()
 
     float darkenAmt = 0.25;
 
+    if (lastActiveFrame != time::getFrameTime()-1)
+    {
+        hover = false;
+        click = false;
+    }
+
+    lastActiveFrame = time::getFrameTime();
+
     if (hover)
     {
         if (!hoverLast)

@@ -3098,18 +3098,17 @@ void Camera::redraw()
 
     setViewMode(renderTexture->viewId, bgfx::ViewMode::Sequential);
 
-    u32 l = renderLayers;
-
+    var l = renderLayers;
     if (renderLayers == -1)
     {
-        for (int i = 0; i < obj::LayerMask::layerMap.size(); ++i)
+        l = 0;
+        for (auto layerMap : obj::LayerMask::layerMap)
         {
-            l |= (1 << i);
+            l |= layerMap.second;
         }
     }
 
     /*
-* 
     for (const auto& draw : calls)
     {
         printf("Submitting draw call: Layer %d\n", draw.layer);
@@ -3122,6 +3121,9 @@ void Camera::redraw()
         // tmgl::setTransform(call.transformMatrix);
 
         if (!call.program)
+            continue;
+
+        if (!(l & call.renderLayer))
             continue;
 
         switch (call.matrixMode)
@@ -3348,6 +3350,7 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
 
 void tmt::render::pushDrawCall(DrawCall d)
 {
+
     u32 l1, l2;
 
     math::unpackU64ToU32(d.layer, l1, l2);
@@ -3356,7 +3359,6 @@ void tmt::render::pushDrawCall(DrawCall d)
     d.layer = l1;
 
     drawCalls.push_back(d);
-
 }
 
 void tmt::render::takeScreenshot(string path)
