@@ -2795,22 +2795,20 @@ RenderTexture::RenderTexture()
 
         u64 textureFlags = TMGL_TEXTURE_RT;
 
-        bgfx::TextureFormat::Enum depthFormat = isTextureValid(0, false, 1, bgfx::TextureFormat::D16, textureFlags)
-            ? bgfx::TextureFormat::D16
-            : isTextureValid(0, false, 1, bgfx::TextureFormat::D24S8, textureFlags)
-            ? bgfx::TextureFormat::D24S8
-            : bgfx::TextureFormat::D32;
+        tmgl::TextureFormat::Enum depthFormat = tmgl::TextureFormat::D24S8;
 
-        format = tmgl::TextureFormat::BGRA8;
+        format = tmgl::TextureFormat::RGBA8;
 
         realTexture = new Texture(width, height, format, textureFlags);
+        depthTexture = new Texture(width, height, depthFormat, textureFlags);
 
+        tmgl::TextureHandle handles[] = {realTexture->handle, depthTexture->handle};
 
-        handle = createFrameBuffer(1, &realTexture->handle, true);
+        handle = createFrameBuffer(2, handles, true);
         this->format = format;
         setViewFrameBuffer(viewId, handle);
     }
-
+    tmgl::setViewClear(viewId, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
     if (!name.empty())
     {
@@ -2826,8 +2824,6 @@ RenderTexture::RenderTexture()
 
 RenderTexture::~RenderTexture()
 {
-    destroy(handle);
-    delete realTexture;
     bgfx::resetView(viewId);
     renderer->viewCache.erase(VEC_FIND(renderer->viewCache, this));
 }
@@ -3064,6 +3060,18 @@ void Camera::redraw()
     std::sort(drawCalls.begin(), drawCalls.end(),
               [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
 
+    if (renderTexture->viewId > 0)
+    {
+
+        tmgl::setViewRect(renderTexture->viewId, 0, 0, renderTexture->realTexture->width,
+                          renderTexture->realTexture->height);
+    }
+    else
+    {
+        tmgl::setViewRect(renderTexture->viewId, 0, 0,
+                          static_cast<uint16_t>(renderer->windowWidth), static_cast<uint16_t>(renderer->windowHeight));
+    }
+
     /*
     for (const auto& draw : calls)
     {
@@ -3176,6 +3184,10 @@ Camera::Camera()
 Camera::~Camera()
 {
     renderer->cameraCache.erase(VEC_FIND(renderer->cameraCache, this));
+    if (renderTexture)
+    {
+        delete renderTexture;
+    }
 }
 
 Color Color::FromHex(string hex)
@@ -3405,37 +3417,6 @@ RendererInfo* tmt::render::init(int width, int height)
 
 void tmt::render::update()
 {
-    // Set view 0 default viewport.
-    tmgl::setViewRect(0, 0, 0,
-                      static_cast<uint16_t>(renderer->windowWidth), static_cast<uint16_t>(renderer->windowHeight));
-
-
-    // This dummy draw call is here to make sure that view 0 is cleared
-    // if no other draw calls are submitted to view 0.
-
-    /*
-    tmgl::dbgTextClear();
-
-    const tmgl::Stats* stats = tmgl::getStats();
-
-    //tmgl::dbgTextPrintf(5, 5, 0x0f, "%s", getRendererName(tmgl::getRendererType()));
-    
-    for (auto d : debugCalls)
-    {
-        switch (d.type)
-        {
-            case debug::Text:
-            {
-                tmgl::dbgTextPrintf(d.origin.x, d.origin.y, 0x4f, "%s.", d.text.c_str());
-            }
-            break;
-            default:
-                break;
-        }
-    }
-    tmgl::setDebug(TMGL_DEBUG_TEXT);
-    */
-
 
     u8 btn = ((input::Mouse::GetMouseButton(input::Mouse::Left, true) == input::Mouse::Hold) ? IMGUI_MBUT_LEFT : 0) |
         ((input::Mouse::GetMouseButton(input::Mouse::Right, true) == input::Mouse::Hold) ? IMGUI_MBUT_RIGHT : 0) |

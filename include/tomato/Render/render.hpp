@@ -615,6 +615,7 @@ namespace tmt::render
         Texture* realTexture = nullptr;
         Texture* depthTexture = nullptr;
 
+
         string name = "";
 
         tmgl::TextureFormat::Enum format;
@@ -658,8 +659,8 @@ namespace tmt::render
 
     struct Camera
     {
-        glm::vec3 position;
-        glm::quat rotation;
+        glm::vec3 position = {0, 0, 0};
+        glm::quat rotation = {1, 0, 0, 0};
 
         RenderTexture* renderTexture;
 
@@ -689,6 +690,7 @@ namespace tmt::render
 
     private:
         friend obj::CameraObject;
+        friend obj::Scene;
 
         Camera();
         ~Camera();
