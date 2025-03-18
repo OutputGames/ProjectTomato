@@ -51,7 +51,7 @@ namespace tmt::ui
         bool isUI = true;
         bool useAlpha = true;
         bool copyAlpha = true;
-        int layer = 0;
+        int spriteLayer = 0;
 
         Anchor anchor = Center;
 

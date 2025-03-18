@@ -572,7 +572,8 @@ void Mesh::use()
     }
 }
 
-void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::vector<glm::mat4> anims)
+void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, u32 layer, u32 renderLayer,
+                std::vector<glm::mat4> anims)
 {
     var drawCall = DrawCall();
 
@@ -580,6 +581,7 @@ void Mesh::draw(glm::mat4 transform, Material* material, glm::vec3 spos, std::ve
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = material->state.matrixMode;
     drawCall.sortedPosition = spos;
+    drawCall.layer = math::packU32ToU64(renderLayer, layer);
 
     //drawCall.transformMatrices = std::vector<MatrixArray>(MAX_BONE_MATRICES + 1);
     drawCall.transformMatrix = transform;
@@ -2806,8 +2808,6 @@ RenderTexture::RenderTexture()
         tmgl::setViewName(viewId, name.c_str());
     }
 
-    setViewMode(viewId, bgfx::ViewMode::Sequential);
-
 
     renderer->viewCache.push_back(this);
 }
@@ -3083,9 +3083,6 @@ glm::vec3 Camera::GetUp()
 
 void Camera::redraw()
 {
-    std::sort(drawCalls.begin(), drawCalls.end(),
-              [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
-
     if (renderTexture->viewId > 0)
     {
 
@@ -3098,7 +3095,21 @@ void Camera::redraw()
                           static_cast<uint16_t>(renderer->windowWidth), static_cast<uint16_t>(renderer->windowHeight));
     }
 
+
+    setViewMode(renderTexture->viewId, bgfx::ViewMode::Sequential);
+
+    u32 l = renderLayers;
+
+    if (renderLayers == -1)
+    {
+        for (int i = 0; i < obj::LayerMask::layerMap.size(); ++i)
+        {
+            l |= (1 << i);
+        }
+    }
+
     /*
+* 
     for (const auto& draw : calls)
     {
         printf("Submitting draw call: Layer %d\n", draw.layer);
@@ -3337,7 +3348,15 @@ Mesh* tmt::render::createMesh(Vertex* data, u16* indices, u32 vertCount, u32 tri
 
 void tmt::render::pushDrawCall(DrawCall d)
 {
+    u32 l1, l2;
+
+    math::unpackU64ToU32(d.layer, l1, l2);
+
+    d.renderLayer = l2;
+    d.layer = l1;
+
     drawCalls.push_back(d);
+
 }
 
 void tmt::render::takeScreenshot(string path)
@@ -3480,6 +3499,8 @@ void tmt::render::update()
         subHandlesLoaded = true;
     }
 
+    std::sort(drawCalls.begin(), drawCalls.end(),
+              [](const DrawCall& a, const DrawCall& b) { return a.layer < b.layer; });
 
     for (auto cameraCache : renderer->cameraCache)
     {

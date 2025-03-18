@@ -4,6 +4,12 @@
 #include <complex.h>
 
 #include "utils.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
+#include "2D/2d.hpp"
 #include "Fs/fs.hpp"
 #include "Obj/obj.hpp"
 
@@ -298,7 +304,10 @@ namespace tmt::render
         void use();
 
         virtual void draw(glm::mat4 t, Material* material, glm::vec3 spos,
-                          std::vector<glm::mat4> anims = std::vector<glm::mat4>());
+                          u32 layer = 0,
+                          u32 renderLayer = 0,
+                          std::vector<glm::mat4> anims = std::vector<glm::mat4>()
+            );
     };
 
 
@@ -665,6 +674,7 @@ namespace tmt::render
         glm::quat rotation = {1, 0, 0, 0};
 
         RenderTexture* renderTexture;
+        u32 renderLayers = -1;
 
         float FOV = 90.0f;
         float NearPlane = 0.001f;
@@ -770,7 +780,9 @@ namespace tmt::render
     struct DrawCall
     {
         u64 state;
-        u32 layer = 0;
+        u64 layer = 0;
+
+        u32 renderLayer;
 
         MaterialOverride* overrides;
         size_t overrideCt = 0;

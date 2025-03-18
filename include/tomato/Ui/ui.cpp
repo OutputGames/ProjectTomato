@@ -137,6 +137,7 @@ void SpriteObject::Start()
 {
     Object::Start();
 
+
     /*
     if (name == "menu")
     {
@@ -177,6 +178,8 @@ SpriteObject::SpriteObject()
 
     if (!mainTexture)
         mainTexture = fs::ResourceManager::pInstance->loaded_textures["White"];
+
+    SetLayer(obj::LayerMask::getLayer("UI"));
 }
 
 SpriteObject::SpriteObject(string path) :
@@ -185,6 +188,8 @@ SpriteObject::SpriteObject(string path) :
     mainTexture = render::Texture::CreateTexture(path);
 
     scale = {mainTexture->width, mainTexture->height, 1};
+
+    SetLayer(obj::LayerMask::getLayer("UI"));
 }
 
 void SpriteObject::Update()
@@ -205,14 +210,14 @@ void SpriteObject::Update()
 
     color->v4 = col.getData();
     tex->tex = mainTexture;
-    spriteData->v4 = glm::vec4(layer, isUI, useAlpha, 0);
+    spriteData->v4 = glm::vec4(spriteLayer, isUI, useAlpha, 0);
 
     //material->state.write = BGFX_STATE_WRITE_RGB;
     //material->state.depth = render::MaterialState::Always;
 
     var drawCall = render::DrawCall();
 
-    drawCall.layer = layer + 1;
+    drawCall.layer = math::packU32ToU64(spriteLayer + 1, layer);
     drawCall.mesh = spriteMesh;
     drawCall.state = material->GetMaterialState();
     drawCall.matrixMode = render::MaterialState::OrthoProj;
@@ -505,6 +510,8 @@ TextObject::TextObject()
 
     //var cursor = MakeCorner(glm::vec2(0));
     //cursor->SetParent(this);
+
+    SetLayer(obj::LayerMask::getLayer("UI"));
 }
 
 void TextObject::Start()
@@ -647,7 +654,7 @@ void TextObject::Update()
 
         var drawCall = render::DrawCall();
 
-        drawCall.layer = layer + 1;
+        drawCall.layer = math::packU32ToU64(spriteLayer + 1, layer);
         drawCall.state = material->GetMaterialState();
         drawCall.matrixMode = render::MaterialState::OrthoProj;
 
