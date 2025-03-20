@@ -366,6 +366,7 @@ namespace tmt::fs
             std::reverse(memp, memp + sizeof(T));
         }
 
+
         template <typename T>
         T Read()
         {
@@ -503,14 +504,19 @@ namespace tmt::fs
 
 
         size_t fileSize;
-        int position;
+        long position;
 
         void SeekBegin(int pos)
         {
             seekg(pos, std::ios::beg);
+            position = pos;
         }
 
-        void SeekCurrent(int pos) { seekg(pos, std::ios::cur); }
+        void SeekCurrent(int pos)
+        {
+            seekg(pos, std::ios::cur);
+            position += pos;
+        }
 
         void Align(int alignment) { seekg((-tellg() % alignment + alignment) % alignment, cur); }
 
