@@ -376,6 +376,8 @@ namespace tmt::fs
                 endswap(&header);
             }
 
+            position = tellg();
+
             return header;
         }
 
@@ -501,6 +503,7 @@ namespace tmt::fs
 
 
         size_t fileSize;
+        int position;
 
         void SeekBegin(int pos)
         {
