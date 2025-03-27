@@ -614,7 +614,7 @@ namespace tmt::render
         //tmgl::ViewId vid = 1;
         Texture* realTexture = nullptr;
         Texture* depthTexture = nullptr;
-
+        u16 viewId;
 
         string name = "";
 
@@ -631,7 +631,6 @@ namespace tmt::render
         friend Camera;
 
 
-        u16 viewId;
     };
 
     struct Font
