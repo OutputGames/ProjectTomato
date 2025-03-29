@@ -215,7 +215,6 @@ void SubShader::Reload()
 
             if (iname.rfind("iu_", 0) == 0)
             {
-                // pos=0 limits the search to the prefix
                 continue;
             }
 
