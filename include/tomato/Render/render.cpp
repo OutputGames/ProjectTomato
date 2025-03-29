@@ -2836,7 +2836,7 @@ void RenderTexture::resize(int width, int height)
     setViewFrameBuffer(viewId, handle);
 }
 
-CubemapTexture::CubemapTexture(string path)
+CubemapTexture::CubemapTexture(string path, int cubemapSize)
 {
     int width, height, nrChannels;
     float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0);
@@ -2875,27 +2875,20 @@ CubemapTexture::CubemapTexture(string path)
 
     var hdrTexture = new Texture(hdrHandle);
 
-    var cubemapSize = 512;
 
-
-    textureFlags = TMGL_TEXTURE_RT;
-    var depthFormat = tmgl::TextureFormat::D24S8;
     var format = tmgl::TextureFormat::RGBA8;
 
-    var realTexture = new Texture(cubemapSize, height, format, textureFlags);
-    var depthTexture = new Texture(cubemapSize, height, depthFormat, textureFlags | TMGL_TEXTURE_RT_WRITE_ONLY);
     tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, TMGL_TEXTURE_RT);
 
-    std::vector<tmgl::Attachment> handles;
+
+    std::vector<tmgl::FrameBufferHandle> fbos;
 
     for (int i = 0; i < 6; ++i)
     {
         var attachment = tmgl::Attachment{};
         attachment.init(cubemapHandle, tmgl::Access::Write, i);
-        handles.push_back(attachment);
+        fbos.push_back(createFrameBuffer(1, &attachment, true));
     }
-
-    var fbo = createFrameBuffer(handles.size(), handles.data(), true);
 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] = {
@@ -2912,13 +2905,12 @@ CubemapTexture::CubemapTexture(string path)
     material->GetUniform("equiMap")->tex = hdrTexture;
     tmgl::setViewClear(1, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
-    setViewFrameBuffer(1, fbo);
+    int off = 16;
     for (int i = 0; i < 6; ++i)
     {
-        tmgl::setViewRect(1, 0, 0, cubemapSize, cubemapSize);
-        tmgl::setViewTransform(1, value_ptr(captureViews[i]), value_ptr(captureProjection));
-
-        material->GetUniform("u_data")->v4 = {i, 0, 0, 0};
+        setViewFrameBuffer(i + off, fbos[i]);
+        tmgl::setViewRect(i + off, 0, 0, cubemapSize, cubemapSize);
+        tmgl::setViewTransform(i + off, value_ptr(captureViews[i]), value_ptr(captureProjection));
 
         var cube = GetPrimitive(prim::Cube);
 
@@ -2926,12 +2918,17 @@ CubemapTexture::CubemapTexture(string path)
 
         cube->use();
 
-        shader->Push(1, material->overrides.data(), material->overrides.size());
+        shader->Push(i + off, material->overrides.data(), material->overrides.size());
+
     }
 
-    tmgl::setViewFrameBuffer(0, TMGL_INVALID_HANDLE);
-    tmgl::setViewClear(0, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
-    setViewRect(0, 0, 0, bgfx::BackbufferRatio::Half);
+    for (auto fbo : fbos)
+    {
+        destroy(fbo);
+    }
+
+    realTexture = new Texture(cubemapHandle);
+    panoramaTexture = hdrTexture;
 }
 
 Font* Font::Create(string path)

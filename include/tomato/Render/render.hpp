@@ -635,8 +635,10 @@ namespace tmt::render
 
     struct CubemapTexture
     {
+        CubemapTexture(string path, int cubemapSize = 512);
 
-        CubemapTexture(string path);
+        Texture* realTexture;
+        Texture* panoramaTexture;
     };
 
     struct Font
