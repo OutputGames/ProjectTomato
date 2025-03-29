@@ -2849,11 +2849,29 @@ CubemapTexture::CubemapTexture(string path)
 
     var dataSize = width * height * nrChannels;
 
+    auto rgbaData = new float[dataSize];
+
+    if (nrChannels == 3)
+    {
+        delete[] rgbaData;
+        dataSize = width * height * 4;
+        rgbaData = new float[dataSize];
+        for (int i = 0; i < width * height; ++i)
+        {
+            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+            rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+            rgbaData[i * 4 + 3] = 1.0; // Add alpha channel with value 1.0
+        }
+        nrChannels = 4;
+    }
+    dataSize = width * height * nrChannels * sizeof(float);
+
     tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA32F; // Use floating point format for HDR
     u16 textureFlags = 0;
 
     var hdrHandle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
-                                    textureFlags, tmgl::copy(data, dataSize));
+                                    textureFlags, tmgl::copy(rgbaData, dataSize));
 
     var hdrTexture = new Texture(hdrHandle);
 
@@ -2866,11 +2884,9 @@ CubemapTexture::CubemapTexture(string path)
 
     var realTexture = new Texture(cubemapSize, height, format, textureFlags);
     var depthTexture = new Texture(cubemapSize, height, depthFormat, textureFlags);
-    tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, textureFlags);
+    tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, TMGL_TEXTURE_RT);
 
-
-    var fbo = createFrameBuffer(6, &cubemapHandle, true);
-    setViewFrameBuffer(16, fbo);
+    var fbo = createFrameBuffer(1, &cubemapHandle, true);
 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] = {
@@ -2884,15 +2900,20 @@ CubemapTexture::CubemapTexture(string path)
     var shader = Shader::CreateShader("test/equi_vert", "test/equi_frag");
 
     var material = new Material(shader);
-    material->GetUniform("equiMap")->tex = hdrTexture;
+    material->GetUniform("s_TexColor")->tex = hdrTexture;
 
-    tmgl::setViewRect(16, 0, 0, cubemapSize, cubemapSize);
     for (int i = 0; i < 6; ++i)
     {
-        tmgl::setViewTransform(16, value_ptr(captureViews[i]), value_ptr(captureProjection));
+        setViewFrameBuffer(i, fbo);
+        tmgl::setViewRect(i, 0, 0, cubemapSize, cubemapSize);
+        tmgl::setViewTransform(i, value_ptr(captureViews[i]), value_ptr(captureProjection));
 
-        prim::GetPrimitive(prim::Cube)->draw(glm::mat4(1.0), material, glm::vec3{0});
+        GetPrimitive(prim::Cube)->draw(glm::mat4(1.0), material, glm::vec3{0}, i, 0);
     }
+
+    tmgl::setViewFrameBuffer(0, TMGL_INVALID_HANDLE);
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+    setViewRect(0, 0, 0, bgfx::BackbufferRatio::Half);
 }
 
 Font* Font::Create(string path)
