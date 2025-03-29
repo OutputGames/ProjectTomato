@@ -2907,12 +2907,18 @@ CubemapTexture::CubemapTexture(string path)
         setViewFrameBuffer(i, fbo);
         tmgl::setViewRect(i, 0, 0, cubemapSize, cubemapSize);
         tmgl::setViewTransform(i, value_ptr(captureViews[i]), value_ptr(captureProjection));
+        tmgl::setViewClear(i, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
-        GetPrimitive(prim::Cube)->draw(glm::mat4(1.0), material, glm::vec3{0}, i, 0);
+
+        var cube = GetPrimitive(prim::Cube);
+
+        cube->use();
+
+        shader->Push(i, material->overrides.data(), material->overrides.size());
     }
 
     tmgl::setViewFrameBuffer(0, TMGL_INVALID_HANDLE);
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+    tmgl::setViewClear(0, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
     setViewRect(0, 0, 0, bgfx::BackbufferRatio::Half);
 }
 
