@@ -72,6 +72,7 @@ void ShaderUniform::Use(SubShader* shader)
                 texSet++;
             }
 
+
             if (forcedSamplerIndex > -1)
             {
                 texSet = forcedSamplerIndex;
