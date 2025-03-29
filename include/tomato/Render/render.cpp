@@ -2910,14 +2910,15 @@ CubemapTexture::CubemapTexture(string path)
 
     var material = new Material(shader);
     material->GetUniform("equiMap")->tex = hdrTexture;
+    tmgl::setViewClear(1, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
 
+    setViewFrameBuffer(1, fbo);
     for (int i = 0; i < 6; ++i)
     {
-        setViewFrameBuffer(i, fbo);
-        tmgl::setViewRect(i, 0, 0, cubemapSize, cubemapSize);
-        tmgl::setViewTransform(i, value_ptr(captureViews[i]), value_ptr(captureProjection));
-        tmgl::setViewClear(i, TMGL_CLEAR_COLOR | TMGL_CLEAR_DEPTH, Color(0.2f, 0.3f, 0.3f, 1).getHex(), 1.0f, 0);
+        tmgl::setViewRect(1, 0, 0, cubemapSize, cubemapSize);
+        tmgl::setViewTransform(1, value_ptr(captureViews[i]), value_ptr(captureProjection));
 
+        material->GetUniform("u_data")->v4 = {i, 0, 0, 0};
 
         var cube = GetPrimitive(prim::Cube);
 
@@ -2925,7 +2926,7 @@ CubemapTexture::CubemapTexture(string path)
 
         cube->use();
 
-        shader->Push(i, material->overrides.data(), material->overrides.size());
+        shader->Push(1, material->overrides.data(), material->overrides.size());
     }
 
     tmgl::setViewFrameBuffer(0, TMGL_INVALID_HANDLE);
