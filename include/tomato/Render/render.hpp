@@ -579,7 +579,7 @@ namespace tmt::render
 
         int width, height;
 
-        static Texture* CreateTexture(string path, bool isCubemap = false, u64 textureFlags = 0);
+        static Texture* CreateTexture(string path, u64 textureFlags = 0);
 
         Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags = 0, const tmgl::Memory* mem = nullptr,
                 string name = "");
@@ -591,7 +591,7 @@ namespace tmt::render
 
     private:
         friend struct TextureAtlas;
-        Texture(string path, bool isCubemap = false, u64 flags = 0);
+        Texture(string path, u64 flags = 0);
         Texture();
     };
 
@@ -631,6 +631,12 @@ namespace tmt::render
         friend Camera;
 
 
+    };
+
+    struct CubemapTexture
+    {
+
+        CubemapTexture(string path);
     };
 
     struct Font

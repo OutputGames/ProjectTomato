@@ -2509,77 +2509,70 @@ Texture::Texture(aiTexel* texels, int width, u64 flags)
     stbi_image_free(data);
 }
 
-Texture::Texture(string path, bool isCubemap, u64 flags)
+Texture::Texture(string path, u64 flags)
 {
 
     uint64_t textureFlags = flags;
     // Adjust as needed
-    if (!isCubemap)
+    int nrChannels;
+    u8* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+    var dataSize = width * height * nrChannels;
+    auto rgbaData = new unsigned char[dataSize];
+
+    if (nrChannels == 3)
     {
-        int nrChannels;
-        u8* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-
-        var dataSize = width * height * nrChannels;
-        auto rgbaData = new unsigned char[dataSize];
-
-        if (nrChannels == 3)
+        delete[] rgbaData;
+        dataSize = width * height * 4;
+        rgbaData = new unsigned char[dataSize];
+        for (int i = 0; i < width * height; ++i)
         {
-            delete[] rgbaData;
-            dataSize = width * height * 4;
-            rgbaData = new unsigned char[dataSize];
-            for (int i = 0; i < width * height; ++i)
-            {
-                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
-                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
-                rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
-                rgbaData[i * 4 + 3] = 255; // Add alpha channel with value 1.0
-            }
-            nrChannels = 4;
+            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+            rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+            rgbaData[i * 4 + 3] = 255; // Add alpha channel with value 1.0
         }
-        else if (nrChannels == 4)
-        {
-            for (int i = 0; i < width * height; ++i)
-            {
-                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
-                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
-                rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
-                rgbaData[i * 4 + 3] = data[i * nrChannels + 3]; // Add alpha channel with value 1.0
-            }
-            rgbaData = data;
-        }
-        else if (nrChannels == 2)
-        {
-            delete[] rgbaData;
-            dataSize = width * height * 4;
-            rgbaData = new unsigned char[dataSize];
-            for (int i = 0; i < width * height; ++i)
-            {
-                rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
-                rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
-                rgbaData[i * 4 + 2] = 0;
-                rgbaData[i * 4 + 3] = data[i * nrChannels + 1];
-            }
-        }
-
-
-        tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
-
-        var s = sizeof(rgbaData);
-
-        // Create the texture in bgfx, passing the image data directly
-        handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
-                                 textureFlags, tmgl::copy(rgbaData, dataSize));
-        format = textureFormat;
-
-        var fpath = std::filesystem::path(path);
-        name = fpath.stem().string();
-
-        stbi_image_free(data);
+        nrChannels = 4;
     }
-    else
+    else if (nrChannels == 4)
     {
-
+        for (int i = 0; i < width * height; ++i)
+        {
+            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+            rgbaData[i * 4 + 2] = data[i * nrChannels + 2];
+            rgbaData[i * 4 + 3] = data[i * nrChannels + 3]; // Add alpha channel with value 1.0
+        }
+        rgbaData = data;
     }
+    else if (nrChannels == 2)
+    {
+        delete[] rgbaData;
+        dataSize = width * height * 4;
+        rgbaData = new unsigned char[dataSize];
+        for (int i = 0; i < width * height; ++i)
+        {
+            rgbaData[i * 4 + 0] = data[i * nrChannels + 0];
+            rgbaData[i * 4 + 1] = data[i * nrChannels + 1];
+            rgbaData[i * 4 + 2] = 0;
+            rgbaData[i * 4 + 3] = data[i * nrChannels + 1];
+        }
+    }
+
+
+    tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA8;
+
+    var s = sizeof(rgbaData);
+
+    // Create the texture in bgfx, passing the image data directly
+    handle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat, textureFlags,
+                             tmgl::copy(rgbaData, dataSize));
+    format = textureFormat;
+
+    var fpath = std::filesystem::path(path);
+    name = fpath.stem().string();
+
+    stbi_image_free(data);
 
     fs::ResourceManager::pInstance->loaded_textures.insert(std::make_pair(name, this));
 
@@ -2708,7 +2701,7 @@ TextureAtlas::TextureAtlas(std::vector<string> paths)
     setName(handle, "atlas");
 }
 
-Texture* Texture::CreateTexture(string path, bool isCubemap, u64 flags)
+Texture* Texture::CreateTexture(string path, u64 flags)
 {
     if (IN_MAP(ResMgr->loaded_textures, path))
     {
@@ -2718,7 +2711,7 @@ Texture* Texture::CreateTexture(string path, bool isCubemap, u64 flags)
     if (!std::filesystem::exists(path))
         return nullptr;
 
-    return new Texture(path, isCubemap, flags);
+    return new Texture(path, flags);
 }
 
 Texture::Texture(int width, int height, tmgl::TextureFormat::Enum tf, u64 flags, const tmgl::Memory* mem, string name)
@@ -2841,6 +2834,70 @@ void RenderTexture::resize(int width, int height)
     handle = createFrameBuffer(2, handles, true);
 
     setViewFrameBuffer(viewId, handle);
+}
+
+CubemapTexture::CubemapTexture(string path)
+{
+    int width, height, nrChannels;
+    float* data = stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0);
+
+    if (!data)
+    {
+        std::cerr << "Cubemap texture failed to load at path: " << path << std::endl;
+        return;
+    }
+
+    var dataSize = width * height * nrChannels;
+
+    tmgl::TextureFormat::Enum textureFormat = tmgl::TextureFormat::RGBA32F; // Use floating point format for HDR
+    u16 textureFlags = 0;
+
+    var hdrHandle = createTexture2D(static_cast<u16>(width), static_cast<u16>(height), false, 1, textureFormat,
+                                    textureFlags, tmgl::copy(data, dataSize));
+
+    var hdrTexture = new Texture(hdrHandle);
+
+    var cubemapSize = 512;
+
+
+    textureFlags = TMGL_TEXTURE_RT;
+    var depthFormat = tmgl::TextureFormat::D24S8;
+    var format = tmgl::TextureFormat::RGBA8;
+
+    var realTexture = new Texture(cubemapSize, height, format, textureFlags);
+    var depthTexture = new Texture(cubemapSize, height, depthFormat, textureFlags);
+    tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, textureFlags);
+
+
+    tmgl::TextureHandle handles[] = {realTexture->handle, depthTexture->handle};
+
+    for (int i = 0; i < 6; ++i)
+    {
+        var fbo = createFrameBuffer(1, &cubemapHandle, true);
+
+        bgfx::Attachment atch{};
+
+        setViewFrameBuffer(16, fbo);
+    }
+
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureViews[] = {
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+    var shader = Shader::CreateShader("test/equi_vert", "test/equi_frag");
+
+    var material = new Material(shader);
+    material->GetUniform("equiMap")->tex = hdrTexture;
+
+    for (int i = 0; i < 6; ++i)
+    {
+        tmgl::setViewRect(16 + i, 0, 0, cubemapSize, cubemapSize);
+    }
 }
 
 Font* Font::Create(string path)
