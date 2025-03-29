@@ -2869,16 +2869,8 @@ CubemapTexture::CubemapTexture(string path)
     tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, textureFlags);
 
 
-    tmgl::TextureHandle handles[] = {realTexture->handle, depthTexture->handle};
-
-    for (int i = 0; i < 6; ++i)
-    {
-        var fbo = createFrameBuffer(1, &cubemapHandle, true);
-
-        bgfx::Attachment atch{};
-
-        setViewFrameBuffer(16, fbo);
-    }
+    var fbo = createFrameBuffer(6, &cubemapHandle, true);
+    setViewFrameBuffer(16, fbo);
 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] = {
@@ -2894,9 +2886,12 @@ CubemapTexture::CubemapTexture(string path)
     var material = new Material(shader);
     material->GetUniform("equiMap")->tex = hdrTexture;
 
+    tmgl::setViewRect(16, 0, 0, cubemapSize, cubemapSize);
     for (int i = 0; i < 6; ++i)
     {
-        tmgl::setViewRect(16 + i, 0, 0, cubemapSize, cubemapSize);
+        tmgl::setViewTransform(16, value_ptr(captureViews[i]), value_ptr(captureProjection));
+
+
     }
 }
 
