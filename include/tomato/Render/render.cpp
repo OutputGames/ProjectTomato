@@ -2883,10 +2883,19 @@ CubemapTexture::CubemapTexture(string path)
     var format = tmgl::TextureFormat::RGBA8;
 
     var realTexture = new Texture(cubemapSize, height, format, textureFlags);
-    var depthTexture = new Texture(cubemapSize, height, depthFormat, textureFlags);
+    var depthTexture = new Texture(cubemapSize, height, depthFormat, textureFlags | TMGL_TEXTURE_RT_WRITE_ONLY);
     tmgl::TextureHandle cubemapHandle = createTextureCube(cubemapSize, false, 1, format, TMGL_TEXTURE_RT);
 
-    var fbo = createFrameBuffer(1, &cubemapHandle, true);
+    std::vector<tmgl::Attachment> handles;
+
+    for (int i = 0; i < 6; ++i)
+    {
+        var attachment = tmgl::Attachment{};
+        attachment.init(cubemapHandle, tmgl::Access::Write, i);
+        handles.push_back(attachment);
+    }
+
+    var fbo = createFrameBuffer(handles.size(), handles.data(), true);
 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] = {
@@ -2900,7 +2909,7 @@ CubemapTexture::CubemapTexture(string path)
     var shader = Shader::CreateShader("test/equi_vert", "test/equi_frag");
 
     var material = new Material(shader);
-    material->GetUniform("s_TexColor")->tex = hdrTexture;
+    material->GetUniform("equiMap")->tex = hdrTexture;
 
     for (int i = 0; i < 6; ++i)
     {
@@ -2911,6 +2920,8 @@ CubemapTexture::CubemapTexture(string path)
 
 
         var cube = GetPrimitive(prim::Cube);
+
+        tmgl::setState(material->GetMaterialState());
 
         cube->use();
 
