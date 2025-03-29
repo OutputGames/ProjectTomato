@@ -2891,7 +2891,7 @@ CubemapTexture::CubemapTexture(string path)
     {
         tmgl::setViewTransform(16, value_ptr(captureViews[i]), value_ptr(captureProjection));
 
-
+        prim::GetPrimitive(prim::Cube)->draw(glm::mat4(1.0), material, glm::vec3{0});
     }
 }
 
