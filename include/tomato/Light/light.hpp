@@ -37,6 +37,18 @@ namespace tmt::light
 
     };
 
+    struct SkyboxObject : obj::Object
+    {
+        SkyboxObject();
+
+        void Update() override;
+
+        render::CubemapTexture* cubemap = nullptr;
+
+    private:
+        render::Material* skyboxMaterial = nullptr;
+        render::Mesh* skyboxMesh = nullptr;
+    };
 
 }
 

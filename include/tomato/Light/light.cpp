@@ -53,3 +53,25 @@ void tmt::light::LightObject::Update()
 
     Object::Update();
 }
+
+tmt::light::SkyboxObject::SkyboxObject()
+{
+    var shader = render::Shader::CreateShader("test/cube_vert", "test/cube_frag");
+    skyboxMaterial = new render::Material(shader);
+
+    skyboxMesh = GetPrimitive(prim::Cube);
+}
+
+void tmt::light::SkyboxObject::Update()
+{
+    if (cubemap)
+    {
+
+        skyboxMaterial->GetUniform("map")->tex = cubemap->realTexture;
+
+        skyboxMesh->draw(glm::mat4(1.0), skyboxMaterial, glm::vec3{0}, layer);
+    }
+
+
+    Object::Update();
+}
