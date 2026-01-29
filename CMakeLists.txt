@@ -127,6 +127,22 @@ set(BIMG_INCLUDE_DIR ${VENDOR_DIR}/bimg/include CACHE PATH "Path to bimg include
 set(BX_INCLUDE_DIR ${VENDOR_DIR}/bx/include CACHE PATH "Path to bx include directory")
 add_subdirectory(${VENDOR_DIR}/tmgl)
 
+# Add bgfx/bimg/bx include directories to tmgl target after it's created
+target_include_directories(tmgl PUBLIC 
+    ${VENDOR_DIR}/bgfx/include
+    ${VENDOR_DIR}/bimg/include
+    ${VENDOR_DIR}/bx/include
+)
+
+# Add platform-specific bx compatibility includes
+if(MSVC)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/msvc)
+elseif(MINGW)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/mingw)
+elseif(APPLE)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/osx)
+endif()
+
 # Tomato Engine Library
 file(GLOB_RECURSE TOMATO_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/tomato/*.cpp
