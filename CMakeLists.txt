@@ -57,14 +57,21 @@ add_subdirectory(${VENDOR_DIR}/bullet3)
 add_library(bx INTERFACE)
 target_include_directories(bx INTERFACE 
     ${VENDOR_DIR}/bx/include
-    ${VENDOR_DIR}/bx/include/compat/msvc
 )
+# Add platform-specific compatibility includes for bx
+if(MSVC)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/msvc)
+elseif(MINGW)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/mingw)
+elseif(APPLE)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/osx)
+endif()
 # Add BX_CONFIG_DEBUG definition as INTERFACE so it propagates to users of bx
 target_compile_definitions(bx INTERFACE
     $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
-    $<$<CONFIG:Release>:BX_CONFIG_DEBUG=0>
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:BX_CONFIG_DEBUG=0>
     # Fallback for when build type is not set (default to Debug behavior)
-    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>>>:BX_CONFIG_DEBUG=1>
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:BX_CONFIG_DEBUG=1>
 )
 # Add MSVC-specific compiler options for bx (required by bx/platform.h)
 if(MSVC)
@@ -96,9 +103,9 @@ target_link_libraries(imgui PUBLIC glfw stb bx)
 # Add BX_CONFIG_DEBUG definition for imgui
 target_compile_definitions(imgui PRIVATE
     $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
-    $<$<CONFIG:Release>:BX_CONFIG_DEBUG=0>
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:BX_CONFIG_DEBUG=0>
     # Fallback for when build type is not set (default to Debug behavior)
-    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>>>:BX_CONFIG_DEBUG=1>
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:BX_CONFIG_DEBUG=1>
 )
 
 # Add MSVC-specific compiler options for imgui
@@ -106,7 +113,7 @@ if(MSVC)
     target_compile_options(imgui PRIVATE /Zc:preprocessor)
 endif()
 
-# FreeTy pe
+# FreeType
 add_subdirectory(${VENDOR_DIR}/freetype)
 
 # Box2D
@@ -121,10 +128,6 @@ if(WIN32)
 endif()
 
 # TMGL (Tomato Graphics Library)
-# Set include paths for tmgl to find bgfx/bimg/bx from parent project
-set(BGFX_INCLUDE_DIR ${VENDOR_DIR}/bgfx/include CACHE PATH "Path to bgfx include directory")
-set(BIMG_INCLUDE_DIR ${VENDOR_DIR}/bimg/include CACHE PATH "Path to bimg include directory")
-set(BX_INCLUDE_DIR ${VENDOR_DIR}/bx/include CACHE PATH "Path to bx include directory")
 add_subdirectory(${VENDOR_DIR}/tmgl)
 
 # Add bgfx/bimg/bx include directories to tmgl target after it's created
