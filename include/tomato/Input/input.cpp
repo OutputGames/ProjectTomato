@@ -1,3 +1,8 @@
+/**
+ * @file input.cpp
+ * @brief Implementation of mouse, keyboard, and gamepad input handling
+ */
+
 #include "input.hpp"
 #include "globals.hpp"
 #include "dear-imgui/imgui.h"
@@ -7,7 +12,9 @@
 using namespace tmt::input;
 
 
+// Current active input method (keyboard/mouse or gamepad)
 static InputState currentInputState = KeyboardMouse;
+// Whether input state has been manually forced (disables auto-switching)
 static bool forcedInputState = false;
 
 glm::vec2 Mouse::GetMousePosition() { return mousep; }
@@ -16,24 +23,41 @@ glm::vec2 Mouse::GetMouseDelta() { return mousedelta; }
 
 glm::vec2 Mouse::GetMouseScroll() { return mousescrl; }
 
-// Function to convert mouse position to a ray direction
+/**
+ * @brief Convert screen coordinates to a world-space ray direction
+ * 
+ * This function performs the reverse of the rendering pipeline:
+ * 1. Converts mouse position to normalized device coordinates (NDC) [-1, 1]
+ * 2. Transforms NDC to clip space
+ * 3. Transforms clip space to eye/camera space
+ * 4. Transforms eye space to world space
+ * 
+ * @param mouseX Mouse X position in screen coordinates
+ * @param mouseY Mouse Y position in screen coordinates
+ * @param screenWidth Screen width in pixels
+ * @param screenHeight Screen height in pixels
+ * @param viewMatrix Camera view matrix
+ * @param projectionMatrix Camera projection matrix
+ * @return glm::vec3 Normalized ray direction in world space
+ */
 glm::vec3 ScreenToWorldRay(float mouseX, float mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
                            const glm::mat4& projectionMatrix)
 {
     // Convert mouse position to normalized device coordinates (NDC)
+    // NDC range is [-1, 1] where (0,0) is center, (-1,-1) is bottom-left, (1,1) is top-right
     float x = 1.0f - (2.0f * mouseX) / static_cast<float>(screenWidth);
     float y = 1.0f - (2.0f * mouseY) / static_cast<float>(screenHeight);
-    float z = 1.0f;
+    float z = 1.0f;  // Far plane
 
 
     glm::vec3 rayNDC(x, y, z);
 
-    // Convert NDC to clip coordinates
+    // Convert NDC to clip coordinates (add w component)
     glm::vec4 rayClip(rayNDC, 1.0f);
 
-    // Convert clip coordinates to eye coordinates
+    // Convert clip coordinates to eye/camera coordinates
     glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);  // Direction vector (w=0)
 
     // Convert eye coordinates to world coordinates
     auto rayWorld = glm::vec3(glm::inverse(viewMatrix) * rayEye);
@@ -42,7 +66,19 @@ glm::vec3 ScreenToWorldRay(float mouseX, float mouseY, int screenWidth, int scre
     return rayWorld;
 }
 
-// Example usage
+/**
+ * @brief Cast a ray from the camera through the mouse cursor into the scene
+ * 
+ * Helper function that combines screen-to-world conversion with raycasting.
+ * 
+ * @param mouseX Mouse X position in screen coordinates
+ * @param mouseY Mouse Y position in screen coordinates  
+ * @param screenWidth Screen width in pixels
+ * @param screenHeight Screen height in pixels
+ * @param viewMatrix Camera view matrix
+ * @param projectionMatrix Camera projection matrix
+ * @return glm::vec3 Ray direction in world space
+ */
 glm::vec3 RaycastFromMouse(float mouseX, float mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix,
                            const glm::mat4& projectionMatrix)
 {
@@ -56,18 +92,34 @@ glm::vec3 RaycastFromMouse(float mouseX, float mouseY, int screenWidth, int scre
 }
 
 
+/**
+ * @brief Get mouse position in world space via raycasting
+ * 
+ * Casts a ray from the camera through the mouse cursor and returns the
+ * first intersection point with the physics world (up to 1000 units away).
+ * 
+ * Note: Returns (0,0,0) if no hit, which could be ambiguous since that's
+ * a valid world coordinate. Consider checking the return value carefully.
+ * 
+ * @param camera Camera to use for raycasting
+ * @return glm::vec3 World position where ray hits, or (0,0,0) if no hit
+ */
 glm::vec3 Mouse::GetWorldMousePosition(render::Camera* camera)
 {
 
+    // Get ray direction from camera through mouse cursor
     var dir = RaycastFromMouse(mousep.x, mousep.y, renderer->windowWidth, renderer->windowHeight, camera->GetView_m4(),
                                camera->GetProjection_m4());
 
+    // Debug visualization (uncomment to see the ray)
     // debug::Gizmos::DrawSphere(camera->position + dir, 0.1f);
 
     var pos = camera->position;
 
+    // Create physics ray starting at camera position
     var ray = physics::Ray{pos, dir, 1000};
 
+    // Cast ray and check for hits
     var hit = ray.Cast();
 
     if (hit)
@@ -75,40 +127,70 @@ glm::vec3 Mouse::GetWorldMousePosition(render::Camera* camera)
         return hit->point;
     }
 
+    // No hit, return origin (note: this is ambiguous with actual (0,0,0) hits)
     return glm::vec3{0};
 }
 
+/**
+ * @brief Get mouse button state with press/hold detection
+ * 
+ * Tracks button state over frames to distinguish between:
+ * - Press: Button just pressed this frame
+ * - Hold: Button held down for multiple frames
+ * - Release: Button not pressed
+ * 
+ * @param i Mouse button to query
+ * @param real If true, ignores UI hover state (for non-game interactions)
+ * @return MouseButtonState Current button state
+ */
 Mouse::MouseButtonState Mouse::GetMouseButton(MouseButton i, bool real)
 {
+    // Get raw button state from GLFW
     int state = glfwGetMouseButton(renderer->window, i);
 
     if (!real)
     {
+        // Optional: Filter input when hovering over UI elements
         /*
         if (ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused() || ImGui::IsAnyItemActive())
             state = Release;
             */
     }
 
+    // Convert Press to Hold if button was already pressed last frame
     if (state == Press && (mstates[i] == Press || mstates[i] == Hold))
     {
         state = Hold;
     }
 
+    // Update state tracking for next frame
     if (real)
         mstates[i] = state;
 
     return static_cast<MouseButtonState>(state);
 }
 
+/**
+ * @brief Get keyboard key state with press/hold detection
+ * 
+ * Similar to mouse button tracking, distinguishes between Press and Hold.
+ * Returns Release if window is not focused.
+ * 
+ * @param key GLFW key code (e.g., GLFW_KEY_W, GLFW_KEY_SPACE)
+ * @return KeyState Current key state
+ */
 Keyboard::KeyState Keyboard::GetKey(int key)
 {
+    // Get raw key state from GLFW
     int state = glfwGetKey(renderer->window, key);
+    
+    // Don't register input if window is not focused
     if (glfwGetWindowAttrib(renderer->window, GLFW_FOCUSED) == GLFW_FALSE)
     {
         state = Release;
     }
 
+    // Resize state tracking vector if needed (dynamic size based on highest key code)
     if (kstates.size() <= key)
     {
         kstates.resize(key + 1, Release);
@@ -116,6 +198,7 @@ Keyboard::KeyState Keyboard::GetKey(int key)
     }
     else
     {
+        // Convert Press to Hold if key was already pressed last frame
         if (state == Press && (kstates[key] == Press || kstates[key] == Hold))
         {
             state = Hold;
@@ -126,6 +209,14 @@ Keyboard::KeyState Keyboard::GetKey(int key)
     return static_cast<KeyState>(state);
 }
 
+/**
+ * @brief Get gamepad button state with press/hold detection
+ * 
+ * Queries the first connected gamepad (GLFW_JOYSTICK_1) for button state.
+ * 
+ * @param button GLFW gamepad button ID
+ * @return PadState Current button state
+ */
 Gamepad::PadState Gamepad::GetButton(int button)
 {
     GLFWgamepadstate s;
@@ -133,6 +224,7 @@ Gamepad::PadState Gamepad::GetButton(int button)
 
     int state = s.buttons[button];
 
+    // Resize state tracking vector if needed
     if (gstates.size() <= button)
     {
         gstates.resize(button + 1, Release);
@@ -140,6 +232,7 @@ Gamepad::PadState Gamepad::GetButton(int button)
     }
     else
     {
+        // Convert Press to Hold if button was already pressed last frame
         if (state == Press && (gstates[button] == Press || gstates[button] == Hold))
         {
             state = Hold;
@@ -150,6 +243,15 @@ Gamepad::PadState Gamepad::GetButton(int button)
     return static_cast<PadState>(state);
 }
 
+/**
+ * @brief Get gamepad axis value with deadzone
+ * 
+ * Queries a gamepad analog stick axis. Applies a small deadzone (0.1)
+ * to prevent drift from slightly off-center sticks.
+ * 
+ * @param axis GLFW gamepad axis ID (e.g., GLFW_GAMEPAD_AXIS_LEFT_X)
+ * @return float Axis value in range [-1, 1], or 0 if within deadzone
+ */
 float Gamepad::GetAxis(int axis)
 {
     GLFWgamepadstate s;
@@ -157,6 +259,7 @@ float Gamepad::GetAxis(int axis)
 
     float a = s.axes[axis];
 
+    // Apply deadzone to prevent stick drift
     if (glm::abs(a) <= 0.1)
     {
         a = 0;
@@ -172,6 +275,21 @@ void tmt::input::ForceInputState(InputState state)
     currentInputState = state;
 }
 
+/**
+ * @brief Get virtual axis value by name
+ * 
+ * Provides consistent input across keyboard/mouse and gamepad by mapping
+ * different input methods to the same virtual axis name.
+ * 
+ * Supported axes:
+ * - "Horizontal": Arrow keys or A/D, or left stick X (-1 = left, 1 = right)
+ * - "Vertical": Arrow keys or W/S, or left stick Y (-1 = down, 1 = up)
+ * - "LookHorizontal": Mouse X delta or right stick X
+ * - "LookVertical": Mouse Y delta or right stick Y
+ * 
+ * @param axis Name of the virtual axis
+ * @return float Axis value typically in range [-1, 1]
+ */
 float tmt::input::GetAxis(string axis)
 {
     var a = 0.0f;
@@ -180,25 +298,27 @@ float tmt::input::GetAxis(string axis)
     {
         if (currentInputState == KeyboardMouse)
         {
-
+            // Check for left arrow or A key
             var l =
                 (Keyboard::GetKey(GLFW_KEY_LEFT) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_A) == Keyboard::Hold);
 
+            // Check for right arrow or D key
             var r = (Keyboard::GetKey(GLFW_KEY_RIGHT) == Keyboard::Hold) ||
                 (Keyboard::GetKey(GLFW_KEY_D) == Keyboard::Hold);
 
 
             if (l)
             {
-                a = -1;
+                a = -1;  // Left
             }
             else if (r)
             {
-                a = 1;
+                a = 1;   // Right
             }
         }
         else if (currentInputState == Gamepad)
         {
+            // Use left stick X axis
             a = Gamepad::GetAxis(GLFW_GAMEPAD_AXIS_LEFT_X);
         }
     }
@@ -206,7 +326,7 @@ float tmt::input::GetAxis(string axis)
     {
         if (currentInputState == KeyboardMouse)
         {
-
+            // Check for up arrow or W key
             var u =
                 (Keyboard::GetKey(GLFW_KEY_UP) == Keyboard::Hold) || (Keyboard::GetKey(GLFW_KEY_W) == Keyboard::Hold);
 
