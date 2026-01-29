@@ -98,6 +98,9 @@ glm::vec3 RaycastFromMouse(float mouseX, float mouseY, int screenWidth, int scre
  * Casts a ray from the camera through the mouse cursor and returns the
  * first intersection point with the physics world (up to 1000 units away).
  * 
+ * Note: Returns (0,0,0) if no hit, which could be ambiguous since that's
+ * a valid world coordinate. Consider checking the return value carefully.
+ * 
  * @param camera Camera to use for raycasting
  * @return glm::vec3 World position where ray hits, or (0,0,0) if no hit
  */
@@ -124,7 +127,7 @@ glm::vec3 Mouse::GetWorldMousePosition(render::Camera* camera)
         return hit->point;
     }
 
-    // No hit, return origin
+    // No hit, return origin (note: this is ambiguous with actual (0,0,0) hits)
     return glm::vec3{0};
 }
 

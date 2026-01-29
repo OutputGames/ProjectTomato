@@ -262,9 +262,11 @@ glm::vec3 convertQuatEuler(btQuaternion q)
 /**
  * @brief Convert Euler angles (degrees) to Bullet3 quaternion
  * 
- * Note: The conversion order appears to be YXZ based on the constructor call.
+ * Takes Euler angles in degrees, converts to radians, then creates a Bullet quaternion.
+ * Note: The quaternion constructor uses YXZ order, not the standard XYZ order.
+ * This may be intentional for a specific coordinate system or rotation order.
  * 
- * @param q Euler angles in degrees
+ * @param q Euler angles in degrees (x=pitch, y=yaw, z=roll)
  * @return btQuaternion Equivalent Bullet quaternion
  */
 btQuaternion convertQuat(glm::vec3 q)
@@ -278,7 +280,7 @@ btQuaternion convertQuat(glm::vec3 q)
     y = qu.y;
     z = qu.z;
 
-    // Note: Order is y, x, z (not standard x, y, z)
+    // Note: Quaternion constructor uses Y, X, Z order (non-standard)
     return btQuaternion(y, x, z);
 };
 
@@ -307,8 +309,8 @@ btQuaternion convertQuat(glm::quat q)
  * 
  * Updates the engine's physics body wrapper with the transform calculated
  * by the Bullet physics simulation. Handles two modes:
- * - Self mode: Updates the body's own position/rotation
- * - Parent mode: Updates the parent object's position/rotation
+ * - Self mode: Updates only the body's position (not rotation)
+ * - Parent mode: Updates the parent object's position and rotation
  * 
  * @param body The physics body to update
  * @param transform The transform from Bullet physics simulation
@@ -323,13 +325,13 @@ void ApplyTransform(tmt::physics::PhysicsBody* body, btTransform transform)
     
     if (body->transRelation == tmt::physics::PhysicsBody::Self)
     {
-        // Update body's own position directly
+        // Self mode: Update only position, not rotation
         var p = body->position;
         body->position = convertVec3(transform.getOrigin());
     }
     else
     {
-        // Update parent object's position and rotation
+        // Parent mode: Update both position and rotation
         var p = parent->position;
         var r = parent->rotation;
 

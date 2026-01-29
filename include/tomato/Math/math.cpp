@@ -9,16 +9,17 @@
 /**
  * @brief Convert a vec4 to a float array
  * 
- * Creates a stack-allocated array from the vector components.
- * Note: This returns a pointer to stack memory and should be used with caution.
+ * WARNING: This function returns a pointer to stack memory which is undefined behavior!
+ * The returned pointer will be invalid after this function returns.
+ * TODO: This function should be fixed to either allocate memory dynamically or use a different approach.
  * 
  * @param v The vec4 to convert
- * @return float* Pointer to float array [x, y, z, w]
+ * @return float* INVALID POINTER - do not use this function
  */
 float* tmt::math::vec4toArray(glm::vec4 v)
 {
     float f[4] = {v.x, v.y, v.z, v.w};
-    return f;
+    return f;  // BUG: Returns pointer to stack memory
 }
 
 /**
@@ -50,11 +51,11 @@ float* tmt::math::mat4ToArray(glm::mat4 m)
 /**
  * @brief Convert a 3x3 matrix to a float array
  * 
- * Currently unimplemented - returns nullptr.
+ * Currently unimplemented - always returns nullptr.
  * TODO: Implement 3x3 matrix conversion if needed.
  * 
  * @param m The matrix to convert
- * @return float** Always returns nullptr
+ * @return float** Always returns nullptr (unimplemented)
  */
 float** tmt::math::mat3ToArray(glm::mat3 m)
 {
@@ -64,10 +65,12 @@ float** tmt::math::mat3ToArray(glm::mat3 m)
 /**
  * @brief Convert a vector of 4x4 matrices to an array of float pointers
  * 
- * Creates an array where each element points to the data of a matrix from the vector.
+ * WARNING: This function has a bug - it returns a pointer to local vector data
+ * which will be invalid after the function returns (undefined behavior).
+ * TODO: This function needs to be fixed to avoid returning dangling pointers.
  * 
  * @param v Vector of matrices to convert
- * @return float** Pointer to array of float pointers
+ * @return float** INVALID POINTER - do not use this function
  */
 float** tmt::math::mat4ArrayToArray(std::vector<glm::mat4> v)
 {
@@ -78,7 +81,7 @@ float** tmt::math::mat4ArrayToArray(std::vector<glm::mat4> v)
         m4[j] = value_ptr(v[i]);
     }
 
-    return m4.data();
+    return m4.data();  // BUG: Returns pointer to local vector's data
 }
 
 /**
@@ -218,6 +221,9 @@ float tmt::math::lerp(float start, float end, float t)
  * Computes the Euclidean length of the vector using the formula:
  * magnitude = sqrt(x² + y² + z²)
  * 
+ * Note: The negative check is redundant since sqrt() of positive values
+ * is always non-negative, but is kept for safety.
+ * 
  * @param v Vector to measure
  * @return float Length of the vector (always non-negative)
  */
@@ -225,7 +231,7 @@ float tmt::math::magnitude(glm::vec3 v)
 {
     float m = glm::sqrt(glm::pow(v.x, 2) + glm::pow(v.y, 2) + glm::pow(v.z, 2));
 
-    // Ensure magnitude is never negative (shouldn't happen, but safety check)
+    // Safety check (mathematically unnecessary but defensive)
     if (m < 0)
     {
         m = 0;

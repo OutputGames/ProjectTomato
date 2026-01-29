@@ -41,8 +41,16 @@ void tmt::time::waitForSeconds(float seconds)
 }
 
 /**
- * @brief Block thread execution for specified frames (assuming 60 FPS)
- * Calculates equivalent time and sleeps
+ * @brief Block thread execution for specified frames
+ * 
+ * Calculates equivalent time based on 60 FPS assumption and sleeps.
+ * 
+ * WARNING: This assumes a fixed 60 FPS frame rate. If your application
+ * runs at a different frame rate, this will wait for the wrong duration.
+ * For example, at 30 FPS, waitForFrames(60) will wait 1 second, but
+ * only 30 frames will have passed, not 60.
+ * 
+ * @param frames Number of frames to wait (assuming 60 FPS)
  */
 void tmt::time::waitForFrames(int frames)
 {
