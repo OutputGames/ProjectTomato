@@ -1,0 +1,3 @@
+[submodule "vendor/tmgl"]
+	path = vendor/tmgl
+	url = https://github.com/OutputGames/tmgl.git

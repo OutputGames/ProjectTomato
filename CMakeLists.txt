@@ -77,7 +77,18 @@ file(GLOB IMGUI_SOURCES
 )
 add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC ${VENDOR_DIR}/dear-imgui)
-target_link_libraries(imgui PUBLIC glfw)
+target_link_libraries(imgui PUBLIC glfw stb bx)
+
+# Add BX_CONFIG_DEBUG definition for imgui
+target_compile_definitions(imgui PRIVATE
+    $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
+    $<$<CONFIG:Release>:BX_CONFIG_DEBUG=0>
+)
+
+# Add MSVC-specific compiler options for imgui
+if(MSVC)
+    target_compile_options(imgui PRIVATE /Zc:preprocessor)
+endif()
 
 # FreeTy pe
 add_subdirectory(${VENDOR_DIR}/freetype)
@@ -92,6 +103,9 @@ target_include_directories(enet PUBLIC ${VENDOR_DIR}/enet/include)
 if(WIN32)
     target_link_libraries(enet PRIVATE ws2_32 winmm)
 endif()
+
+# TMGL (Tomato Graphics Library)
+add_subdirectory(${VENDOR_DIR}/tmgl)
 
 # Tomato Engine Library
 file(GLOB_RECURSE TOMATO_SOURCES
@@ -134,6 +148,7 @@ target_link_libraries(TomatoEngine PUBLIC
     freetype
     box2d
     enet
+    tmgl
 )
 
 # Platform-specific libraries
