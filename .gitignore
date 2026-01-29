@@ -1,20 +1,42 @@
+# IDE files
 .vs/
 .idea/
 .vscode/
+*.code-workspace
+
+# Build directories
 bin/
 generated/
 enc_temp_folder/
-*.sln
-Makefile
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-*cmake*
 runtime/
 temp/
 obj/
 release/
 debug/
 lib/
-obj/
 contrib/
+
+# Build system files
+*.sln
+Makefile
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*cmake*
+!CMakeLists.txt
+
+# Binary files
+*.exe
+*.dll
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dylib
+
+# Generated/temporary files
+imgui.ini
+*.cap
+aucmt.txt
+assimp.pc

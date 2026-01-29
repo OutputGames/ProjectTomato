@@ -4,6 +4,47 @@
 
 A 3D game engine built in C++ with support for both 2D and 3D rendering, physics simulation, audio, and cross-platform input handling.
 
+## Quick Start
+
+### Building with CMake (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/OutputGames/ProjectTomato.git
+cd ProjectTomato
+
+# Create build directory
+mkdir build && cd build
+
+# Configure (automatically builds dependencies)
+cmake ..
+
+# Build
+cmake --build .
+
+# Run examples
+./bin/BasicExample  # or BasicExample.exe on Windows
+```
+
+### Building with Premake5
+
+```bash
+# Generate project files
+premake5 vs2022  # or vs2019, gmake2, etc.
+
+# Open generated solution and build
+```
+
+## Examples
+
+The `examples/` directory contains several example applications demonstrating engine features:
+
+- **01_basic**: Basic engine initialization and 3D rendering
+- **02_input**: Keyboard, mouse, and gamepad input handling
+- **03_physics**: Physics simulation with Bullet3
+
+See [examples/README.md](examples/README.md) for details.
+
 ## Architecture Overview
 
 The Tomato Engine is organized into modular subsystems, each handling a specific aspect of game functionality:
@@ -170,6 +211,107 @@ while (!glfwWindowShouldClose(renderer->window))
 // Clean shutdown
 tmt::engine::shutdown();
 ```
+
+## Dependencies
+
+- **GLFW** - Window and input management
+- **GLM** - Mathematics library
+- **Bullet3** - Physics simulation
+- **Assimp** - 3D model loading
+- **stb_image** - Image loading
+- **par_shapes** - Procedural mesh generation
+- **ImGui** - Debug UI
+- **bgfx** - Graphics rendering backend
+- **FreeType** - Font rendering
+- **Box2D** - 2D physics (optional)
+- **ENet** - Networking (optional)
+
+Most dependencies are included in the `vendor/` directory and will be built automatically with CMake.
+
+## Building
+
+### CMake Build (Cross-Platform)
+
+CMake is the recommended build system as it works across Windows, Linux, and macOS:
+
+```bash
+# Clone repository with submodules
+git clone --recursive https://github.com/OutputGames/ProjectTomato.git
+cd ProjectTomato
+
+# Create build directory
+mkdir build && cd build
+
+# Configure (use -G to specify generator)
+cmake ..                          # Default generator
+cmake -G "Visual Studio 17 2022" ..  # VS 2022
+cmake -G "Unix Makefiles" ..      # Makefiles
+
+# Build
+cmake --build .                   # Default configuration
+cmake --build . --config Release  # Release build
+
+# Install (optional)
+cmake --install . --prefix /path/to/install
+
+# Build options
+cmake -DTOMATO_BUILD_EXAMPLES=ON ..   # Build examples (default: ON)
+cmake -DTOMATO_BUILD_SHARED=ON ..     # Build shared library (default: OFF)
+```
+
+### Premake5 Build (Windows)
+
+Premake5 is also supported for Visual Studio on Windows:
+
+```bash
+# Generate Visual Studio solution
+premake5.exe vs2022  # or vs2019, vs2017
+
+# Open generated .sln file in Visual Studio and build
+```
+
+## Usage Example
+
+```cpp
+#include "tomato/tomato.hpp"
+#include "tomato/globals.hpp"
+
+using namespace tmt;
+
+int main()
+{
+    // Create application window
+    var app = new engine::Application("My Game", 1920, 1080, false);
+
+    // Get main camera
+    var cam = obj::CameraObject::GetMainCamera();
+    cam->position = glm::vec3(5, 5, 5);
+    cam->LookAt(glm::vec3(0, 0, 0));
+
+    // Create a cube
+    var cube = obj::MeshObject::FromPrimitive(prim::Cube);
+    
+    // Main game loop
+    while (!glfwWindowShouldClose(renderer->window))
+    {
+        glfwPollEvents();
+        
+        // Game logic
+        cube->rotation.y += time::getDeltaTime() * 50.0f;
+        
+        engine::update();  // Update all systems
+    }
+    
+    // Cleanup
+    engine::shutdown();
+    return 0;
+}
+```
+
+## Projects Using Tomato Engine
+
+- [SplatoonTomato](https://github.com/OutputGames/SplatoonTomato) - Splatoon-inspired game
+- [TomodachiRecreation](https://github.com/OutputGames/TomodachiRecreation) - Tomodachi Life recreation
 
 ## Dependencies
 
