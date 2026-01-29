@@ -59,6 +59,17 @@ target_include_directories(bx INTERFACE
     ${VENDOR_DIR}/bx/include
     ${VENDOR_DIR}/bx/include/compat/msvc
 )
+# Add BX_CONFIG_DEBUG definition as INTERFACE so it propagates to users of bx
+target_compile_definitions(bx INTERFACE
+    $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
+    $<$<CONFIG:Release>:BX_CONFIG_DEBUG=0>
+    # Fallback for when build type is not set (default to Debug behavior)
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>>>:BX_CONFIG_DEBUG=1>
+)
+# Add MSVC-specific compiler options for bx (required by bx/platform.h)
+if(MSVC)
+    target_compile_options(bx INTERFACE /Zc:preprocessor)
+endif()
 
 add_library(bimg INTERFACE)
 target_include_directories(bimg INTERFACE ${VENDOR_DIR}/bimg/include)
@@ -76,13 +87,18 @@ file(GLOB IMGUI_SOURCES
     ${VENDOR_DIR}/dear-imgui/*.h
 )
 add_library(imgui STATIC ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC ${VENDOR_DIR}/dear-imgui)
+target_include_directories(imgui PUBLIC 
+    ${VENDOR_DIR}/dear-imgui
+    ${VENDOR_DIR}  # Add vendor dir so imgui can find stb/stb_*.h
+)
 target_link_libraries(imgui PUBLIC glfw stb bx)
 
 # Add BX_CONFIG_DEBUG definition for imgui
 target_compile_definitions(imgui PRIVATE
     $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
     $<$<CONFIG:Release>:BX_CONFIG_DEBUG=0>
+    # Fallback for when build type is not set (default to Debug behavior)
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>>>:BX_CONFIG_DEBUG=1>
 )
 
 # Add MSVC-specific compiler options for imgui
@@ -105,6 +121,10 @@ if(WIN32)
 endif()
 
 # TMGL (Tomato Graphics Library)
+# Set include paths for tmgl to find bgfx/bimg/bx from parent project
+set(BGFX_INCLUDE_DIR ${VENDOR_DIR}/bgfx/include CACHE PATH "Path to bgfx include directory")
+set(BIMG_INCLUDE_DIR ${VENDOR_DIR}/bimg/include CACHE PATH "Path to bimg include directory")
+set(BX_INCLUDE_DIR ${VENDOR_DIR}/bx/include CACHE PATH "Path to bx include directory")
 add_subdirectory(${VENDOR_DIR}/tmgl)
 
 # Tomato Engine Library
