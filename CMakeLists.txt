@@ -57,8 +57,26 @@ add_subdirectory(${VENDOR_DIR}/bullet3)
 add_library(bx INTERFACE)
 target_include_directories(bx INTERFACE 
     ${VENDOR_DIR}/bx/include
-    ${VENDOR_DIR}/bx/include/compat/msvc
 )
+# Add platform-specific compatibility includes for bx
+if(MSVC)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/msvc)
+elseif(MINGW)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/mingw)
+elseif(APPLE)
+    target_include_directories(bx INTERFACE ${VENDOR_DIR}/bx/include/compat/osx)
+endif()
+# Add BX_CONFIG_DEBUG definition as INTERFACE so it propagates to users of bx
+target_compile_definitions(bx INTERFACE
+    $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:BX_CONFIG_DEBUG=0>
+    # Fallback for when build type is not set (default to Debug behavior)
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:BX_CONFIG_DEBUG=1>
+)
+# Add MSVC-specific compiler options for bx (required by bx/platform.h)
+if(MSVC)
+    target_compile_options(bx INTERFACE /Zc:preprocessor)
+endif()
 
 add_library(bimg INTERFACE)
 target_include_directories(bimg INTERFACE ${VENDOR_DIR}/bimg/include)
@@ -76,10 +94,26 @@ file(GLOB IMGUI_SOURCES
     ${VENDOR_DIR}/dear-imgui/*.h
 )
 add_library(imgui STATIC ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC ${VENDOR_DIR}/dear-imgui)
-target_link_libraries(imgui PUBLIC glfw)
+target_include_directories(imgui PUBLIC 
+    ${VENDOR_DIR}/dear-imgui
+    ${VENDOR_DIR}  # Add vendor dir so imgui can find stb/stb_*.h
+)
+target_link_libraries(imgui PUBLIC glfw stb bx)
 
-# FreeTy pe
+# Add BX_CONFIG_DEBUG definition for imgui
+target_compile_definitions(imgui PRIVATE
+    $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:BX_CONFIG_DEBUG=0>
+    # Fallback for when build type is not set (default to Debug behavior)
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:BX_CONFIG_DEBUG=1>
+)
+
+# Add MSVC-specific compiler options for imgui
+if(MSVC)
+    target_compile_options(imgui PRIVATE /Zc:preprocessor)
+endif()
+
+# FreeType
 add_subdirectory(${VENDOR_DIR}/freetype)
 
 # Box2D
@@ -91,6 +125,25 @@ add_library(enet STATIC ${ENET_SOURCES})
 target_include_directories(enet PUBLIC ${VENDOR_DIR}/enet/include)
 if(WIN32)
     target_link_libraries(enet PRIVATE ws2_32 winmm)
+endif()
+
+# TMGL (Tomato Graphics Library)
+add_subdirectory(${VENDOR_DIR}/tmgl)
+
+# Add bgfx/bimg/bx include directories to tmgl target after it's created
+target_include_directories(tmgl PUBLIC 
+    ${VENDOR_DIR}/bgfx/include
+    ${VENDOR_DIR}/bimg/include
+    ${VENDOR_DIR}/bx/include
+)
+
+# Add platform-specific bx compatibility includes
+if(MSVC)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/msvc)
+elseif(MINGW)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/mingw)
+elseif(APPLE)
+    target_include_directories(tmgl PUBLIC ${VENDOR_DIR}/bx/include/compat/osx)
 endif()
 
 # Tomato Engine Library
@@ -134,6 +187,7 @@ target_link_libraries(TomatoEngine PUBLIC
     freetype
     box2d
     enet
+    tmgl
 )
 
 # Platform-specific libraries

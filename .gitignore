@@ -40,3 +40,4 @@ imgui.ini
 *.cap
 aucmt.txt
 assimp.pc
+/build/
